@@ -146,9 +146,12 @@ const formatTime = (frames: number | undefined | null) => { // Added null to typ
     // Calculate hours, minutes, seconds, and milliseconds
     const ms = Math.round(totalMilliseconds % 1000); // Round milliseconds to nearest integer
     const totalSeconds = Math.floor(totalMilliseconds / 1000);
-    const h = Math.floor((totalSeconds % 3600) / 60);
-    const m = Math.floor((totalSeconds % 3600) / 60);
-    const s = totalSeconds % 60;
+
+    // Corrected calculation for hours, minutes, and seconds
+    const h = Math.floor(totalSeconds / 3600);
+    const remainingSecondsAfterHours = totalSeconds % 3600;
+    const m = Math.floor(remainingSecondsAfterHours / 60);
+    const s = remainingSecondsAfterHours % 60;
 
     // Always include milliseconds with 3 digits
     const formattedTime = `${h > 0 ? `${h}h ` : ''}${m > 0 || h > 0 ? `${m}m ` : ''}${s}.${ms.toString().padStart(3, '0')}s`;
@@ -954,7 +957,7 @@ const UserViewer = () => {
         // Cleanup function to clear the interval when the component unmounts or dependencies change
         return () => clearInterval(retryInterval);
 
-    }, [userEntriesByTrack, resolvedUserId, handleRetryTrack, ALL_TRACKS]); // Depend on userEntriesByTrack, resolvedUserId, handleRetryTrack, and ALL_TRACKS
+    }, [userEntriesByTrack, resolvedUserId, handleRetryTrack, ALL_TRACKS]);
 
 
   // Function to copy text to clipboard
