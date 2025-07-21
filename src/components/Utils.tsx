@@ -50,10 +50,10 @@ const PREDEFINED_TRACKS = [
 ];
 
 
-const API_BASE_URL_LEADERBOARD = 'https://vps.kodub.com:43273/leaderboard';
-const API_BASE_URL_USER = 'https://vps.kodub.com:43273/user';
+const API_BASE_URL_LEADERBOARD = 'https://vps.kodub.com/leaderboard';
+const API_BASE_URL_USER = 'https://vps.kodub.com/user';
 const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url=';
-const VERSION = '0.5.0';
+const VERSION = '0.5.1';
 const AMOUNT = 10;
 
 interface BasicUserData {

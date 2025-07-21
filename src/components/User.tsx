@@ -100,6 +100,11 @@ const OFFICIAL_TRACKS = [
 ];
 
 const COMMUNITY_TRACKS = [
+    { name: 'Asguardia', id: 'b7b253d6b0cc2ce8e6d5fe51cd3365bde09ad5de4e12256128e9b6493969085c'},
+    { name: 'Flying Dreams', id: 'da1ef837b8412d32269e305d4031c47b59da08fca2b856d94890eaf58ec29b71'},
+    { name: 'Ghost City', id: '7537816191920c597d6a1f0ab03b50c4ae3d74b6e0f6eeb8ddb85653762c7a5d'},
+    { name: 'Mos Espa', id: 'fa1a61bb25e8a5a68f2b30fffe9ca3bdd448f4a5c249f8b2403b4f5323b6de45'},
+    { name: 'Natsujo', id: 'a054a6277181a7f0a46588f5cccd1b794f537e5efd09a173a9ca7e11d511f304'},
     { name: '90xRESET', id: '4d0f964b159d51d6906478bbb87e1edad21b0f1eb2972af947be34f2d8c49ae9' },
     { name: 'concrete jungle', id: '0544f97453f7b0e2a310dfb0dcd331b4060ae2e9cb14ac27dc5367183dab0513' },
     { name: 'lu muvimento', id: '2ccd83e9419b6071ad9272b73e549e427b1a0f62d5305015839ae1e08fb86ce6' },
@@ -108,6 +113,8 @@ const COMMUNITY_TRACKS = [
     { name: 'Opal Palace - Repolished', id: '89f1a70d0e6be8297ec340a378b890f3fed7d0e20e3ef15b5d32ef4ef7ff1701' },
     { name: 'Snow Park', id: '2978b99f058cb3a2ce6f97c435c803b8d638400532d7c79028b2ec3d5e093882' },
     { name: 'Winter Hollow', id: '2046c377ac7ec5326b263c46587f30b66ba856257ddc317a866e3e7f66a73929' },
+    { name: 'Anubis', id: 'b453c3afb4b5872213aee43249d6db38578e8e2ded4a96f840617c9c6e63a6b6'},
+    { name: 'Joenail Jones', id: '23a46c3d4978a72be5f4a7fea236797aa31b52e577044ef4c6faa822ecc5cdc0'},
     { name: 'Arabica', id: '1aadcef252749318227d5cd4ce61a4a71526087857104fd57697b6fc63102e8a' },
     { name: 'Clay temples', id: '773eb0b02b97a72f3e482738cda7a5292294800497e16d9366e4f4c88a6f4e2d' }, // Corrected ID
     { name: 'DESERT STALLION', id: '932da81567f2b223fa1a52d88d6db52016600c5b9df02218f06c9eb832ecddeb' },
@@ -119,10 +126,10 @@ const COMMUNITY_TRACKS = [
 
 const ALL_TRACKS = [...OFFICIAL_TRACKS, ...COMMUNITY_TRACKS]; // Combined list for searching basic data
 
-const API_BASE_URL = 'https://vps.kodub.com:43273/leaderboard';
-const USER_API_BASE_URL = 'https://vps.kodub.com:43273/user'; // User specific API
+const API_BASE_URL = 'https://vps.kodub.com/leaderboard';
+const USER_API_BASE_URL = 'https://vps.kodub.com/user'; // User specific API
 const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url='; // Using the provided proxy
-const VERSION = '0.5.0'; // Version number
+const VERSION = '0.5.1'; // Version number
 const MAX_RETRY_ATTEMPTS = 5; // Maximum number of auto-retries per track
 const AUTO_RETRY_INTERVAL = 7000; // Interval to check for failed tracks (7 seconds)
 
