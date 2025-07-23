@@ -128,8 +128,8 @@ const COMMUNITY_TRACKS = [
 
 const ALL_TRACKS = [...OFFICIAL_TRACKS, ...COMMUNITY_TRACKS]; // Combined list for searching basic data
 
-const API_BASE_URL = 'https://vps.kodub.com:43273/leaderboard';
-const USER_API_BASE_URL = 'https://vps.kodub.com:43273/user'; // User specific API
+const API_BASE_URL = 'https://vps.kodub.com/leaderboard';
+const USER_API_BASE_URL = 'https://vps.kodub.com/user'; // User specific API
 const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url='; // Using the provided proxy
 const VERSION = '0.5.1'; // Version number
 const MAX_RETRY_ATTEMPTS = 5; // Maximum number of auto-retries per track

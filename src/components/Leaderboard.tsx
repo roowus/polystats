@@ -21,8 +21,8 @@ interface LeaderboardEntry { id: number; userId: string; name: string; carColors
 interface LeaderboardData { total: number; entries: LeaderboardEntry[]; userEntry: LeaderboardEntry | null; }
 interface RecordingData { recording: string; frames: number; verifiedState: number; carColors: string; }
 
-const API_BASE_URL = 'https://vps.kodub.com:43273/leaderboard';
-const RECORDING_API_BASE_URL = 'https://vps.kodub.com:43273/recordings';
+const API_BASE_URL = 'https://vps.kodub.com/leaderboard';
+const RECORDING_API_BASE_URL = 'https://vps.kodub.com/recordings';
 const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url=';
 const VERSION = '0.5.1';
 const AMOUNT = 10;
