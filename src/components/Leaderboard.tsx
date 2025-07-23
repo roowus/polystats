@@ -24,7 +24,7 @@ interface RecordingData { recording: string; frames: number; verifiedState: numb
 const API_BASE_URL = 'https://vps.kodub.com:43273/leaderboard';
 const RECORDING_API_BASE_URL = 'https://vps.kodub.com:43273/recordings';
 const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url=';
-const VERSION = '0.5.0';
+const VERSION = '0.5.1';
 const AMOUNT = 10;
 
 // Define the predefined tracks - Added new tracks
