@@ -58,7 +58,6 @@ const PREDEFINED_TRACKS = [
 
 
 
-
 const API_BASE_URL_LEADERBOARD = 'https://vps.kodub.com/leaderboard';
 const API_BASE_URL_USER = 'https://vps.kodub.com/user';
 const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url=';
