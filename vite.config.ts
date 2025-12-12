@@ -11,5 +11,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: 'https://mythses.github.io/polystats',
+  base: 'https://roowus.github.io/polystats',
 });
