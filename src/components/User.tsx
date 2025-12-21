@@ -7,6 +7,7 @@ import { Search, Trophy, User, Circle, CheckCircle, Copy, AlertCircle, TriangleA
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from 'react-tooltip';
+import Navigation from './Navigation';
 
 import {
   Select,
@@ -141,7 +142,7 @@ const ALL_TRACKS = [...OFFICIAL_TRACKS, ...COMMUNITY_TRACKS]; // Combined list f
 
 const API_BASE_URL = 'https://vps.kodub.com/leaderboard';
 const USER_API_BASE_URL = 'https://vps.kodub.com/user'; // User specific API
-const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url='; // Using the provided proxy
+const PROXY_URL = 'https://cp.rewis.workers.dev/?url='; // Using the provided proxy
 const VERSION = '0.5.1'; // Version number
 const MAX_RETRY_ATTEMPTS = 5; // Maximum number of auto-retries per track
 const AUTO_RETRY_INTERVAL = 7000; // Interval to check for failed tracks (7 seconds)
@@ -1733,8 +1734,10 @@ const UserViewer = () => {
 
 
   return (
-    // Main container with background and centering
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 flex justify-center items-start">
+    <>
+      <Navigation />
+      {/* Main container with background and centering */}
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 pt-24 flex justify-center items-start">
       {/* Add the style block here */}
       <style>{`
         .tooltip-WR { color: #000000 !important; } /* Black */
@@ -2520,6 +2523,7 @@ const UserViewer = () => {
            </div>
        )}
     </div>
+    </>
   );
 };
 

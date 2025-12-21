@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button'; // Assuming Button is needed elsewhere
 import { Input } from '@/components/ui/input'; // Assuming Input is needed elsewhere
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'; // Assuming Card components are needed elsewhere
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"; // Assuming Select components are needed elsewhere
+import Navigation from './Navigation';
 
 interface LeaderboardEntry { id: number; userId: string; name: string; carColors: string; frames: number; verifiedState: number; position: number; rank?: number; percent?: number; }
 interface LeaderboardData { total: number; entries: LeaderboardEntry[]; userEntry: LeaderboardEntry | null; }
@@ -23,7 +25,7 @@ interface RecordingData { recording: string; frames: number; verifiedState: numb
 
 const API_BASE_URL = 'https://vps.kodub.com/leaderboard';
 const RECORDING_API_BASE_URL = 'https://vps.kodub.com/recordings';
-const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url=';
+const PROXY_URL = 'https://cp.rewis.workers.dev/?url=';
 const VERSION = '0.5.1';
 const AMOUNT = 10;
 
@@ -152,6 +154,7 @@ const getPosMedal = (position: number | undefined) => {
 };
 
 const Leaderboard = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [userInput, setUserInput] = useState('');
   const [userInputType, setUserInputType] = useState<'userid' | 'usertoken' | 'rank'>('userid');
   const [userId, setUserId] = useState(''); // This state will now primarily store the *resolved* user ID for display/pagination
@@ -170,6 +173,7 @@ const Leaderboard = () => {
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [userNotFoundOnTrack, setUserNotFoundOnTrack] = useState(false); // New state for user not found on track
+  const initialLoadRef = useRef(false); // Track if we've loaded from URL params
 
   const formatTime = (frames: number) => {
     const h = Math.floor(frames / 3600000);
@@ -178,6 +182,32 @@ const Leaderboard = () => {
     const ms = frames % 1000;
     return `${h > 0 ? `${h}h  ` : ''}${m > 0 || h > 0 ? `${m}m  ` : ''}${s}.${ms.toString().padStart(3, '0')}s`;
   };
+
+  // Load from URL parameters on mount
+  useEffect(() => {
+    if (!initialLoadRef.current) {
+      const urlUserId = searchParams.get('userId');
+      const urlTrackId = searchParams.get('trackId');
+      const urlVerified = searchParams.get('verified');
+
+      if (urlUserId || urlTrackId) {
+        if (urlUserId) {
+          setUserInput(urlUserId);
+          setUserInputType('userid');
+        }
+        if (urlTrackId) {
+          setTrackId(urlTrackId);
+          // Check if it's a predefined track
+          const isPredefined = PREDEFINED_TRACKS.some(track => track.id === urlTrackId);
+          setIsOtherTrack(!isPredefined);
+        }
+        if (urlVerified !== null) {
+          setOnlyVerified(urlVerified !== 'false');
+        }
+        initialLoadRef.current = true;
+      }
+    }
+  }, [searchParams]);
 
   // Function to fetch leaderboard data for a specific page
   const fetchLeaderboardPage = useCallback(async (page = 1, targetTrackId: string, targetOnlyVerified: boolean, targetUserId: string | null = null) => {
@@ -382,6 +412,9 @@ const Leaderboard = () => {
       } else if (userInputType === 'usertoken') {
         try {
           targetUserId = await sha256(userInput);
+          // Update the input type and value to reflect the conversion
+          setUserInputType('userid');
+          setUserInput(targetUserId);
         } catch (e: any) {
           processingError = 'Failed to hash user token.';
           console.error('Hashing error:', e);
@@ -426,6 +459,13 @@ const Leaderboard = () => {
       if (targetUserId && trackId) {
           setUserId(targetUserId); // Set the resolved userId for display/pagination
 
+          // Update URL parameters (only user ID is shown in URL for privacy)
+          const newParams = new URLSearchParams();
+          newParams.set('userId', targetUserId);
+          newParams.set('trackId', trackId);
+          newParams.set('verified', String(onlyVerified));
+          setSearchParams(newParams, { replace: true });
+
           // Fetch user specific data first
           const fetchedUserData = await fetchAndSetUserData(targetUserId, trackId, onlyVerified);
 
@@ -444,7 +484,7 @@ const Leaderboard = () => {
           setLoading(false);
       }
 
-  }, [userInput, userInputType, trackId, onlyVerified, fetchAndSetUserData, fetchLeaderboardPage, PROXY_URL, API_BASE_URL, VERSION, userNotFoundOnTrack]); // Added userNotFoundOnTrack to dependencies
+  }, [userInput, userInputType, trackId, onlyVerified, fetchAndSetUserData, fetchLeaderboardPage, PROXY_URL, API_BASE_URL, VERSION, userNotFoundOnTrack, setSearchParams]); // Added userNotFoundOnTrack and setSearchParams to dependencies
 
 
   const handlePageChange = (newPage: number) => {
@@ -586,8 +626,10 @@ const Leaderboard = () => {
 
 
   return (
-    // Main container with background and consistent flex centering
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 flex flex-col justify-center items-center"> {/* Added flex-col for consistent centering */}
+    <>
+      <Navigation />
+      {/* Main container with background and consistent flex centering */}
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 pt-24 flex flex-col justify-center items-center"> {/* Added flex-col for consistent centering */}
       <AnimatePresence>
         {copiedText && <CopyPopup text={copiedText} />}
       </AnimatePresence>
@@ -1231,6 +1273,7 @@ const Leaderboard = () => {
          }`
        }</style>
      </div>
+    </>
    );
  };
 

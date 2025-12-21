@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import Home from "./components/Home";
+import HowToUse from "./components/HowToUse";
 import Leaderboard from "./components/Leaderboard";
 import User from "./components/User";
 import Utils from "./components/Utils";
@@ -23,19 +24,23 @@ const router = createHashRouter([
         // base "/polystats" and "/polystats/" paths.
         path: "/",
         children: [
-           
             {
-                // This route matches "/polystats/leaderboard"
+                // This route matches "/how-to-use"
+                path: "how-to-use",
+                Component: HowToUse
+            },
+            {
+                // This route matches "/leaderboard"
                 path: "leaderboard",
                 Component: Leaderboard
             },
             {
-                // This route matches "/polystats/user"
+                // This route matches "/user"
                 path: "user",
                 Component: User
             },
             {
-                // This route matches "/polystats/utils"
+                // This route matches "/utils"
                 path: "utils",
                 Component: Utils
             },

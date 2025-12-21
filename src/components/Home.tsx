@@ -1,29 +1,41 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button'; // Assuming you have a Button component
-import { Search, BarChart2, FileText, Users, Settings, ChevronDown } from 'lucide-react'; // Icons for features and new buttons
-// Import useNavigate from react-router-dom
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { BarChart2, Users, Settings, ExternalLink, Info, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react'; // Import useState for the tutorial state
+import Navigation from './Navigation';
 
-// Define simple animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.15,
+      delayChildren: 0.3
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
       type: "spring",
       stiffness: 100,
+      damping: 15
+    }
+  }
+};
+
+const cardHoverVariants = {
+  rest: { scale: 1 },
+  hover: {
+    scale: 1.05,
+    transition: {
+      type: "spring",
+      stiffness: 400,
       damping: 10
     }
   }
@@ -31,174 +43,181 @@ const itemVariants = {
 
 const Home = () => {
   const navigate = useNavigate();
-  const [showTutorial, setShowTutorial] = useState(false); // State to control tutorial visibility
 
-  const handleNavigateToLeaderboards = () => {
-    navigate('/leaderboard');
-  };
-
-  const handleNavigateToUser = () => {
-    navigate('/user');
-  };
-
-  const handleNavigateToUtils = () => {
-    navigate('/utils');
-  };
-
-  const toggleTutorial = () => {
-    setShowTutorial(!showTutorial);
-  };
+  const features = [
+    {
+      title: 'Leaderboards',
+      description: 'Explore global rankings across all tracks. View top players, compare times, and analyze performance trends.',
+      icon: BarChart2,
+      path: '/leaderboard',
+      gradient: 'from-purple-500 to-blue-500',
+      bgGradient: 'from-purple-500/10 to-blue-500/10'
+    },
+    {
+      title: 'User Statistics',
+      description: 'Access comprehensive player statistics including personal bests, averages, and performance analytics across all tracks.',
+      icon: Users,
+      path: '/user',
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGradient: 'from-blue-500/10 to-cyan-500/10'
+    },
+    {
+      title: 'Utilities',
+      description: 'Helpful tools to retrieve User IDs, convert tokens, and access other useful Polytrack utilities.',
+      icon: Settings,
+      path: '/utils',
+      gradient: 'from-cyan-500 to-green-500',
+      bgGradient: 'from-cyan-500/10 to-green-500/10'
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white flex flex-col items-center justify-center p-4 md:p-8">
-      <motion.div
-        className="max-w-4xl mx-auto text-center space-y-8"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <motion.h1
-          className="text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 drop-shadow-lg"
-          variants={itemVariants}
-        >
-          Welcome to Polystats
-        </motion.h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white">
+      <Navigation />
 
-        <motion.p
-          className="text-lg sm:text-xl text-gray-300 leading-relaxed"
-          variants={itemVariants}
-        >
-          Polystats provides a comprehensive platform for analyzing <a href="https://www.kodub.com/apps/polytrack" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Polytrack</a> data and user statistics.
-        </motion.p>
-
-        {/* How to Use Section */}
+      <div className="pt-24 pb-16 px-4 md:px-8">
         <motion.div
-          className="bg-black/20 border border-blue-500/30 rounded-lg p-6 space-y-4 shadow-md text-left"
-          variants={itemVariants}
+          className="max-w-6xl mx-auto space-y-12"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-blue-400">
-              <FileText size={24} />
-              <h3 className="text-xl font-semibold">How to Use Polystats</h3>
-            </div>
-            <motion.button
-              onClick={toggleTutorial}
-              className="flex items-center justify-center text-blue-300 hover:text-blue-400"
-              whileTap={{ scale: 0.9 }}
-              aria-label={showTutorial ? 'Hide tutorial' : 'Show tutorial'}
-            >
-              <motion.div
-                animate={{
-                  rotate: showTutorial ? 180 : 0,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
+          {/* Hero Section */}
+          <motion.div className="text-center space-y-6" variants={itemVariants}>
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-2xl">
+              Welcome to Polystats
+            </h1>
+            <p className="text-xl sm:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Your comprehensive analytics platform for{' '}
+              <a
+                href="https://www.kodub.com/apps/polytrack"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1 hover:underline"
               >
-                <ChevronDown size={24} />
-              </motion.div>
-            </motion.button>
-          </div>
-          <AnimatePresence>
-            {showTutorial && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="mt-4 space-y-2 text-gray-400 text-sm"
-              >
-                <p>Polystats primarily accepts two types of inputs: <strong>UserID</strong> and <strong>User Token</strong> (also known as User Key)</p>
-                <p><strong>Getting your User ID:</strong></p>
-                <ul className="list-disc list-inside">
-                  <li>To obtain your UserID, go to the "Utils" page on Polystats.</li>
-                  <li>On the "Utils" page, you can retrieve your UserID either from your User Token or from a Rank on a specific Track.</li>
-                </ul>
-                <p><strong>Getting your User Token:</strong></p>
-                <ul className="list-disc list-inside">
-                  <li>Your User Token can be found on the Polytrack website.</li>
-                  <li>Go to your "Profile," select a profile, and click "Export."</li>
-                  <li>A disclaimer will appear. Please note that Polystats does not save or share any user data.</li>
-                </ul>
-                <p>This site is still in beta and likely has many issues. For the time being please contact "roowus" on Discord for bugs and suggestions</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          {!showTutorial && (
-            <div className="mt-4 text-gray-400 text-sm overflow-hidden max-h-8 transition-max-h duration-300" style={{ maxHeight: showTutorial ? 'none' : '2rem' }}>
-              <p>Polystats primarily accepts two types of inputs: UserID and User Token (also known as User Key).  To obtain your UserID, go to the "Utils" page on Polystats...</p>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left mt-8"
-          variants={containerVariants} // Stagger children within this grid
-        >
-          {/* Leaderboard Box with Button */}
-          <motion.div className="bg-black/20 border border-purple-500/30 rounded-lg p-6 space-y-4 shadow-lg flex flex-col justify-between items-center text-center" variants={itemVariants}>
-            <div className="space-y-3">
-              <div className="flex items-center justify-center gap-3 text-purple-400">
-                <BarChart2 size={24} />
-                <h3 className="text-xl font-semibold">Leaderboards</h3>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Explore global rankings and track records.
-              </p>
-            </div>
-            <Button
-              onClick={handleNavigateToLeaderboards}
-              className="mt-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 text-md rounded-full transition-all duration-300 hover:from-purple-600 hover:to-blue-600 hover:scale-105 shadow-lg focus:outline-none focus:ring-0 flex items-center justify-center gap-2"
-            >
-              <BarChart2 size={20} />
-              View Leaderboards
-            </Button>
+                Polytrack
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              {' '}data and player statistics
+            </p>
           </motion.div>
 
-          {/* User Stats Box with Button */}
-          <motion.div className="bg-black/20 border border-purple-500/30 rounded-lg p-6 space-y-4 shadow-lg flex flex-col justify-between items-center text-center" variants={itemVariants}>
-            <div className="space-y-3">
-              <div className="flex items-center justify-center gap-3 text-purple-400">
-                <Users size={24} />
-                <h3 className="text-xl font-semibold">User Stats</h3>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Access detailed statistics for personal bests and averages.
-              </p>
-            </div>
-            <Button
-              onClick={handleNavigateToUser}
-              className="mt-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-6 py-3 text-md rounded-full transition-all duration-300 hover:from-blue-600 hover:to-cyan-600 hover:scale-105 shadow-lg focus:outline-none focus:ring-0 flex items-center justify-center gap-2"
+          {/* Quick Start Card */}
+          <motion.div variants={itemVariants}>
+            <Card
+              className="bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 border-2 border-blue-500/40 backdrop-blur-sm shadow-2xl cursor-pointer hover:shadow-blue-500/20 hover:scale-[1.02] transition-all"
+              onClick={() => navigate('/how-to-use')}
             >
-              <Users size={20} />
-              View User Stats
-            </Button>
+              <CardContent className="p-6 sm:p-8">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 shrink-0">
+                      <Info className="w-8 h-8" />
+                    </div>
+                    <div className="text-center sm:text-left">
+                      <h2 className="text-2xl font-bold text-white mb-2">
+                        New to Polystats?
+                      </h2>
+                      <p className="text-gray-300">
+                        Learn how to get your User ID and start exploring your stats
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg hover:scale-105 transition-all shrink-0 group"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/how-to-use');
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      View Guide
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
 
-          {/* Utilities Box with Button */}
-          <motion.div className="bg-black/20 border border-purple-500/30 rounded-lg p-6 space-y-4 shadow-lg flex flex-col justify-between items-center text-center" variants={itemVariants}>
-            <div className="space-y-3">
-              <div className="flex items-center justify-center gap-3 text-purple-400">
-                <Settings size={24} />
-                <h3 className="text-xl font-semibold">Utilities</h3>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Access helpful tools like User ID fetcher.
-              </p>
-            </div>
-            <Button
-              onClick={handleNavigateToUtils}
-              className="mt-4 bg-gradient-to-r from-cyan-500 to-green-500 text-white px-6 py-3 text-md rounded-full transition-all duration-300 hover:from-cyan-600 hover:to-green-600 hover:scale-105 shadow-lg focus:outline-none focus:ring-0 flex items-center justify-center gap-2"
-            >
-              <Settings size={20} />
-              Access Utilities
-            </Button>
+          {/* Features Grid */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            variants={containerVariants}
+          >
+            {features.map((feature) => {
+              const Icon = feature.icon;
+
+              return (
+                <motion.div
+                  key={feature.title}
+                  variants={itemVariants}
+                  whileHover="hover"
+                  initial="rest"
+                >
+                  <Card className={`h-full bg-gradient-to-br ${feature.bgGradient} border-2 border-purple-500/30 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-shadow cursor-pointer overflow-hidden group`}>
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <div className="flex-1 space-y-4">
+                        <motion.div
+                          className={`p-3 rounded-xl bg-gradient-to-r ${feature.gradient} w-fit`}
+                          variants={cardHoverVariants}
+                        >
+                          <Icon className="w-8 h-8 text-white" />
+                        </motion.div>
+
+                        <h3 className="text-2xl font-bold text-white">
+                          {feature.title}
+                        </h3>
+
+                        <p className="text-gray-300 leading-relaxed">
+                          {feature.description}
+                        </p>
+                      </div>
+
+                      <Button
+                        onClick={() => navigate(feature.path)}
+                        className={`mt-6 w-full bg-gradient-to-r ${feature.gradient} text-white px-6 py-3 rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black focus:ring-purple-500 group-hover:shadow-xl`}
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          Go to {feature.title}
+                          <motion.div
+                            initial={{ x: 0 }}
+                            whileHover={{ x: 5 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                          >
+                            →
+                          </motion.div>
+                        </span>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+          {/* Footer */}
+          <motion.div
+            className="text-center text-gray-400 space-y-2 pt-8"
+            variants={itemVariants}
+          >
+            <p className="text-sm">
+              Made with ❤️ for the Polytrack community
+            </p>
+            <p className="text-xs">
+              Play Polytrack at{' '}
+              <a
+                href="https://www.kodub.com/apps/polytrack"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 transition-colors hover:underline"
+              >
+                kodub.com
+              </a>
+            </p>
           </motion.div>
         </motion.div>
-
-      </motion.div>
+      </div>
     </div>
   );
 };

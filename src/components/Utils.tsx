@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, TriangleAlert, Info } from 'lucide-react';
 import { Tooltip } from 'react-tooltip';
+import Navigation from './Navigation';
 import {
   Select,
   SelectContent,
@@ -70,7 +71,7 @@ const PREDEFINED_TRACKS = [
 
 const API_BASE_URL_LEADERBOARD = 'https://vps.kodub.com/leaderboard';
 const API_BASE_URL_USER = 'https://vps.kodub.com/user';
-const PROXY_URL = 'https://hi-rewis.maxicode.workers.dev/?url=';
+const PROXY_URL = 'https://cp.rewis.workers.dev/?url=';
 const VERSION = '0.5.1';
 const AMOUNT = 10;
 
@@ -405,12 +406,14 @@ const Utils = () => {
   const isUserDataSectionVisible = userLoading || basicUserData || userError || resolvedUserId; // Include resolvedUserId here
 
   return (
-    <div className={cn(
-      "min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 flex flex-col justify-center items-center relative"
-    )}>
-      <AnimatePresence>
-        {copiedText && <CopyPopup text={copiedText} />}
-      </AnimatePresence>
+    <>
+      <Navigation />
+      <div className={cn(
+        "min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 pt-24 flex flex-col justify-center items-center relative"
+      )}>
+        <AnimatePresence>
+          {copiedText && <CopyPopup text={copiedText} />}
+        </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0, y: 50 }}
@@ -739,6 +742,7 @@ const Utils = () => {
         </div>
       )}
     </div> // Closing tag for the main div
+    </>
   );
 };
 
