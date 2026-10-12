@@ -107,7 +107,7 @@ const WrPage = () => {
                 {visible.length} tracks{missing > 0 ? ` · ${missing} with no verified time` : ''}
               </span>
             </div>
-            <LeaderboardTable rows={visible} showMedal emptyLabel="No records loaded." />
+            <LeaderboardTable rows={visible.map((r) => ({ ...r, subtitle: r.trackName }))} showMedal emptyLabel="No records loaded." />
           </Panel>
         )}
       </PageShell>

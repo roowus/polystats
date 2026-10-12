@@ -312,7 +312,7 @@ const Utils = () => {
     <>
       <Navigation />
       <div className={cn(
-        "min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8 pt-24 flex flex-col justify-center items-center relative"
+        "min-h-screen bg-[#0a0714] px-4 pt-24 pb-16 sm:px-6"
       )}>
         <AnimatePresence>
           {copiedText && <CopyPopup text={copiedText} />}
@@ -332,7 +332,7 @@ const Utils = () => {
           variants={titleVariants}
           initial="hidden"
           animate="visible"
-          className="text-4xl sm:text-5xl md:text-6xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400"
+          className="bg-gradient-to-r from-violet-300 via-purple-300 to-fuchsia-300 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl"
         >
           Utils
         </motion.h1>
@@ -342,7 +342,7 @@ const Utils = () => {
           initial="hidden"
           animate="visible"
         >
-          <Card className="bg-gray-800/50 text-white border-purple-500/30 shadow-lg">
+          <Card className="rounded-2xl border border-white/8 bg-white/[0.03] backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-blue-400 text-2xl">User ID Finder</CardTitle>
               <CardDescription className="text-gray-400">
@@ -360,7 +360,7 @@ const Utils = () => {
                     setError(null);
                     setUserError(null);
                   }} defaultValue={userInputType}>
-                    <SelectTrigger className="w-[180px] bg-black/20 text-white border-purple-500/30 focus:ring-purple-500/50">
+                    <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:ring-purple-500/50">
                       <SelectValue placeholder="Select Input Type" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 text-white border-purple-500/30">
@@ -373,7 +373,7 @@ const Utils = () => {
                     placeholder={inputPlaceholder}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    className="flex-1 bg-black/20 text-white border-purple-500/30 placeholder:text-gray-500 focus:ring-purple-500/50"
+                    className="flex-1 border-white/10 bg-black/30 placeholder:text-gray-500 focus:ring-purple-500/50"
                   />
                 </div>
               </motion.div>
@@ -419,7 +419,7 @@ const Utils = () => {
                             placeholder="Enter Track ID"
                             value={trackId}
                             onChange={(e) => setTrackId(e.target.value)}
-                            className="flex-1 bg-black/20 text-white border-purple-500/30 placeholder:text-gray-500 focus:ring-purple-500/50"
+                            className="flex-1 border-white/10 bg-black/30 placeholder:text-gray-500 focus:ring-purple-500/50"
                           />
                           <Button
                             variant="outline"
@@ -428,7 +428,7 @@ const Utils = () => {
                               setIsOtherTrack(false);
                               setTrackId('');
                             }}
-                            className="bg-gray-800/50 text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0"
+                            className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0"
                             title="Select from predefined tracks"
                           >
                             <List className="h-4 w-4" />
@@ -444,7 +444,7 @@ const Utils = () => {
                             setTrackId(value);
                           }
                         }} value={trackId || ''}>
-                          <SelectTrigger className="w-full bg-black/20 text-white border-purple-500/30 focus:ring-purple-500/50">
+                          <SelectTrigger className="w-full border-white/10 bg-black/30 focus:ring-purple-500/50">
                             <SelectValue placeholder="Select Track" />
                           </SelectTrigger>
                           <SelectContent className="bg-gray-800 text-white border-purple-500/30">

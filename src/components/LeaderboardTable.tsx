@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 export interface RowEntry {
   trackId?: string;
   nickname?: string;
+  subtitle?: string;
   frames: number;
   position?: number;
   verifiedState?: number;
@@ -77,6 +78,9 @@ export function LeaderboardTable({
                 <td className="px-4 py-2.5 tabular-nums text-zinc-400">{row.position ?? startIndex + i + 1}</td>
                 <td className="max-w-[240px] truncate px-4 py-2.5 font-medium">
                   {row.nickname ?? 'Unknown'}
+                  {row.subtitle && (
+                    <span className="block text-[11px] font-normal text-zinc-500">{row.subtitle}</span>
+                  )}
                   {row.countryCode && (
                     <span className="ml-2 text-[11px] uppercase text-zinc-500">{row.countryCode}</span>
                   )}

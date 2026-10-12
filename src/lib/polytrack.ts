@@ -204,7 +204,7 @@ export function normalizeEntry(raw: Record<string, unknown>): LeaderboardEntry {
  * matching the in-game time format.
  */
 export function formatTime(framesMs: number): string {
-  const n = Math.abs(framesMs);
+  const n = Math.floor(Math.abs(framesMs));
   const m = Math.floor(n / 60000);
   const s = Math.floor((n - 60000 * m) / 1000);
   const ms = n - 60000 * m - 1000 * s;
