@@ -211,6 +211,37 @@ export function formatTime(framesMs: number): string {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
 }
 
+
+export interface TrackOfTheWeek {
+  trackId: string;
+  name: string;
+  author: string;
+  environment: number;
+  endTime: string | null;
+}
+
+/** Fetch the current Track of the Week; null if unavailable. */
+export async function fetchTrackOfTheWeek(): Promise<TrackOfTheWeek | null> {
+  try {
+    const response = await fetch(buildTrackOfTheWeekUrl());
+    if (!response.ok) return null;
+    const raw = (await response.json()) as {
+      current?: { trackId?: string; name?: string; author?: string; environment?: number; endTime?: string } | null;
+    };
+    const c = raw.current;
+    if (!c?.trackId) return null;
+    return {
+      trackId: c.trackId,
+      name: c.name ?? 'Track of the Week',
+      author: c.author ?? '',
+      environment: c.environment ?? 0,
+      endTime: c.endTime ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Fetch helpers
 // ---------------------------------------------------------------------------

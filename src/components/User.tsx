@@ -13,6 +13,7 @@ import { OFFICIAL_TRACKS, COMMUNITY_TRACKS, ALL_TRACKS } from '@/lib/tracks';
 import {
   buildLeaderboardUrl,
   fetchUser,
+  fetchTrackOfTheWeek,
   normalizeEntry,
   sha256Hex,
   API_VERSION,
@@ -670,7 +671,8 @@ const UserViewer = () => {
             })) as LeaderboardEntryWithTrackName[]; // Cast the result to the correct type
 
 
-            const updatedOfficial = successfulEntries.filter(entry => OFFICIAL_TRACKS.some(ot => ot.id === entry.trackId));
+            const updatedOfficial = successfulEntries.filter(entry =>
+                OFFICIAL_TRACKS.some(ot => ot.id === entry.trackId) || entry.trackName.startsWith('Track of the Week:'));
             const updatedCommunity = successfulEntries.filter(entry => COMMUNITY_TRACKS.some(ct => ct.id === entry.trackId));
 
 
@@ -716,8 +718,19 @@ const UserViewer = () => {
       setCommunityBestWorst({});
       setOverallBestWorst({});
 
+      // Include the current Track of the Week in the scan (rotates weekly)
+      let tracksToScan = ALL_TRACKS;
+      try {
+          const totw = await fetchTrackOfTheWeek();
+          if (totw) {
+              tracksToScan = [{ name: `Track of the Week: ${totw.name}`, id: totw.trackId }, ...ALL_TRACKS];
+          }
+      } catch {
+          // TOTW is optional; scan the static catalog regardless
+      }
+
       // First, fetch all WR times concurrently
-      const wrFetchPromises = ALL_TRACKS.map(track =>
+      const wrFetchPromises = tracksToScan.map(track =>
            // Added a small delay before starting WR fetch for each track
            new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 10)).then(() => // Random delay between 10ms and 110ms
                fetchTrackWR(track.id)
@@ -755,7 +768,7 @@ const UserViewer = () => {
 
 
       // Then, fetch user entries concurrently, passing the fetched WR time
-      const userFetchPromises = ALL_TRACKS.map((track, index) =>
+      const userFetchPromises = tracksToScan.map((track, index) =>
           // Added a small delay before starting user entry fetch for each track
           new Promise(resolve => setTimeout(resolve, index * 20 + Math.random() * 50)).then(() => { // Added random delay
               const wrTimeForTrack = fetchedWrTimesMap.get(track.id) || null; // Get WR time from the map
@@ -1551,7 +1564,7 @@ const UserViewer = () => {
                   isVerifier: 'N/A'
              });
              // Set an error if the user wasn't found on any track
-             processingError = 'User ID not found on any official or community tracks.';
+             processingError = 'No leaderboard entries found for this User ID on any official or community track (including the current Track of the Week). This player exists but has not set a time yet — or the ID is wrong.';
         }
 
 
