@@ -575,7 +575,7 @@ const Leaderboard = () => {
     <>
       <Navigation />
       {/* Main container with background and consistent flex centering */}
-      <div className="min-h-screen bg-[#0a0714] p-4 md:p-8 pt-24 flex flex-col justify-center items-center"> {/* Added flex-col for consistent centering */}
+      <div className="min-h-screen bg-[#10102a] p-4 md:p-8 pt-24 flex flex-col justify-center items-center"> 
       <AnimatePresence>
         {copiedText && <CopyPopup text={copiedText} />}
       </AnimatePresence>

@@ -118,3 +118,56 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   PolyTrack-flavoured global theme
+   Palette lifted from the game client: navy chrome rgba(20,20,45,0.8),
+   #112052 accents, white text, ForcedSquare display font.
+--------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: 'ForcedSquare';
+  src: url('/forced_square.woff2') format('woff2');
+  font-display: swap;
+}
+
+:root {
+  --pt-navy: #14142d;        /* panel chrome */
+  --pt-navy-deep: #10102a;   /* page background */
+  --pt-blue: #112052;        /* accent panels */
+  --pt-border: rgba(255, 255, 255, 0.12);
+}
+
+html {
+  background: var(--pt-navy-deep);
+  /* stop the white rubber-band at the page edges */
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--pt-navy-deep);
+  color: #f4f4ff;
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Game-style display font for headings and the brand */
+.font-game {
+  font-family: 'ForcedSquare', 'Trebuchet MS', sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Shared motion language: one entrance, one hover, everywhere */
+@keyframes pt-fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pt-enter {
+  animation: pt-fade-up 0.3s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pt-enter { animation: none; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

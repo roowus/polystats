@@ -91,12 +91,12 @@ const UserPage = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && search()}
                 placeholder="User ID (64-char hex) or User Token"
-                className="flex-1 rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 font-mono text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/25"
+                className="flex-1 rounded-md border border-white/15 bg-[rgba(20,20,45,0.6)] px-4 py-2.5 font-mono text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/25"
               />
               <button
                 onClick={search}
                 disabled={!input.trim()}
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#112052] border border-white/20 hover:bg-[#1a2d6e] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
               >
                 <Search className="h-4 w-4" /> Search
               </button>

@@ -129,17 +129,17 @@ const ComparePage = () => {
               value={inputA}
               onChange={(e) => setInputA(e.target.value)}
               placeholder="Player A — User ID"
-              className="rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 font-mono text-sm outline-none focus:border-purple-500/60"
+              className="rounded-md border border-white/15 bg-[rgba(20,20,45,0.6)] px-4 py-2.5 font-mono text-sm outline-none focus:border-purple-500/60"
             />
             <input
               value={inputB}
               onChange={(e) => setInputB(e.target.value)}
               placeholder="Player B — User ID (optional)"
-              className="rounded-xl border border-white/10 bg-black/30 px-4 py-2.5 font-mono text-sm outline-none focus:border-purple-500/60"
+              className="rounded-md border border-white/15 bg-[rgba(20,20,45,0.6)] px-4 py-2.5 font-mono text-sm outline-none focus:border-purple-500/60"
             />
             <button
               onClick={start}
-              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#112052] border border-white/20 hover:bg-[#1a2d6e] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
             >
               <Search className="h-4 w-4" /> Compare
             </button>

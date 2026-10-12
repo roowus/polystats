@@ -19,17 +19,15 @@ const Navigation = () => {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-[#0a0714]/80 backdrop-blur-xl">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/8 bg-[#10102a]/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <button
           onClick={() => navigate('/')}
-          className="text-lg font-bold tracking-tight"
+          className="font-game text-base font-bold uppercase tracking-wider"
           aria-label="PolyStats home"
         >
-          <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-            Poly
-          </span>
-          <span className="text-zinc-100">Stats</span>
+          <span className="text-white">Poly</span>
+          <span className="text-[#7f9cf5]">Stats</span>
         </button>
 
         <div className="flex items-center gap-0.5 overflow-x-auto">
@@ -51,7 +49,7 @@ const Navigation = () => {
                 {active && (
                   <motion.span
                     layoutId="nav-active"
-                    className="absolute inset-0 -z-10 rounded-lg bg-purple-500/15 ring-1 ring-purple-500/30"
+                    className="absolute inset-0 -z-10 rounded-lg bg-[#112052] ring-1 ring-white/20"
                     transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                   />
                 )}

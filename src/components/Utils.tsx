@@ -312,7 +312,7 @@ const Utils = () => {
     <>
       <Navigation />
       <div className={cn(
-        "min-h-screen bg-[#0a0714] px-4 pt-24 pb-16 sm:px-6"
+        "min-h-screen bg-[#10102a] px-4 pt-24 pb-16 sm:px-6"
       )}>
         <AnimatePresence>
           {copiedText && <CopyPopup text={copiedText} />}
@@ -630,7 +630,7 @@ const Utils = () => {
           )}
         </AnimatePresence>
 
-      </motion.div> {/* Closing tag for the main content motion.div */}
+      </motion.div> 
 
       <Tooltip id="verifier-tip-true" place="top" />
       <Tooltip id="verifier-tip-false" place="top" />
@@ -644,7 +644,7 @@ const Utils = () => {
           <p>Play the game: <a href="https://www.kodub.com/apps/polytrack" className="text-purple-400 hover:underline">Polytrack</a></p>
         </div>
       )}
-    </div> // Closing tag for the main div
+    </div>
     </>
   );
 };

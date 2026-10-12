@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { createHashRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./components/Home";
 import HowToUse from "./components/HowToUse";
 import Leaderboard from "./components/Leaderboard";
@@ -11,7 +11,7 @@ import WrPage from "./pages/WrPage";
 import ComparePage from "./pages/ComparePage";
 import "./index.css";
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   { path: "/", Component: Home },
   { path: "/user/:userId?", Component: UserPage },
   { path: "/totw", Component: TotwPage },
