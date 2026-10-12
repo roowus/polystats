@@ -5,10 +5,6 @@ import { cn } from '@/lib/utils';
 export function PageShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className="min-h-screen bg-[#10102a] text-zinc-100">
-      {/* ambient navy glow, PolyTrack style */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-40 left-1/2 h-[420px] w-[760px] -translate-x-1/2 rounded-full bg-[#112052]/60 blur-[130px]" />
-      </div>
       <div className="relative pt-20">
         <main className={cn('pt-enter mx-auto w-full max-w-6xl px-4 py-10 sm:px-6', className)}>
           {children}
@@ -21,7 +17,7 @@ export function PageShell({ children, className }: { children: ReactNode; classN
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="mb-8">
-      <h1 className="font-game text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
+      <h1 className="font-game inline-block -skew-x-6 text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
         {title}
       </h1>
       {subtitle && <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">{subtitle}</p>}
@@ -32,10 +28,7 @@ export function PageTitle({ title, subtitle }: { title: string; subtitle?: strin
 export function Panel({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={cn(
-        'rounded-lg border border-white/10 bg-[rgba(20,20,45,0.6)] backdrop-blur-sm',
-        className
-      )}
+      className={cn('pt-panel rounded-none p-4', className)}
     >
       {children}
     </div>
@@ -54,7 +47,7 @@ export function StatTile({
   hint?: string;
 }) {
   return (
-    <Panel className="p-4">
+    <Panel>
       <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</p>
       <p className="mt-1 text-xl font-semibold tabular-nums" style={accent ? { color: accent } : undefined}>
         {value}

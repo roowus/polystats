@@ -14,6 +14,14 @@ import {
   type UserTrackEntry,
 } from '@/lib/stats';
 import { cn } from '@/lib/utils';
+import {
+  getRecentUsers,
+  getSavedUsers,
+  isSaved,
+  pushRecentUser,
+  toggleSavedUser,
+  type StoredUser,
+} from '@/lib/userStore';
 
 type SortKey = 'name' | 'time' | 'rank' | 'gap';
 
@@ -28,13 +36,25 @@ const UserPage = () => {
   const { userId: routeId } = useParams();
   const navigate = useNavigate();
   const { status, scan, reset } = useUserStats();
+  const userId = routeId; // hex id when present
 
   const [input, setInput] = useState('');
   const [copied, setCopied] = useState(false);
   const [sort, setSort] = useState<SortKey>('rank');
   const [filter, setFilter] = useState<'all' | 'official' | 'community' | 'totw'>('all');
+  const [recents, setRecents] = useState<StoredUser[]>([]);
+  const [saved, setSaved] = useState<StoredUser[]>([]);
+  const [savedFlag, setSavedFlag] = useState(false);
 
-  const userId = routeId; // hex id when present
+  const refreshLists = useCallback(() => {
+    setRecents(getRecentUsers());
+    setSaved(getSavedUsers());
+    if (userId) setSavedFlag(isSaved(userId));
+  }, [userId]);
+
+  useEffect(() => {
+    refreshLists();
+  }, [refreshLists]);
 
   useEffect(() => {
     if (userId && /^[a-f0-9]{64}$/i.test(userId)) {
@@ -91,7 +111,7 @@ const UserPage = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && search()}
                 placeholder="User ID (64-char hex) or User Token"
-                className="flex-1 rounded-md border border-white/15 bg-[rgba(20,20,45,0.6)] px-4 py-2.5 font-mono text-sm text-zinc-100 placeholder:text-zinc-600 outline-none transition focus:border-purple-500/60 focus:ring-2 focus:ring-purple-500/25"
+                className="pt-input flex-1 px-4 py-2.5 font-mono text-sm outline-none transition"
               />
               <button
                 onClick={search}
@@ -101,9 +121,12 @@ const UserPage = () => {
                 <Search className="h-4 w-4" /> Search
               </button>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              Try <button className="font-mono text-purple-300 underline-offset-2 hover:underline" onClick={() => setInput('645dae10402a92900b304db46440388833558a89a36647c864c872af60d8d518')}>645dae…d518</button> (current Summer 1 WR holder)
-            </p>
+            <UserChips label="Saved" users={saved} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
+              <span className="text-zinc-600">No saved players yet — hit the ★ on a player page.</span>
+            } />
+            <UserChips label="Recent" users={recents} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
+              <span className="text-zinc-600">Your recent lookups will appear here.</span>
+            } />
           </Panel>
         )}
 
@@ -146,6 +169,10 @@ const UserPage = () => {
         {status.phase === 'error' && <ErrorNote>{status.message}</ErrorNote>}
 
         {status.phase === 'done' && (
+          <RecentRecorder userId={userId!} nickname={status.nickname} onChange={refreshLists} />
+        )}
+
+        {status.phase === 'done' && (
           <>
             {/* Player header */}
             <Panel className="mb-6 flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
@@ -153,7 +180,20 @@ const UserPage = () => {
                 {(nickname ?? '?').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="truncate text-xl font-bold">{nickname ?? 'Unknown player'}</h2>
+                <h2 className="flex items-center gap-2 truncate text-xl font-bold">
+                  {nickname ?? 'Unknown player'}
+                  <button
+                    onClick={() => {
+                      const nowSaved = toggleSavedUser(userId!, nickname ?? undefined);
+                      setSavedFlag(nowSaved);
+                      refreshLists();
+                    }}
+                    className={cn('text-lg transition', savedFlag ? 'text-amber-300' : 'text-zinc-600 hover:text-zinc-300')}
+                    title={savedFlag ? 'Remove from saved players' : 'Save player'}
+                  >
+                    {savedFlag ? '★' : '☆'}
+                  </button>
+                </h2>
                 <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                   <span className="max-w-[280px] truncate font-mono sm:max-w-[420px]">{userId}</span>
                   <button onClick={copy} className="text-zinc-400 hover:text-purple-300" title="Copy User ID">
@@ -294,3 +334,50 @@ const UserPage = () => {
 };
 
 export default UserPage;
+
+/** Writes a finished scan into local recents; renders nothing. */
+function RecentRecorder({ userId, nickname, onChange }: { userId: string; nickname: string | null; onChange: () => void }) {
+  useEffect(() => {
+    pushRecentUser(userId, nickname ?? undefined);
+    onChange();
+    // run once per finished scan
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, nickname]);
+  return null;
+}
+
+function UserChips({
+  label,
+  users,
+  onPick,
+  onEmpty,
+}: {
+  label: string;
+  users: StoredUser[];
+  onPick: (id: string) => void;
+  onEmpty: React.ReactNode;
+}) {
+  return (
+    <div className="mt-3">
+      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</p>
+      {users.length === 0 ? (
+        onEmpty
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {users.map((u) => (
+            <button
+              key={u.id}
+              onClick={() => onPick(u.id)}
+              className="pt-skew bg-[#112052] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1a2d6e] hover:ring-white/50"
+              title={u.id}
+            >
+              <span className="flex items-center gap-1.5">
+                {u.nickname ?? `${u.id.slice(0, 8)}…`}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

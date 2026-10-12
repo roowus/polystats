@@ -60,7 +60,9 @@ describe('UserPage — search screen', () => {
     renderAt('/user');
     expect(screen.getByPlaceholderText(/User ID/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /search/i })).toBeDisabled();
-    expect(screen.getByText(/current Summer 1 WR holder/i)).toBeInTheDocument();
+    expect(screen.getByText('Saved')).toBeInTheDocument();
+    expect(screen.getByText('Recent')).toBeInTheDocument();
+    expect(screen.getByText(/recent lookups will appear here/i)).toBeInTheDocument();
   });
 
   it('scans when a valid :userId is in the route', () => {

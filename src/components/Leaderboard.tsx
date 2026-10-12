@@ -608,7 +608,7 @@ const Leaderboard = () => {
            animate="visible"
            layout // Enable layout animations for smooth size changes
         >
-          <Card className="rounded-2xl border border-white/8 bg-white/[0.03] shadow-lg"> {/* Added styling classes */}
+          <Card className="pt-panel shadow-lg"> {/* Added styling classes */}
               <CardHeader>
                   <CardTitle className="text-blue-400 text-2xl">Leaderboard Search</CardTitle> {/* Updated Title */}
                   <CardDescription className="text-gray-400">
@@ -632,7 +632,7 @@ const Leaderboard = () => {
                               setGoToPosition(''); // Clear go to position
                               setUserNotFoundOnTrack(false); // Reset user not found state
                           }} defaultValue={userInputType}>
-                              <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:ring-purple-500/50">
+                              <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:border-white/40">
                                   <SelectValue placeholder="Select Input Type" />
                               </SelectTrigger>
                               <SelectContent className="border border-white/10 bg-[#171022] text-zinc-100">
@@ -648,7 +648,7 @@ const Leaderboard = () => {
                             placeholder={inputPlaceholder}
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
-                            className="flex-1 border-white/10 bg-black/30 placeholder:text-gray-500 focus:ring-purple-500/50"
+                            className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
                           />
                       </div>
                   </motion.div>
@@ -675,7 +675,7 @@ const Leaderboard = () => {
                                           placeholder="Enter Track ID"
                                           value={trackId}
                                           onChange={(e) => setTrackId(e.target.value)}
-                                          className="flex-1 border-white/10 bg-black/30 placeholder:text-gray-500 focus:ring-purple-500/50"
+                                          className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
                                       />
                                       <Button
                                           variant="outline"
@@ -684,7 +684,7 @@ const Leaderboard = () => {
                                               setIsOtherTrack(false);
                                               setTrackId('');
                                           }}
-                                          className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0"
+                                          className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0"
                                           title="Select from predefined tracks"
                                       >
                                           <List className="h-4 w-4" />
@@ -700,7 +700,7 @@ const Leaderboard = () => {
                                           setTrackId(value);
                                       }
                                   }} value={trackId || ''}>
-                                      <SelectTrigger className="flex-1 border-white/10 bg-black/30 focus:ring-purple-500/50">
+                                      <SelectTrigger className="flex-1 border-white/10 bg-black/30 focus:border-white/40">
                                           <SelectValue placeholder="Select Track" />
                                       </SelectTrigger>
                                       <SelectContent className="border border-white/10 bg-[#171022] text-zinc-100">
@@ -875,11 +875,11 @@ const Leaderboard = () => {
                    {(() => {
                        const medal = getMedal(userData.percent as number | undefined);
                        const posMedal = getPosMedal(userData.rank as number | undefined);
-                       let userStatsBoxStyle = 'bg-black/20 border-purple-500/30';
+                       let userStatsBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-white/15';
                        let userStatsDataTextStyle = 'text-blue-400';
 
                        if (posMedal && posMedal.color === 'black') { // WR
-                           userStatsBoxStyle = 'bg-black/20 border-2 border-black/50';
+                           userStatsBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-2 border-black/50';
                            userStatsDataTextStyle = 'text-gray-100';
                        } else if (posMedal && posMedal.color === 'purple') { // Podium (Updated condition to 'purple')
                            userStatsBoxStyle = 'bg-purple-500/20 border-2 border-purple-500/50';
@@ -907,7 +907,7 @@ const Leaderboard = () => {
                                    userStatsDataTextStyle = 'text-orange-300'; // Still using orange-300 for text
                                    break;
                                default: // Fallback
-                                   userStatsBoxStyle = 'bg-black/20 border-purple-500/30';
+                                   userStatsBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-white/15';
                                    userStatsDataTextStyle = 'text-blue-400';
                            }
                        }
@@ -1014,13 +1014,13 @@ const Leaderboard = () => {
 
                                // Determine text color and box style based on whether it's the user's entry
                                const isCurrentUserEntry = entry.userId === userId;
-                               let entryBoxStyle = 'rounded-2xl border border-white/8 bg-white/[0.03] border border-gray-700';
+                               let entryBoxStyle = 'pt-panel border border-gray-700';
                                let entryDataTextStyle = 'text-blue-300'; // Default color for non-user entry data
 
                                if (isCurrentUserEntry) {
                                  // User's entry - apply specific styles based on rank/medal
                                  if (posMedal && posMedal.color === 'black') { // WR
-                                     entryBoxStyle = 'bg-black/20 border-2 border-black/50';
+                                     entryBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-2 border-black/50';
                                      entryDataTextStyle = 'text-gray-100'; // White/gray for contrast
                                  } else if (posMedal && posMedal.color === 'purple') { // Podium (Updated condition to 'purple')
                                      entryBoxStyle = 'bg-purple-500/20 border-2 border-purple-500/50';
@@ -1057,7 +1057,7 @@ const Leaderboard = () => {
                                  }
                                } else {
                                  // Not the user's entry - apply default styles
-                                 entryBoxStyle = 'rounded-2xl border border-white/8 bg-white/[0.03] border border-gray-700';
+                                 entryBoxStyle = 'pt-panel border border-gray-700';
                                  entryDataTextStyle = 'text-blue-300'; // User ID and other data text color
                                }
 
@@ -1156,20 +1156,20 @@ const Leaderboard = () => {
                          </div>
                          {/* Pagination */}
                          <div className="flex items-center justify-center gap-2 mt-4">
-                           <Button variant="outline" size="icon" onClick={() => handlePageChange(1)} disabled={currentPage === 1 || loading} className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                           <Button variant="outline" size="icon" onClick={() => handlePageChange(1)} disabled={currentPage === 1 || loading} className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
                              <ChevronsLeft className="h-4 w-4" />
                            </Button>
-                           <Button variant="outline" size="icon" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1 || loading} className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                           <Button variant="outline" size="icon" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1 || loading} className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
                              <ChevronLeft className="h-4 w-4" />
                            </Button>
                            <span className="text-gray-300">Page {currentPage} of {totalPagesRef.current}</span>
-                           <Button variant="outline" size="icon" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPagesRef.current || loading} className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                           <Button variant="outline" size="icon" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPagesRef.current || loading} className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
                              <ChevronRight className="h-4 w-4" />
                            </Button>
-                            <Button variant="outline" size="icon" onClick={() => handlePageChange(Math.min(currentPage + 10, totalPagesRef.current))} disabled={currentPage + 10 > totalPagesRef.current || loading} className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <Button variant="outline" size="icon" onClick={() => handlePageChange(Math.min(currentPage + 10, totalPagesRef.current))} disabled={currentPage + 10 > totalPagesRef.current || loading} className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
                                +{10}
                            </Button>
-                           <Button variant="outline" size="icon" onClick={() => handlePageChange(totalPagesRef.current)} disabled={currentPage === totalPagesRef.current || loading} className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
+                           <Button variant="outline" size="icon" onClick={() => handlePageChange(totalPagesRef.current)} disabled={currentPage === totalPagesRef.current || loading} className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
                              <ChevronsRight className="h-4 w-4" />
                            </Button>
                            {userPage && (
@@ -1183,7 +1183,7 @@ const Leaderboard = () => {
                                placeholder="Go to pos."
                                value={goToPosition}
                                onChange={(e) => setGoToPosition(e.target.value)}
-                               className="w-24 rounded-2xl border border-white/8 bg-white/[0.03] text-white border-gray-700 placeholder:text-gray-500 focus:ring-purple-500/50"
+                               className="w-24 pt-panel text-white border-gray-700 placeholder:text-zinc-500 focus:border-white/40"
                                onKeyDown={(e) => { if (e.key === 'Enter') handleGoToPage(); }}
                              />
                              <Button onClick={handleGoToPage} disabled={loading} className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">

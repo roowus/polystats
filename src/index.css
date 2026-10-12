@@ -43,20 +43,20 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #10102a;
+  --foreground: #f4f4ff;
+  --card: #14142d;
+  --card-foreground: #f4f4ff;
+  --popover: #14142d;
+  --popover-foreground: #f4f4ff;
+  --primary: #112052;
+  --primary-foreground: #f4f4ff;
+  --secondary: #1c1c3d;
+  --secondary-foreground: #f4f4ff;
+  --muted: #1c1c3d;
+  --muted-foreground: #9a9ab8;
+  --accent: #1c1c3d;
+  --accent-foreground: #f4f4ff;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -170,4 +170,65 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pt-enter { animation: none; }
   * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   PolyTrack shape language: flat navy panels, parallelogram chrome
+--------------------------------------------------------------------------- */
+
+/* Flat panel — no blur, no shadows, exact game chrome color */
+.pt-panel {
+  background: rgba(20, 20, 45, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Parallelogram: skew the box, counter-skew the content */
+.pt-skew {
+  transform: skewX(-8deg);
+}
+.pt-skew > * {
+  transform: skewX(8deg);
+}
+
+/* Primary action button, game style */
+.pt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #112052;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.6rem 1.4rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.pt-btn:hover:not(:disabled) {
+  background: #1a2d6e;
+  border-color: #fff;
+}
+.pt-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Flat force-square inputs */
+.pt-input {
+  background: rgba(16, 16, 42, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  color: #f4f4ff;
+}
+.pt-input::placeholder {
+  color: #6f6f92;
+}
+.pt-input:focus {
+  border-color: #bed8f7;
+  outline: none;
+}
+
+/* force native dropdown options dark too */
+select, option {
+  background: #14142d;
+  color: #f4f4ff;
 }

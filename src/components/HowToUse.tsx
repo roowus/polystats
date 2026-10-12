@@ -141,7 +141,7 @@ const HowToUse = () => {
 
                 {/* User Token Section */}
                 <motion.div
-                  className="space-y-4 p-6 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30"
+                  className="space-y-4 p-6 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/15"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 }}

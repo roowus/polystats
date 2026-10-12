@@ -342,7 +342,7 @@ const Utils = () => {
           initial="hidden"
           animate="visible"
         >
-          <Card className="rounded-2xl border border-white/8 bg-white/[0.03] backdrop-blur-sm">
+          <Card className="pt-panel">
             <CardHeader>
               <CardTitle className="text-blue-400 text-2xl">User ID Finder</CardTitle>
               <CardDescription className="text-gray-400">
@@ -360,10 +360,10 @@ const Utils = () => {
                     setError(null);
                     setUserError(null);
                   }} defaultValue={userInputType}>
-                    <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:ring-purple-500/50">
+                    <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:border-white/40">
                       <SelectValue placeholder="Select Input Type" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-800 text-white border-purple-500/30">
+                    <SelectContent className="bg-gray-800 text-white border-white/15">
                       <SelectItem value="usertoken">User Token</SelectItem>
                       <SelectItem value="rank">Rank and Track ID</SelectItem>
                     </SelectContent>
@@ -373,7 +373,7 @@ const Utils = () => {
                     placeholder={inputPlaceholder}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    className="flex-1 border-white/10 bg-black/30 placeholder:text-gray-500 focus:ring-purple-500/50"
+                    className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
                   />
                 </div>
               </motion.div>
@@ -419,7 +419,7 @@ const Utils = () => {
                             placeholder="Enter Track ID"
                             value={trackId}
                             onChange={(e) => setTrackId(e.target.value)}
-                            className="flex-1 border-white/10 bg-black/30 placeholder:text-gray-500 focus:ring-purple-500/50"
+                            className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
                           />
                           <Button
                             variant="outline"
@@ -428,7 +428,7 @@ const Utils = () => {
                               setIsOtherTrack(false);
                               setTrackId('');
                             }}
-                            className="rounded-2xl border border-white/8 bg-white/[0.03] text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0"
+                            className="pt-panel text-white hover:bg-gray-700/50 focus:outline-none focus:ring-0"
                             title="Select from predefined tracks"
                           >
                             <List className="h-4 w-4" />
@@ -444,10 +444,10 @@ const Utils = () => {
                             setTrackId(value);
                           }
                         }} value={trackId || ''}>
-                          <SelectTrigger className="w-full border-white/10 bg-black/30 focus:ring-purple-500/50">
+                          <SelectTrigger className="w-full border-white/10 bg-black/30 focus:border-white/40">
                             <SelectValue placeholder="Select Track" />
                           </SelectTrigger>
-                          <SelectContent className="bg-gray-800 text-white border-purple-500/30">
+                          <SelectContent className="bg-gray-800 text-white border-white/15">
                             {PREDEFINED_TRACKS.map((track) => (
                               <SelectItem key={track.id} value={track.id}>
                                 {track.name}
@@ -517,7 +517,7 @@ const Utils = () => {
                     {/* Always display User Information header and User ID if resolvedUserId exists */}
                     {resolvedUserId && (
                       <div className="space-y-2">
-                         <h3 className="text-purple-400 text-xl font-semibold flex items-center gap-2 border-b border-purple-500/30 pb-2">
+                         <h3 className="text-purple-400 text-xl font-semibold flex items-center gap-2 border-b border-white/15 pb-2">
                           <User className="w-5 h-5" /> User Information
                         </h3>
                         <p className="text-gray-300 flex items-center">

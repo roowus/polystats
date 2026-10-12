@@ -75,7 +75,7 @@ const TotwPage = () => {
 
         {totw && (
           <>
-            <div className="relative mb-6 overflow-hidden rounded-2xl border border-white/8">
+            <div className="relative mb-6 pt-panel overflow-hidden">
               {totw.coverUrl && (
                 <img
                   src={totw.coverUrl}
