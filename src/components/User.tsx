@@ -3,11 +3,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Fixed import syntax
-import { Search, Trophy, User, Circle, CheckCircle, Copy, AlertCircle, TriangleAlert, ArrowUpDown, RotateCw } from 'lucide-react';
+import { Search, Circle, CheckCircle, Copy, AlertCircle, TriangleAlert, ArrowUpDown, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip } from 'react-tooltip';
 import Navigation from './Navigation';
+// Track catalog and API client (v6 API) — see src/lib
+import { OFFICIAL_TRACKS, COMMUNITY_TRACKS, ALL_TRACKS } from '@/lib/tracks';
+import {
+  buildLeaderboardUrl,
+  fetchUser,
+  normalizeEntry,
+  sha256Hex,
+  API_VERSION,
+} from '@/lib/polytrack';
 
 import {
   Select,
@@ -81,82 +90,11 @@ interface TrackWithUserData {
 }
 
 
-// Define the predefined tracks - ENSURE THESE ARE UNCHANGED
-const OFFICIAL_TRACKS = [
-    { name: 'Summer 1', id: 'ef949bfd7492a8b329c30fac19713d9ea96256fb8bf1cdb65cb3727c0205b862' },
-    { name: 'Summer 2', id: 'cf1ceacd0e3239a44afe8e4c291bd655a80ffffe559964e9a5bc5c3e21c4cafc' },
-    { name: 'Summer 3', id: '456a0ac6f849ecf5d4020ade78f4e2e44f3eee3cd21b9452ff8a93e0624dbd2f' },
-    { name: 'Summer 4', id: '668c209f6055c04b9f28e37127884039cb1f8710360bfe5b578955295151979f' },
-    { name: 'Summer 5', id: 'b31551b1fc3cfdf3f76043b82d0c88d92451ae5246ce3db65bc3979e4912d01f' },
-    { name: 'Summer 6', id: 'b6657496f1f25ab8b1599c4cc7d93b2cecebef9bd018032993f9c2f92a9f2851' },
-    { name: 'Summer 7', id: 'f3d90e905743a30d4a01ff302be3ae0be38ee055cc1a3b99257752e505765c04' },
-    { name: 'Winter 1', id: '94de41605004b67581f7a2a4f68c84d352b5b723a604ccb38e511f5eac9d22a9' },
-    { name: 'Winter 2', id: 'f84e5f767fc5d53ae0d3ddf95dfb4a9197f361283cdb049673077b0208d12fe8' },
-    { name: 'Winter 3', id: '7a0e04bfe09e1bead36ddd2f7e61d32fd6c1e55e907d60edc6ccd3e17532e1f7' },
-    { name: 'Winter 4', id: '39b2d610aeed5d193f3346291fc4000ef23030e5817f471522f167b9e74ed1f5' },
-    { name: 'Desert 1', id: '56a5e13736d871f92863cb60ad690e78547f459520e61285fde05bd02bd2d349' },
-    { name: 'Desert 2', id: '7425633d9f77c41bbf7486fdd2b3a2ce04aa26bacc870a032929b4c7e33a8cf3' },
-    { name: 'Desert 3', id: 'b84107a25d159c6544092903da12b61573971da5a6b3c917e55be30486ccaddd' },
-    { name: 'Desert 4', id: '29b6343e99552c610e24a5bfefc8a240800ed151600c0dc8f5c0f3dce334d322' },
-];
-
-const COMMUNITY_TRACKS = [
-{name: '⚙Cogware⚙', id: '0b1a69362fa1d4f9efcd5f7624455b6130a0191c17f337d2264e712d19df8df8'},
-{name: 'Land of the Rising Sun', id: 'd8d37c36fe97d08066c88ceb158ad0fdf9194e6509654ad8d0f8dc4d85f80d3f'},
-{name: 'Launch Control', id: 'b8ca71d987425c3566cfea3780d8139cdb61690eb0de043e057dce91efd07576'},
-{name: 'Fractured Shore', id: '69feab90ea0ce9e227444de3af0d64c4b770ddbdc2077fd3a9cf50893f5da27b'},
-{ name: 'Asgaurdia', id: 'b7b253d6b0cc2ce8e6d5fe51cd3365bde09ad5de4e12256128e9b6493969085c' },
-{ name: 'Flying Dreams', id: 'da1ef837b8412d32269e305d4031c47b59da08fca2b856d94890eaf58ec29b71' },
-{ name: 'Ghost City', id: '7537816191920c597d6a1f0ab03b50c4ae3d74b6e0f6eeb8ddb85653762c7a5d' },
-{ name: 'MOS ESPA', id: 'fa1a61bb25e8a5a68f2b30fffe9ca3bdd448f4a5c249f8b2403b4f5323b6de45' },
-{ name: 'NatsujŌ', id: 'a054a6277181a7f0a46588f5cccd1b794f537e5efd09a173a9ca7e11d511f304' },
-{ name: '90xRESET', id: '4d0f964b159d51d6906478bbb87e1edad21b0f1eb2972af947be34f2d8c49ae9' },
-{ name: 'concrete jungle', id: '0544f97453f7b0e2a310dfb0dcd331b4060ae2e9cb14ac27dc5367183dab0513' },
-{ name: 'lu muvimento', id: '2ccd83e9419b6071ad9272b73e549e427b1a0f62d5305015839ae1e08fb86ce6' },
-{ name: 'Re : Akina', id: 'f112ab979138b9916221cbf46329fa7377a745bdd18cd3d00b4ffd6a8a68f113' },
-{ name: "Zealot", id: 'f95345240cc5eaae1623be62a4f28116e8d87a37e22e9052b15b2dcf2a53a314' },
-{ name: "Frozen In Time", id: '0b338897b42122439bf95e7e412b7ed4cda6b28d03641971d805840edee93462' },
-{ name: "WinterFell", id: 'fbd8918a06e28381702bcbb588a740f8e0f1033636978c540a95fffc5e927c52' },
-{ name: "Hyperion's Sanctuary", id: 'b41ac84904b60d00efa5ab8bb60f42c929c16d8ebbfe2f77126891fcddab9c1c' },
-{ name: 'Opal Palace - Repolished', id: '89f1a70d0e6be8297ec340a378b890f3fed7d0e20e3ef15b5d32ef4ef7ff1701' },
-{ name: 'Snow Park', id: '2978b99f058cb3a2ce6f97c435c803b8d638400532d7c79028b2ec3d5e093882' },
-{ name: 'Winter Hollow', id: '2046c377ac7ec5326b263c46587f30b66ba856257ddc317a866e3e7f66a73929' },
-{ name: "Shrouded Oasis", id: 'fb1e0d0e182c546be3d026ce3cf629b0eba1de00577872ef334957953de358d4' },
-{ name: "Midas Metropolis", id: 'f958fadbb2cbecd38cbdf962abcf9e32384db258657041942a9dd0215f5c85cf' },
-{ name: "Starry Tropics", id: '9eef9cc0e65b4c1c14bb865912be432aec09d1c2ff47aab40be5b7aba0ffcba3' },
-{ name: 'Anubis', id: 'b453c3afb4b5872213aee43249d6db38578e8e2ded4a96f840617c9c6e63a6b6' },
-{ name: 'Joenail Jones', id: '23a46c3d4978a72be5f4a7fea236797aa31b52e577044ef4c6faa822ecc5cdc0' },
-{ name: 'Arabica', id: '1aadcef252749318227d5cd4ce61a4a71526087857104fd57697b6fc63102e8a' },
-{ name: 'Clay temples', id: '773eb0b02b97a72f3e482738cda7a5292294800497e16d9366e4f4c88a6f4e2d' },
-{ name: 'DESERT STALLION', id: '932da81567f2b223fa1a52d88d6db52016600c5b9df02218f06c9eb832ecddeb' },
-{ name: 'Las Calles', id: '97da746d9b3ddd5a861fa8da7fcb6f6402ffa21f8f5cf61029d7a947bad76290' },
-{ name: 'Last Remnant', id: '19335bb082dfde2af4f7e73e812cd54cee0039a9eadf3793efee3ae3884ce423' },
-{ name: 'Malformations', id: 'bc7d29657a0eb2d0abb3b3639edcf4ade61705132c7ca1b56719a7a110096afd' },
-{ name: 'Sandline Ultimatum', id: 'faed71cf26ba4d183795ecc93e3d1b39e191e51d664272b512692b0f4f323ff5' },
-];
-
-
-
-
-const ALL_TRACKS = [...OFFICIAL_TRACKS, ...COMMUNITY_TRACKS]; // Combined list for searching basic data
-
-const API_BASE_URL = 'https://vps.kodub.com/leaderboard';
-const USER_API_BASE_URL = 'https://vps.kodub.com/user'; // User specific API
-const PROXY_URL = 'https://cp.rewis.workers.dev/?url='; // Using the provided proxy
-const VERSION = '0.5.1'; // Version number
 const MAX_RETRY_ATTEMPTS = 5; // Maximum number of auto-retries per track
 const AUTO_RETRY_INTERVAL = 7000; // Interval to check for failed tracks (7 seconds)
 
 
 // Function to calculate SHA-256 hash
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
-}
-
 // Helper to format frames into time string (frames are in milliseconds)
 const formatTime = (frames: number | undefined | null) => { // Added null to type
     if (typeof frames !== 'number' || isNaN(frames) || frames < 0) return 'N/A';
@@ -292,7 +230,7 @@ const UserViewer = () => {
       try {
           // Fetch the first entry (skip=0, amount=1) which should be the WR
           // Assuming WRs are always verified, use onlyVerified=true
-          const wrFetchUrl = `${PROXY_URL}${encodeURIComponent(API_BASE_URL + `?version=${VERSION}&trackId=${trackId}&skip=0&amount=1&onlyVerified=true`)}`;
+          const wrFetchUrl = buildLeaderboardUrl({ trackId, skip: 0, amount: 1, onlyVerified: true });
           const wrResponse = await fetch(wrFetchUrl);
 
           if (!wrResponse.ok) {
@@ -305,7 +243,7 @@ const UserViewer = () => {
               throw new Error(`HTTP error fetching WR! status: ${wrResponse.status}`);
           }
 
-          const wrData: { entries: LeaderboardEntry[] } = await wrResponse.json();
+          const wrData: { entries: LeaderboardEntry[] } = await wrResponse.json().then((d) => ({ entries: (d.entries ?? []).map((e: Record<string, unknown>) => normalizeEntry(e) as LeaderboardEntry) }));
 
           if (wrData.entries && wrData.entries.length > 0) {
               return wrData.entries[0].frames; // Return the frames of the first entry (the WR)
@@ -321,7 +259,7 @@ const UserViewer = () => {
           console.error(`Failed to fetch WR for track ${trackId}:`, errorMessage, err);
           return null; // Return null on error
       }
-  }, [PROXY_URL, API_BASE_URL, VERSION]);
+  }, [buildLeaderboardUrl]);
 
 
   // Function to fetch user's entry for a specific track with retry logic
@@ -330,7 +268,7 @@ const UserViewer = () => {
       for (let i = 0; i <= retries; i++) {
           try {
               // Step 1: Fetch user entry using userTokenHash to get position and total count
-              const firstCallUrl = `${PROXY_URL}${encodeURIComponent(API_BASE_URL + `?version=${VERSION}&trackId=${trackId}&skip=0&amount=1&onlyVerified=false&userTokenHash=${userId}`)}`;
+              const firstCallUrl = buildLeaderboardUrl({ trackId, skip: 0, amount: 1, onlyVerified: false, userTokenHash: userId });
               const firstResponse = await fetch(firstCallUrl);
 
               if (!firstResponse.ok) {
@@ -341,7 +279,7 @@ const UserViewer = () => {
                   throw new Error(`HTTP error (first call)! status: ${firstResponse.status}`);
               }
 
-              const firstData: { total: number; userEntry: LeaderboardEntry | null } = await firstResponse.json();
+              const firstData: { total: number; userEntry: LeaderboardEntry | null } = await firstResponse.json().then((d: { total?: number; userEntry?: Record<string, unknown> | null }) => ({ total: d.total ?? 0, userEntry: d.userEntry ? (normalizeEntry(d.userEntry) as LeaderboardEntry) : null }));
 
               if (!firstData.userEntry || firstData.userEntry.position === undefined) {
                    console.warn(`User entry or position not found in first call response for track ${trackId}.`);
@@ -369,7 +307,7 @@ const UserViewer = () => {
 
 
               // Step 2: Fetch the user's entry from the full leaderboard list to get verifiedState and full details
-              const secondCallUrl = `${PROXY_URL}${encodeURIComponent(API_BASE_URL + `?version=${VERSION}&trackId=${trackId}&skip=${skipAmount}&amount=1&onlyVerified=false`)}`; // Fetch the specific entry by position
+              const secondCallUrl = buildLeaderboardUrl({ trackId, skip: skipAmount, amount: 1, onlyVerified: false }); // Fetch the specific entry by position
               const secondResponse = await fetch(secondCallUrl);
 
               if (!secondResponse.ok) {
@@ -390,7 +328,7 @@ const UserViewer = () => {
                   throw new Error(`HTTP error (second call)! status: ${secondResponse.status}`);
               }
 
-              const secondData: { entries: LeaderboardEntry[] } = await secondResponse.json();
+              const secondData: { entries: LeaderboardEntry[] } = await secondResponse.json().then((d) => ({ entries: (d.entries ?? []).map((e: Record<string, unknown>) => normalizeEntry(e) as LeaderboardEntry) }));
 
               if (secondData.entries && secondData.entries.length > 0 && secondData.entries[0].userId === userId) {
                   // Found the user's entry in the entries array - this has the verifiedState and full details
@@ -437,27 +375,20 @@ const UserViewer = () => {
       }
       // Should not be reached if retries > 0, but as a fallback
       return { error: 'Failed to load data after retries', retryCount: retries + 1 }; // Include retryCount in the fallback
-  }, [PROXY_URL, API_BASE_URL, VERSION]); // Added dependencies
+  }, [buildLeaderboardUrl]); // Added dependencies
 
 
   // Function to fetch user's basic data (if using token)
   const fetchUserBasicData = useCallback(async (userToken: string): Promise<UserBasicData | null> => {
       try {
-          const userApiUrl = `${PROXY_URL}${encodeURIComponent(USER_API_BASE_URL + `?version=${VERSION}&userToken=${userToken}`)}`;
-          const response = await fetch(userApiUrl);
-
-          if (!response.ok) {
-              throw new Error(`Failed to fetch user basic data: ${response.status}`);
-          }
-          const data: UserBasicData = await response.json();
-          return data;
+          return await fetchUser(userToken);
       } catch (err: any) {
            const errorMessage = err.message || 'An unknown error occurred while fetching user basic data.';
           console.error("Error fetching user basic data:", errorMessage, err);
           setError(errorMessage);
           return null;
       }
-  }, [PROXY_URL, USER_API_BASE_URL, VERSION]);
+  }, [fetchUser]);
 
   // Helper function to calculate averages from a list of entries
   const calculateAverages = (entries: LeaderboardEntry[]): AverageStats | null => {
@@ -953,7 +884,7 @@ const UserViewer = () => {
 
         const retryInterval = setInterval(() => {
             const failedTracksToRetry = Array.from(userEntriesByTrack.entries())
-                .filter(([trackId, entryOrError]) =>
+                .filter(([, entryOrError]) =>
                     entryOrError &&
                     typeof entryOrError === 'object' &&
                     'error' in entryOrError &&
@@ -962,7 +893,7 @@ const UserViewer = () => {
                 );
 
             if (failedTracksToRetry.length > 0) {
-                failedTracksToRetry.forEach(([trackId, entryOrError]) => {
+                failedTracksToRetry.forEach(([trackId]) => {
                     // Add a slightly offset random delay between retries
                      const delay = Math.random() * 2000 + 500; // Random delay between 500ms and 2500ms
                      setTimeout(() => {
@@ -1249,7 +1180,6 @@ const UserViewer = () => {
               {stats.length > 0 ? (
                   stats.map((track, index) => {
                       const entryOrError = userEntriesByTrack.get(track.trackId); // Get entry or error from the map
-                       const wrTime = wrTimesByTrack.get(track.trackId); // Get the fetched WR time
 
 
                       // Check if it's an error object
@@ -1267,7 +1197,6 @@ const UserViewer = () => {
                         // Explicitly check if entryOrError is a LeaderboardEntry before accessing verifiedState
                         const entryIsLeaderboardEntry = entryOrError !== null && typeof entryOrError === 'object' && !('error' in entryOrError);
                         // Access verifiedState directly from the potential LeaderboardEntry object
-                        const verifiedStateValue = entryIsLeaderboardEntry ? (entryOrError as LeaderboardEntry).verifiedState : undefined;
 
 
                         // Determine WR gap display values
@@ -1566,7 +1495,7 @@ const UserViewer = () => {
             await new Promise(resolve => setTimeout(resolve, 50)); // Add a small delay
             try {
                 // First call: Get user's position on using userTokenHash
-                const firstCallUrl = `${PROXY_URL}${encodeURIComponent(API_BASE_URL + `?version=${VERSION}&trackId=${track.id}&skip=0&amount=1&onlyVerified=false&userTokenHash=${targetUserId}`)}`;
+                const firstCallUrl = buildLeaderboardUrl({ trackId: track.id, skip: 0, amount: 1, onlyVerified: false, userTokenHash: targetUserId });
                 const firstResponse = await fetch(firstCallUrl);
 
                 if (!firstResponse.ok) {
@@ -1580,13 +1509,13 @@ const UserViewer = () => {
                     const skipAmount = userPosition > 1 ? userPosition - 1 : 0; // Calculate skip amount
 
                     // Second call: Get the user's entry at their position to get name/colors
-                    const secondCallUrl = `${PROXY_URL}${encodeURIComponent(API_BASE_URL + `?version=${VERSION}&trackId=${track.id}&skip=${skipAmount}&amount=1&onlyVerified=false`)}`; // Removed userTokenHash here
+                    const secondCallUrl = buildLeaderboardUrl({ trackId: track.id, skip: skipAmount, amount: 1, onlyVerified: false }); // Removed userTokenHash here
                     const secondResponse = await fetch(secondCallUrl);
 
                     if (!secondResponse.ok) {
                         continue; // Continue to the next track on error
                     } else {
-                        const secondData: { entries: LeaderboardEntry[] } = await secondResponse.json();
+                        const secondData: { entries: LeaderboardEntry[] } = await secondResponse.json().then((d) => ({ entries: (d.entries ?? []).map((e: Record<string, unknown>) => normalizeEntry(e) as LeaderboardEntry) }));
 
                         if (secondData.entries && secondData.entries.length > 0 && secondData.entries[0].userId === targetUserId) {
                             // Found the user's entry in the entries array - use this data
@@ -1628,7 +1557,7 @@ const UserViewer = () => {
 
       } else if (userInputType === 'usertoken') {
         try {
-          targetUserId = await sha256(userInput);
+          targetUserId = await sha256Hex(userInput);
           const fetchedBasicData = await fetchUserBasicData(userInput); // Fetch basic data using the token
            // Set basic user data from fetched data
            setBasicUserData(fetchedBasicData);
@@ -1677,7 +1606,7 @@ const UserViewer = () => {
           setLoadingStep(null); // Clear loading step
       }
 
-  }, [userInput, userInputType, fetchUserBasicData, fetchAllUserTrackStats, ALL_TRACKS, PROXY_URL, API_BASE_URL, VERSION]);
+  }, [userInput, userInputType, fetchUserBasicData, fetchAllUserTrackStats, ALL_TRACKS]);
 
 
     // Effect to set basic user data to 'not found' if no entries are returned after loading
@@ -1705,7 +1634,7 @@ const UserViewer = () => {
 
         const retryInterval = setInterval(() => {
             const failedTracksToRetry = Array.from(userEntriesByTrack.entries())
-                .filter(([trackId, entryOrError]) =>
+                .filter(([, entryOrError]) =>
                     entryOrError &&
                     typeof entryOrError === 'object' &&
                     'error' in entryOrError &&
@@ -1714,7 +1643,7 @@ const UserViewer = () => {
                 );
 
             if (failedTracksToRetry.length > 0) {
-                failedTracksToRetry.forEach(([trackId, entryOrError]) => {
+                failedTracksToRetry.forEach(([trackId]) => {
                     // Add a slightly offset random delay between retries
                      const delay = Math.random() * 2000 + 500; // Random delay between 500ms and 2500ms
                      setTimeout(() => {
@@ -2516,7 +2445,7 @@ const UserViewer = () => {
        {/* Version and Play Game Link - Conditionally rendered */}
        {displayMode === 'input' && !loading && ( // Only show when in input mode AND not loading
            <div className="text-center text-gray-500 text-sm mt-4 absolute bottom-4 left-1/2 transform -translate-x-1/2">
-               <p>Version: {VERSION}</p>
+               <p>Game version: {API_VERSION}</p>
                <p>
                  Play the game: <a href="https://www.kodub.com/apps/polytrack" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Polytrack</a>
                </p>

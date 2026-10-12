@@ -1,56 +1,78 @@
-# React + TypeScript + Vite
+# PolyStats
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Statistics dashboard for [PolyTrack](https://www.kodub.com/apps/polytrack) — look up
+user stats across every official and community track, browse leaderboards, and find
+user IDs by rank.
 
-Currently, two official plugins are available:
+Built with React 19, TypeScript, Vite and Tailwind CSS v4.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How it works
 
-## Expanding the ESLint configuration
+PolyStats talks to the PolyTrack leaderboard API (`https://vps.kodub.com/v6/`,
+game version **0.6.x**). That API only serves requests whose `Origin` header is the
+game's own origin, so browser requests from this site must go through a small CORS
+proxy that adds the correct `Origin` header (see [`worker/`](worker)).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Key modules
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+| Module | Purpose |
+| --- | --- |
+| `src/lib/polytrack.ts` | API client: URL builders, typed fetchers, response normalisation, car-style decoding, time formatting |
+| `src/lib/tracks.ts` | Track catalog (17 official + community tracks) with the current v6 track IDs |
+| `src/components/` | UI: user stats viewer, leaderboard browser, utils (user-ID finder) |
+
+The proxy URL is resolved in this order:
+
+1. `localStorage["polystats_proxy_url"]` (runtime override)
+2. `VITE_PROXY_URL` build-time environment variable
+3. `DEFAULT_PROXY_URL` in `src/lib/polytrack.ts`
+
+## Deploying the proxy
+
+The bundled Cloudflare Worker is the easiest option:
+
+```bash
+cd worker
+npx wrangler deploy
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Then build the app with the resulting URL:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+VITE_PROXY_URL="https://polystats-proxy.<your-subdomain>.workers.dev/?url=" npm run build
 ```
 
-<!-- Test: GitHub integration check -->
+The worker only proxies `https://vps.kodub.com` — it is not an open proxy.
+
+## Development
+
+```bash
+npm install
+npm run dev        # start dev server
+npm test           # run Vitest suite
+npm run test:watch # watch mode
+npm run lint       # ESLint
+npm run build      # type-check + production build
+```
+
+## Tests
+
+The Vitest suite covers the API client (URL building, response normalisation,
+car-style decoding, time formatting, hashing), the track catalog, the proxy worker,
+and component rendering. CI (`.github/workflows/ci.yml`) runs type-check, lint,
+tests and build on every push and pull request.
+
+## API notes (v6)
+
+- Base: `https://vps.kodub.com/v6/`, every request includes `version=0.6.3`
+- `GET leaderboard?trackId&skip&amount&onlyVerified[&userTokenHash]` →
+  `{ total, entries, userEntry }`
+- `GET user?userToken` → `{ nickname, countryCode, carStyle, isVerifier }`
+- `GET leaderboardUserEntry?trackId&userTokenHash&onlyVerified`
+- `GET recordings?ids=a,b,c`
+- `GET trackOfTheWeek`
+- Entry times are milliseconds (field `frames`); entries expose `nickname` and a
+  serialized `carStyle` string, which this app normalises to `name` and four
+  hex `carColors`
+- Track IDs are 64-character hex hashes; track IDs from the old 0.5.x API no
+  longer resolve

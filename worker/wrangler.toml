@@ -1,0 +1,6 @@
+name = "polystats-proxy"
+main = "index.ts"
+compatibility_date = "2024-12-01"
+
+# After deploying, set VITE_PROXY_URL to "https://polystats-proxy.<your-subdomain>.workers.dev/?url="
+# when building the app, or set the `polystats_proxy_url` localStorage key at runtime.
