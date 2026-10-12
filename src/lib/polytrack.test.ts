@@ -196,3 +196,62 @@ describe('fetchUser', () => {
     expect(await fetchUser('token')).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// v2 additions: light user entry, world record, bounded concurrency
+// ---------------------------------------------------------------------------
+
+import { fetchUserEntryLight, fetchWorldRecord, mapLimit } from '@/lib/polytrack';
+
+describe('fetchUserEntryLight', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns position/frames/id when the user has an entry', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ total: 5, userEntry: { position: 4, frames: 12345, id: 99 } }), { status: 200 })
+    );
+    expect(await fetchUserEntryLight(TRACK_ID, 'hash')).toEqual({ position: 4, frames: 12345, id: 99 });
+  });
+
+  it('returns null when the user has no entry', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ total: 5, userEntry: null }), { status: 200 })
+    );
+    expect(await fetchUserEntryLight(TRACK_ID, 'hash')).toBeNull();
+  });
+});
+
+describe('fetchWorldRecord', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('returns the first verified entry', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          total: 2,
+          entries: [{ id: 1, userId: 'u', nickname: 'wr', carStyle: '', frames: 22123, verifiedState: 1 }],
+        }),
+        { status: 200 }
+      )
+    );
+    const wr = await fetchWorldRecord(TRACK_ID);
+    expect(wr?.nickname).toBe('wr');
+    expect(wr?.frames).toBe(22123);
+  });
+});
+
+describe('mapLimit', () => {
+  it('maps with bounded concurrency and preserves order', async () => {
+    let active = 0;
+    let peak = 0;
+    const result = await mapLimit([1, 2, 3, 4, 5, 6], 2, async (n) => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await new Promise((r) => setTimeout(r, 5));
+      active -= 1;
+      return n * 2;
+    });
+    expect(result).toEqual([2, 4, 6, 8, 10, 12]);
+    expect(peak).toBeLessThanOrEqual(2);
+  });
+});

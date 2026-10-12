@@ -218,6 +218,8 @@ export interface TrackOfTheWeek {
   author: string;
   environment: number;
   endTime: string | null;
+  thumbnailUrl?: string;
+  coverUrl?: string;
 }
 
 /** Fetch the current Track of the Week; null if unavailable. */
@@ -226,7 +228,7 @@ export async function fetchTrackOfTheWeek(): Promise<TrackOfTheWeek | null> {
     const response = await fetch(buildTrackOfTheWeekUrl());
     if (!response.ok) return null;
     const raw = (await response.json()) as {
-      current?: { trackId?: string; name?: string; author?: string; environment?: number; endTime?: string } | null;
+      current?: { trackId?: string; name?: string; author?: string; environment?: number; endTime?: string; thumbnailUrl?: string; coverUrl?: string } | null;
     };
     const c = raw.current;
     if (!c?.trackId) return null;
@@ -236,6 +238,8 @@ export async function fetchTrackOfTheWeek(): Promise<TrackOfTheWeek | null> {
       author: c.author ?? '',
       environment: c.environment ?? 0,
       endTime: c.endTime ?? null,
+      thumbnailUrl: c.thumbnailUrl,
+      coverUrl: c.coverUrl,
     };
   } catch {
     return null;
@@ -283,4 +287,49 @@ export async function fetchUser(userToken: string): Promise<UserBasicData | null
     isVerifier: typeof raw.isVerifier === 'boolean' ? raw.isVerifier : 'N/A',
     isVerifierRaw: typeof raw.isVerifier === 'boolean' ? raw.isVerifier : undefined,
   };
+}
+
+export interface UserEntryLight {
+  position: number;
+  frames: number;
+  id: number;
+}
+
+/** Light-weight "does this user have an entry on this track" check. */
+export async function fetchUserEntryLight(
+  trackId: string,
+  userTokenHash: string
+): Promise<UserEntryLight | null> {
+  const response = await fetch(
+    buildLeaderboardUrl({ trackId, skip: 0, amount: 1, onlyVerified: false, userTokenHash })
+  );
+  if (!response.ok) throw new Error(`User entry request failed: ${response.status}`);
+  const raw = (await response.json()) as { userEntry?: { position?: number; frames?: number; id?: number } | null };
+  const e = raw.userEntry;
+  if (!e || typeof e.position !== 'number' || typeof e.frames !== 'number') return null;
+  return { position: e.position, frames: e.frames, id: e.id ?? 0 };
+}
+
+/** World record (best verified time) for a track; null when none exists. */
+export async function fetchWorldRecord(trackId: string): Promise<LeaderboardEntry | null> {
+  const data = await fetchLeaderboard({ trackId, skip: 0, amount: 1, onlyVerified: true });
+  return data.entries[0] ?? null;
+}
+
+/** Run promise-producing tasks with bounded concurrency, preserving order. */
+export async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return results;
 }
