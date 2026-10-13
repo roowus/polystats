@@ -8,7 +8,7 @@ import { PageShell, Panel } from './shell';
 const FEATURES = [
   {
     title: 'Track of the Week',
-    description: 'This week’s community spotlight — live leaderboard, cover art, and a countdown to rotation.',
+    description: 'This week’s community spotlight: live leaderboard, cover art, and a countdown to rotation.',
     icon: CalendarDays,
     path: '/totw',
   },
@@ -26,7 +26,7 @@ const FEATURES = [
   },
   {
     title: 'World Records',
-    description: 'Every verified world record — official, community and Track of the Week — in one table.',
+    description: 'Every verified world record across official, community and Track of the Week, in one table.',
     icon: Trophy,
     path: '/wr',
   },
@@ -67,7 +67,7 @@ const Home = () => {
             >
               PolyTrack
             </a>{' '}
-            — player profiles, world records, Track of the Week and head-to-head
+            : player profiles, world records, Track of the Week and head-to-head
             comparisons, powered by the live leaderboards.
           </p>
         </div>

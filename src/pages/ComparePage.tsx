@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { X, Plus } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/shell';
+import { PlayerSearchInput } from '@/components/PlayerSearchInput';
 import { formatTime } from '@/lib/polytrack';
 import { useUserStats } from '@/hooks/useUserStats';
 import { computeAverages, type UserTrackEntry } from '@/lib/stats';
@@ -142,12 +143,15 @@ const ComparePage = () => {
 
         <Panel className="mb-6 p-5">
           <div className="flex flex-col gap-3 sm:flex-row">
-            <input
+            <PlayerSearchInput
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
-              placeholder="Add a player — User ID"
-              className="pt-input flex-1 px-4 py-2.5 text-sm outline-none transition"
+              onChange={setInput}
+              onPick={(id) => {
+                const next = [...new Set([...ids, id])].slice(0, MAX_PLAYERS);
+                setInput('');
+                navigate(`/compare?ids=${next.join(',')}`);
+              }}
+              placeholder="Add a player by name or User ID"
             />
             <button
               onClick={addPlayer}

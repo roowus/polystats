@@ -89,7 +89,7 @@ describe('ComparePage — multi-player', () => {
   it('shows the add-player form', () => {
     mockCalls([]);
     renderAt('/compare');
-    expect(screen.getByPlaceholderText(/Add a player/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Add a player by name or User ID/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
   });
 });

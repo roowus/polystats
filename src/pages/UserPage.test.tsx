@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import UserPage from '@/pages/UserPage';
 import { useUserStats } from '@/hooks/useUserStats';
@@ -155,5 +156,43 @@ describe('UserPage — results and calculations', () => {
     renderAt(`/user/${USER}`);
     expect(screen.getByText(USER)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /compare/i }).length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('UserPage — autocomplete', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('suggests players by username and navigates on pick', async () => {
+    mockStatus({ phase: 'idle' });
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: unknown) => {
+      const u = String(url);
+      if (u.includes('/users?q=')) {
+        return new Response(
+          JSON.stringify({ users: [{ user_id: 'f'.repeat(64), nickname: 'Monstrosity', car_style: null, last_seen: 'now' }] }),
+          { status: 200 }
+        );
+      }
+      return new Response('{}', { status: 200 });
+    });
+
+    renderAt('/user');
+    const input = screen.getByPlaceholderText(/Player name/i);
+    await user.type(input, 'mons');
+    await waitFor(() => expect(screen.getByText('Monstrosity')).toBeInTheDocument(), { timeout: 3000 });
+    await user.click(screen.getByText('Monstrosity'));
+    expect(input).toHaveValue('f'.repeat(64));
+  });
+
+  it('does not suggest for hex ids (direct navigation instead)', async () => {
+    mockStatus({ phase: 'idle' });
+    const user = userEvent.setup();
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+    renderAt('/user');
+    const input = screen.getByPlaceholderText(/Player name/i);
+    await user.type(input, 'a'.repeat(64).slice(0, 10));
+    await new Promise((r) => setTimeout(r, 400));
+    expect(screen.queryByText(/player.*found/i)).not.toBeInTheDocument();
+    void fetchSpy;
   });
 });

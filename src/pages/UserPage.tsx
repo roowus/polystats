@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Copy, Check, Swords } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { PlayerSearchInput } from '@/components/PlayerSearchInput';
 import { PageShell, PageTitle, Panel, StatTile, MedalBadge, Spinner, ErrorNote } from '@/components/shell';
 import { useUserStats } from '@/hooks/useUserStats';
 import { sha256Hex, formatTime } from '@/lib/polytrack';
@@ -116,7 +117,7 @@ const UserPage = () => {
         {nameResults && (
           <Panel className="mx-auto mb-6 max-w-2xl p-4">
             <p className="mb-2 text-xs uppercase tracking-wider text-zinc-400">
-              {nameResults.length} player{safeLen(nameResults)} found — click to open
+              {nameResults.length} player{safeLen(nameResults)} found. Click one to open:
             </p>
             {nameResults.length === 0 ? (
               <p className="text-sm text-zinc-400">No players with that name in the catalog yet.</p>
@@ -143,13 +144,14 @@ const UserPage = () => {
         {showSearch && (
           <Panel className="mx-auto max-w-2xl p-5">
             <div className="flex flex-col gap-3 sm:flex-row">
-              <input
-                type="text"
+              <PlayerSearchInput
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && search()}
-                placeholder="User ID (64-char hex) or User Token"
-                className="pt-input flex-1 px-4 py-2.5 font-mono text-sm outline-none transition"
+                onChange={setInput}
+                onPick={(id: string) => {
+                  setInput(id);
+                  navigate(`/user/${id}`);
+                }}
+                placeholder="Player name, User ID (64-char hex) or User Token"
               />
               <button
                 onClick={search}
@@ -160,7 +162,7 @@ const UserPage = () => {
               </button>
             </div>
             <UserChips label="Saved" users={saved} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
-              <span className="text-zinc-600">No saved players yet — hit the ★ on a player page.</span>
+              <span className="text-zinc-600">No saved players yet. Hit the star on a player page.</span>
             } />
             <UserChips label="Recent" users={recents} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
               <span className="text-zinc-600">Your recent lookups will appear here.</span>
@@ -190,7 +192,7 @@ const UserPage = () => {
           <Panel className="mx-auto max-w-md p-6 text-center">
             <Spinner className="h-6 w-6" />
             <p className="mt-3 text-sm text-zinc-300">
-              Found {status.found} track{status.found === 1 ? '' : 's'} — loading details…
+              Found {status.found} track{status.found === 1 ? '' : 's'}, loading details...
             </p>
           </Panel>
         )}
@@ -224,7 +226,7 @@ const UserPage = () => {
               <p className="font-medium">No leaderboard entries found.</p>
               <p className="mt-1 text-red-200/80">
                 Every official, community and Track of the Week leaderboard was checked. This
-                player exists but hasn&apos;t set a time yet — or the ID is wrong.
+                player exists but hasn&apos;t set a time yet, or the ID is wrong.
               </p>
             </ErrorNote>
           </div>

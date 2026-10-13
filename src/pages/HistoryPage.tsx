@@ -85,7 +85,7 @@ function ProgressionChart({ rows }: { rows: HistoryRow[] }) {
         {series.map((p, i) => (
           <g key={i}>
             <circle cx={x(p.t)} cy={y(p.ms)} r="3" fill="#fff" />
-            <title>{`${p.player} — ${fmt(p.ms)}`}</title>
+            <title>{`${p.player}: ${fmt(p.ms)}`}</title>
           </g>
         ))}
         <text x={PAD.l} y={H - 8} fontSize="9" fill="#cfcfe4">
@@ -158,7 +158,7 @@ export default function HistoryPage() {
       <PageShell>
         <PageTitle
           title="Record History"
-          subtitle="Every world-record progression on the official tracks — who held it, when, and how fast."
+          subtitle="Every world-record progression on the official tracks: who held it, when, and how fast."
         />
         <Freshness date={dataStatus?.last_backfill_run ?? dataStatus?.last_fresh_run} />
 
@@ -224,7 +224,7 @@ export default function HistoryPage() {
 
             <Panel className="overflow-hidden">
               <div className="border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white">
-                Progression — {track.name}
+                Progression: {track.name}
               </div>
               {!rows || rows.length === 0 ? (
                 <p className="px-4 py-8 text-center text-sm text-zinc-300">No history recorded for this track yet.</p>
@@ -259,7 +259,7 @@ export default function HistoryPage() {
                               ) : isRecord ? (
                                 <span className="font-mono text-emerald-300">−{formatTime(diff)}</span>
                               ) : (
-                                <span className="text-zinc-500">—</span>
+                                <span className="text-zinc-500">n/a</span>
                               )}
                             </td>
                           </tr>
