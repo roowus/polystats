@@ -22,7 +22,7 @@ import {
   toggleSavedUser,
   type StoredUser,
 } from '@/lib/userStore';
-import { fetchCatalog, shareToCatalog } from '@/lib/catalog';
+import { fetchCatalog, shareToCatalog, upsertUserProfile } from '@/lib/catalog';
 
 type SortKey = 'name' | 'time' | 'rank' | 'gap';
 
@@ -177,7 +177,12 @@ const UserPage = () => {
         {status.phase === 'error' && <ErrorNote>{status.message}</ErrorNote>}
 
         {status.phase === 'done' && (
-          <RecentRecorder userId={userId!} nickname={status.nickname} onChange={refreshLists} />
+          <RecentRecorder
+            userId={userId!}
+            nickname={status.nickname}
+            carStyle={status.entries[0]?.carStyle}
+            onChange={refreshLists}
+          />
         )}
 
         {status.phase === 'done' && (
@@ -345,9 +350,21 @@ const UserPage = () => {
 export default UserPage;
 
 /** Writes a finished scan into local recents; renders nothing. */
-function RecentRecorder({ userId, nickname, onChange }: { userId: string; nickname: string | null; onChange: () => void }) {
+function RecentRecorder({
+  userId,
+  nickname,
+  carStyle,
+  onChange,
+}: {
+  userId: string;
+  nickname: string | null;
+  carStyle?: string;
+  onChange: () => void;
+}) {
   useEffect(() => {
     pushRecentUser(userId, nickname ?? undefined);
+    // keep the community database fresh on every lookup
+    upsertUserProfile(userId, nickname ?? undefined, carStyle);
     onChange();
     // run once per finished scan
     // eslint-disable-next-line react-hooks/exhaustive-deps

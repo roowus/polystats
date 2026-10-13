@@ -30,6 +30,17 @@ export function shareToCatalog(userId: string, nickname?: string): void {
   });
 }
 
+/** Upsert a player profile (nickname/car style) into the community database. */
+export function upsertUserProfile(userId: string, nickname?: string, carStyle?: string): void {
+  fetch(`${workerOrigin()}/users`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, nickname, carStyle }),
+  }).catch(() => {
+    // local-only context; ignore
+  });
+}
+
 /** Most-saved players across the community; null when unavailable. */
 export async function fetchCatalog(limit = 50): Promise<CatalogUser[] | null> {
   try {

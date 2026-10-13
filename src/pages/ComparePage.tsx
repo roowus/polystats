@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, X } from 'lucide-react';
+import { X, Plus } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/shell';
 import { formatTime } from '@/lib/polytrack';
@@ -9,110 +9,127 @@ import { computeAverages, type UserTrackEntry } from '@/lib/stats';
 import { cn } from '@/lib/utils';
 
 const HEX64 = /^[a-f0-9]{64}$/i;
+const MAX_PLAYERS = 6;
 
-function Side({
-  label,
-  data,
+interface DoneStatus {
+  phase: 'done';
+  nickname: string | null;
+  entries: UserTrackEntry[];
+}
+
+/** One player column: runs its own scan and reports results upward. */
+function PlayerPanel({
+  id,
+  onDone,
   onRemove,
 }: {
-  label: string;
-  data: ReturnType<typeof useUserStats>['status'];
+  id: string;
+  onDone: (id: string, nickname: string | null, entries: UserTrackEntry[]) => void;
   onRemove?: () => void;
 }) {
-  if (data.phase === 'done') {
-    const avg = computeAverages(data.entries);
-    return (
-      <Panel className="p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="truncate text-lg font-bold text-violet-200">{data.nickname ?? label}</h3>
-          {onRemove && (
-            <button onClick={onRemove} className="text-zinc-500 hover:text-zinc-200" title="Remove">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-sm">
-          <div>
-            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Tracks</p>
-            <p className="font-semibold tabular-nums">{avg?.tracks ?? 0}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Avg rank</p>
-            <p className="font-semibold tabular-nums">{avg ? Math.round(avg.avgRank) : '—'}</p>
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-wide text-zinc-500">Avg WR gap</p>
-            <p className="font-semibold tabular-nums">{avg ? `${avg.avgWrGapPercent.toFixed(1)}%` : '—'}</p>
-          </div>
-        </div>
-      </Panel>
-    );
-  }
-  if (data.phase === 'scanning' || data.phase === 'enriching') {
-    return (
-      <Panel className="p-5 text-center">
-        <Spinner className="h-5 w-5" />
-        <p className="mt-2 text-xs text-zinc-400">{label}</p>
-      </Panel>
-    );
-  }
-  if (data.phase === 'no-entries') {
-    return (
-      <Panel className="p-5 text-center text-sm text-zinc-500">
-        {label}: no entries found
-      </Panel>
-    );
-  }
+  const { status, scan, reset } = useUserStats();
+
+  useEffect(() => {
+    scan(id);
+    return () => reset();
+  }, [id, scan, reset]);
+
+  useEffect(() => {
+    if (status.phase === 'done') onDone(id, status.nickname, status.entries);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  const avg = status.phase === 'done' ? computeAverages(status.entries) : null;
+
   return (
-    <Panel className="p-5 text-center text-sm text-zinc-600">{label}: waiting…</Panel>
+    <Panel className="p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="truncate text-sm font-bold text-white" title={id}>
+          {status.phase === 'done' ? (status.nickname ?? `${id.slice(0, 10)}…`) : `${id.slice(0, 10)}…`}
+        </h3>
+        {onRemove && (
+          <button onClick={onRemove} className="text-zinc-400 hover:text-white" title="Remove player">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      {status.phase === 'done' ? (
+        avg ? (
+          <div className="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
+            <div>
+              <p className="text-[10px] uppercase text-zinc-400">Tracks</p>
+              <p className="font-semibold tabular-nums text-white">{avg.tracks}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-zinc-400">Avg rank</p>
+              <p className="font-semibold tabular-nums text-white">{Math.round(avg.avgRank)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] uppercase text-zinc-400">Avg gap</p>
+              <p className="font-semibold tabular-nums text-white">{avg.avgWrGapPercent.toFixed(1)}%</p>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-zinc-400">No entries found</p>
+        )
+      ) : status.phase === 'error' ? (
+        <p className="mt-2 text-xs text-red-300">{status.message}</p>
+      ) : (
+        <div className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
+          <Spinner className="h-3.5 w-3.5" /> scanning…
+        </div>
+      )}
+    </Panel>
   );
 }
 
 const ComparePage = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const ids = (params.get('ids') ?? '').split(',').filter((s) => HEX64.test(s));
-  const [a, setA] = useState<string>(ids[0] ?? '');
-  const [b, setB] = useState<string>(ids[1] ?? '');
-  const [inputA, setInputA] = useState(ids[0] ?? '');
-  const [inputB, setInputB] = useState(ids[1] ?? '');
-  const left = useUserStats();
-  const right = useUserStats();
+  const ids = useMemo(
+    () => (params.get('ids') ?? '').split(',').filter((s) => HEX64.test(s)).slice(0, MAX_PLAYERS),
+    [params]
+  );
 
-  const start = useCallback(() => {
-    const na = HEX64.test(a) ? a : '';
-    const nb = HEX64.test(b) ? b : '';
-    if (!na && !nb) return;
-    navigate(`/compare?ids=${[na, nb].filter(Boolean).join(',')}`);
-    left.reset();
-    right.reset();
-    if (na) left.scan(na);
-    if (nb) right.scan(nb);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [a, b, navigate]);
+  const [input, setInput] = useState('');
+  const [results, setResults] = useState<Record<string, { nickname: string | null; entries: UserTrackEntry[] }>>({});
 
-  useEffect(() => {
-    if (ids[0] && ids[0] !== a) setA(ids[0]);
-    if (ids[1] && ids[1] !== b) setB(ids[1]);
-    if (ids[0]) left.scan(ids[0]);
-    if (ids[1]) right.scan(ids[1]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [params]);
+  const handleDone = useCallback((id: string, nickname: string | null, entries: UserTrackEntry[]) => {
+    setResults((prev) => ({ ...prev, [id]: { nickname, entries } }));
+  }, []);
 
-  const leftEntries = left.status.phase === 'done' ? left.status.entries : [];
-  const rightEntries = right.status.phase === 'done' ? right.status.entries : [];
-  const rightById = new Map(rightEntries.map((e) => [e.trackId, e]));
-  const common = leftEntries.filter((e) => rightById.has(e.trackId));
+  const addPlayer = useCallback(() => {
+    const value = input.trim();
+    const id = HEX64.test(value) ? value : '';
+    if (!id) return;
+    const next = [...new Set([...ids, id])].slice(0, MAX_PLAYERS);
+    setInput('');
+    navigate(`/compare?ids=${next.join(',')}`);
+  }, [input, ids, navigate]);
 
-  const deltaCell = (l: UserTrackEntry, r: UserTrackEntry) => {
-    const diff = l.frames - r.frames;
-    const color = diff < 0 ? 'text-emerald-400' : diff > 0 ? 'text-red-400' : 'text-zinc-500';
-    return (
-      <span className={cn('font-mono text-xs tabular-nums', color)}>
-        {diff === 0 ? '=' : `${diff < 0 ? '−' : '+'}${formatTime(Math.abs(diff))}`}
-      </span>
-    );
-  };
+  const removePlayer = useCallback(
+    (id: string) => {
+      const next = ids.filter((x) => x !== id);
+      navigate(next.length ? `/compare?ids=${next.join(',')}` : '/compare');
+    },
+    [ids, navigate]
+  );
+
+  // Union of tracks where at least two scanned players have entries
+  const doneIds = ids.filter((id) => results[id]);
+  const trackMap = useMemo(() => {
+    const map = new Map<string, { trackName: string; times: Record<string, number> }>();
+    for (const id of doneIds) {
+      for (const e of results[id].entries) {
+        const slot = map.get(e.trackId) ?? { trackName: e.trackName, times: {} };
+        slot.times[id] = e.frames;
+        map.set(e.trackId, slot);
+      }
+    }
+    return [...map.entries()].filter(([, v]) => Object.keys(v.times).length >= 2);
+  }, [doneIds, results]);
+
+  const playerColors = ['#bed8f7', '#ffd9a0', '#b8f2c9', '#f2b8d9', '#d9c1f7', '#f7e6b8'];
 
   return (
     <div>
@@ -120,69 +137,87 @@ const ComparePage = () => {
       <PageShell>
         <PageTitle
           title="Compare Players"
-          subtitle="Head-to-head across every track both players have set a time on."
+          subtitle={`Head-to-head across shared tracks — up to ${MAX_PLAYERS} players at once.`}
         />
 
         <Panel className="mb-6 p-5">
-          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <input
-              value={inputA}
-              onChange={(e) => setInputA(e.target.value)}
-              placeholder="Player A — User ID"
-              className="border border-white/15 bg-[rgba(20,20,45,0.6)] px-4 py-2.5 font-mono text-sm outline-none focus:border-purple-500/60"
-            />
-            <input
-              value={inputB}
-              onChange={(e) => setInputB(e.target.value)}
-              placeholder="Player B — User ID (optional)"
-              className="border border-white/15 bg-[rgba(20,20,45,0.6)] px-4 py-2.5 font-mono text-sm outline-none focus:border-purple-500/60"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
+              placeholder="Add a player — User ID"
+              className="pt-input flex-1 px-4 py-2.5 text-sm outline-none transition"
             />
             <button
-              onClick={start}
-              className="flex items-center justify-center gap-2 bg-[#112052] border border-white/20 hover:bg-[#1a2d6e] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+              onClick={addPlayer}
+              disabled={!HEX64.test(input.trim()) || ids.length >= MAX_PLAYERS}
+              className="pt-btn"
             >
-              <Search className="h-4 w-4" /> Compare
+              <Plus className="h-4 w-4" /> Add
             </button>
           </div>
+          {ids.length > 0 && (
+            <p className="mt-2 text-xs text-zinc-400">
+              {ids.length}/{MAX_PLAYERS} players loaded
+            </p>
+          )}
         </Panel>
 
-        {(a || b) && (
-          <div className="mb-6 grid gap-3 sm:grid-cols-2">
-            <Side label={a ? `${a.slice(0, 10)}…` : 'Player A'} data={left.status} />
-            <Side label={b ? `${b.slice(0, 10)}…` : 'Player B'} data={right.status} />
+        {ids.length > 0 && (
+          <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ids.map((id) => (
+              <PlayerPanel
+                key={id}
+                id={id}
+                onDone={handleDone}
+                onRemove={ids.length > 1 ? () => removePlayer(id) : undefined}
+              />
+            ))}
           </div>
         )}
 
-        {common.length > 0 && (
+        {trackMap.length > 0 && (
           <Panel className="overflow-hidden">
-            <div className="border-b border-white/8 px-4 py-3 text-sm font-semibold text-zinc-300">
-              Head-to-head — {common.length} shared track{common.length === 1 ? '' : 's'}
+            <div className="border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white">
+              Head-to-head — {trackMap.length} shared track{trackMap.length === 1 ? '' : 's'}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/8 text-left text-[11px] uppercase tracking-wider text-zinc-500">
+                  <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-zinc-400">
                     <th className="px-4 py-2.5 font-medium">Track</th>
-                    <th className="px-4 py-2.5 text-right font-medium">A time</th>
-                    <th className="px-4 py-2.5 text-right font-medium">B time</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Δ</th>
-                    <th className="px-4 py-2.5 text-right font-medium">Winner</th>
+                    {doneIds.map((id, i) => (
+                      <th
+                        key={id}
+                        className="px-4 py-2.5 text-right font-medium"
+                        style={{ color: playerColors[i % playerColors.length] }}
+                      >
+                        {results[id]?.nickname ?? `${id.slice(0, 8)}…`}
+                      </th>
+                    ))}
+                    <th className="px-4 py-2.5 text-right font-medium">Best</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {common.map((l) => {
-                    const r = rightById.get(l.trackId)!;
-                    const aWins = l.frames < r.frames;
+                  {trackMap.map(([trackId, { trackName, times }]) => {
+                    const best = Math.min(...Object.values(times));
                     return (
-                      <tr key={l.trackId} className="border-b border-white/5 hover:bg-white/[0.03]">
-                        <td className="max-w-[220px] truncate px-4 py-2.5">{l.trackName}</td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">{formatTime(l.frames)}</td>
-                        <td className="px-4 py-2.5 text-right font-mono tabular-nums">{formatTime(r.frames)}</td>
-                        <td className="px-4 py-2.5 text-right">{deltaCell(l, r)}</td>
-                        <td className="px-4 py-2.5 text-right text-xs">
-                          <span className={aWins ? 'text-violet-300' : 'text-fuchsia-300'}>
-                            {aWins ? 'A' : 'B'}
-                          </span>
+                      <tr key={trackId} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="max-w-[220px] truncate px-4 py-2.5">{trackName}</td>
+                        {doneIds.map((id) => (
+                          <td key={id} className="px-4 py-2.5 text-right font-mono tabular-nums">
+                            {times[id] !== undefined ? (
+                              <span className={times[id] === best ? 'font-semibold text-emerald-300' : 'text-zinc-200'}>
+                                {formatTime(times[id])}
+                              </span>
+                            ) : (
+                              <span className="text-zinc-600">—</span>
+                            )}
+                          </td>
+                        ))}
+                        <td className="px-4 py-2.5 text-right font-mono text-xs text-zinc-400">
+                          {formatTime(best)}
                         </td>
                       </tr>
                     );
@@ -193,8 +228,8 @@ const ComparePage = () => {
           </Panel>
         )}
 
-        {left.status.phase === 'done' && right.status.phase === 'done' && common.length === 0 && (
-          <ErrorNote>These two players have no tracks in common.</ErrorNote>
+        {doneIds.length >= 2 && trackMap.length === 0 && (
+          <ErrorNote>No shared tracks between these players yet.</ErrorNote>
         )}
       </PageShell>
     </div>

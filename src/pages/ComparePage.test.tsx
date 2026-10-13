@@ -12,52 +12,42 @@ const reset = vi.fn();
 
 function entry(frames: number, trackId: string, trackName: string): UserTrackEntry {
   return {
-    id: 1,
-    userId: 'x',
-    nickname: 'p',
-    name: 'p',
-    carColors: '',
-    frames,
-    verifiedState: 1,
-    trackId,
-    trackName,
-    trackGroup: 'official',
-    position: 1,
-    rank: 1,
+    id: 1, userId: 'x', nickname: 'p', name: 'p', carColors: '', frames,
+    verifiedState: 1, trackId, trackName, trackGroup: 'official', position: 1, rank: 1,
   };
 }
 
-// side A: fast on Summer, slow on Winter. side B: the reverse.
+const ID_A = 'a'.repeat(64);
+const ID_B = 'b'.repeat(64);
+const ID_C = 'c'.repeat(64);
+
 const A = {
   phase: 'done' as const,
   nickname: 'Alice',
-  entries: [
-    entry(20000, 'summer', 'Summer 1'),
-    entry(30000, 'winter', 'Winter 1'),
-  ],
+  entries: [entry(20000, 'summer', 'Summer 1'), entry(30000, 'winter', 'Winter 1')],
 };
 const B = {
   phase: 'done' as const,
   nickname: 'Bob',
-  entries: [
-    entry(21000, 'summer', 'Summer 1'),
-    entry(29000, 'winter', 'Winter 1'),
-  ],
+  entries: [entry(21000, 'summer', 'Summer 1'), entry(29000, 'winter', 'Winter 1')],
+};
+const C = {
+  phase: 'done' as const,
+  nickname: 'Cara',
+  entries: [entry(19500, 'summer', 'Summer 1')],
 };
 
-function mockHook(status: typeof A | typeof B | { phase: 'idle' }) {
-  return { status, scan, reset };
+function mockCalls(statuses: typeof A[]) {
+  if (statuses.length === 0) statuses = [{ phase: 'idle' } as unknown as typeof A];
+  (useUserStats as ReturnType<typeof vi.fn>).mockReset();
+  // rerenders re-call the hook; cycle through statuses instead of a one-shot queue
+  (useUserStats as ReturnType<typeof vi.fn>).mockImplementation(() => {
+    const next = (useUserStats as ReturnType<typeof vi.fn>).mock.calls.length % statuses.length;
+    return { status: statuses[next], scan, reset };
+  });
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  (useUserStats as ReturnType<typeof vi.fn>)
-    .mockReturnValueOnce(mockHook(A))
-    .mockReturnValueOnce(mockHook(B));
-});
-
-const ID_A = 'a'.repeat(64);
-const ID_B = 'b'.repeat(64);
+beforeEach(() => vi.clearAllMocks());
 
 function renderAt(path: string) {
   return render(
@@ -67,40 +57,39 @@ function renderAt(path: string) {
   );
 }
 
-describe('ComparePage', () => {
-  it('renders both player summaries with calculated averages', () => {
-    renderAt(`/compare?ids=${ID_A},${ID_B}`);
-    expect(screen.getByText('Alice')).toBeInTheDocument();
-    expect(screen.getByText('Bob')).toBeInTheDocument();
-    // both have 2 tracks, avg rank 1
-    expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(2);
+describe('ComparePage — multi-player', () => {
+  it('renders three player summaries side by side', () => {
+    mockCalls([A, B, C]);
+    renderAt(`/compare?ids=${ID_A},${ID_B},${ID_C}`);
+    expect(screen.getAllByText('Alice').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Bob').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Cara').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('3/6 players loaded')).toBeInTheDocument();
   });
 
-  it('lists shared tracks with per-track deltas and winners', () => {
-    renderAt(`/compare?ids=${ID_A},${ID_B}`);
+  it('builds the head-to-head table across all players and highlights the best time', () => {
+    mockCalls([A, B, C]);
+    renderAt(`/compare?ids=${ID_A},${ID_B},${ID_C}`);
+    // 2 shared tracks (Summer 1 has all 3, Winter 1 has 2)
     expect(screen.getByText(/2 shared tracks/)).toBeInTheDocument();
-    // Summer 1: A 20s vs B 21s -> A wins by 1000ms -> "+00:01.000"
-    expect(screen.getByText('+00:01.000')).toBeInTheDocument();
-    // Winter 1: A 30s vs B 29s -> B wins -> "−00:01.000"
-    expect(screen.getByText('−00:01.000')).toBeInTheDocument();
-    // winner column letters: one A and one B
-    expect(screen.getByText('A')).toBeInTheDocument();
-    expect(screen.getByText('B')).toBeInTheDocument();
+    // best times highlighted: Summer 1 -> Cara 19500; Winter 1 -> Bob 29000
+    expect(screen.getAllByText('00:19.500').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('00:29.000').length).toBeGreaterThanOrEqual(1);
+    // missing entry for Cara on Winter 1 renders a dash
+    expect(screen.getAllByText('—').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('states clearly when players share no tracks', () => {
-    (useUserStats as ReturnType<typeof vi.fn>)
-      .mockReset()
-      .mockReturnValueOnce(mockHook({ ...A, entries: [entry(1, 's'.repeat(64), 'Summer 1')] }))
-      .mockReturnValueOnce(mockHook({ ...B, entries: [entry(1, 'w'.repeat(64), 'Winter 1')] }));
-    renderAt(`/compare?ids=${'s'.repeat(64)},${'w'.repeat(64)}`);
-    expect(screen.getByText(/no tracks in common/i)).toBeInTheDocument();
+  it('caps the player note at the limit', () => {
+    mockCalls([]);
+    const sixIds = [ID_A, ID_B, ID_C, 'd'.repeat(64), 'e'.repeat(64), 'f'.repeat(64)].join(',');
+    renderAt(`/compare?ids=${sixIds}`);
+    expect(screen.getByText('6/6 players loaded')).toBeInTheDocument();
   });
 
-  it('shows the search form', () => {
+  it('shows the add-player form', () => {
+    mockCalls([]);
     renderAt('/compare');
-    expect(screen.getByPlaceholderText(/Player A/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Player B/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /compare/i }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByPlaceholderText(/Add a player/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
   });
 });
