@@ -33,7 +33,7 @@ const HowToUse = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#212b58] text-white">
+    <div className="min-h-screen bg-[#212b58] pt-20">
       <Navigation />
 
       <div className="pt-24 pb-16 px-4 md:px-8">

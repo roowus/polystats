@@ -23,7 +23,7 @@ import {
   toggleSavedUser,
   type StoredUser,
 } from '@/lib/userStore';
-import { fetchCatalog, shareToCatalog, upsertUserProfile } from '@/lib/catalog';
+import { fetchCatalog, searchUsers, shareToCatalog, upsertUserProfile, type UserSearchResult } from '@/lib/catalog';
 
 type SortKey = 'name' | 'time' | 'rank' | 'gap';
 
@@ -44,6 +44,7 @@ const UserPage = () => {
   const [copied, setCopied] = useState(false);
   const [sort, setSort] = useState<SortKey>('rank');
   const [filter, setFilter] = useState<'all' | 'official' | 'community' | 'totw'>('all');
+  const [nameResults, setNameResults] = useState<UserSearchResult[] | null>(null);
   const [recents, setRecents] = useState<StoredUser[]>([]);
   const [saved, setSaved] = useState<StoredUser[]>([]);
   const [community, setCommunity] = useState<StoredUser[]>([]);
@@ -75,8 +76,9 @@ const UserPage = () => {
     if (/^[a-f0-9]{64}$/i.test(value)) {
       navigate(`/user/${value}`);
     } else {
-      // treat as a raw token: hash it and redirect
-      navigate(`/user/${await sha256Hex(value)}`);
+      // username search across the community catalog
+      const results = await searchUsers(value);
+      setNameResults(results);
     }
   }, [input, navigate]);
 
@@ -107,6 +109,33 @@ const UserPage = () => {
           title="User Stats"
           subtitle="Paste a User ID or User Token. Every official, community and Track of the Week leaderboard is scanned."
         />
+
+        {nameResults && (
+          <Panel className="mx-auto mb-6 max-w-2xl p-4">
+            <p className="mb-2 text-xs uppercase tracking-wider text-zinc-400">
+              {nameResults.length} player{safeLen(nameResults)} found — click to open
+            </p>
+            {nameResults.length === 0 ? (
+              <p className="text-sm text-zinc-400">No players with that name in the catalog yet.</p>
+            ) : (
+              <div className="divide-y divide-white/10">
+                {nameResults.map((u) => (
+                  <button
+                    key={u.user_id}
+                    onClick={() => {
+                      setNameResults(null);
+                      navigate(`/user/${u.user_id}`);
+                    }}
+                    className="flex w-full items-center justify-between px-2 py-2 text-left hover:bg-white/10"
+                  >
+                    <span className="font-semibold text-white">{u.nickname ?? 'Unknown'}</span>
+                    <span className="font-mono text-xs text-zinc-400">{u.user_id.slice(0, 12)}…</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </Panel>
+        )}
 
         {showSearch && (
           <Panel className="mx-auto max-w-2xl p-5">
@@ -350,6 +379,11 @@ const UserPage = () => {
     </div>
   );
 };
+
+
+function safeLen(arr: unknown[]): string {
+  return arr.length === 1 ? '' : 's';
+}
 
 export default UserPage;
 

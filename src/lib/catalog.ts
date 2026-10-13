@@ -52,3 +52,43 @@ export async function fetchCatalog(limit = 50): Promise<CatalogUser[] | null> {
     return null;
   }
 }
+
+export interface UserSearchResult {
+  user_id: string;
+  nickname: string | null;
+  car_style?: string | null;
+  last_seen?: string;
+}
+
+/** Search players by username (substring match on the community catalog). */
+export async function searchUsers(q: string, limit = 10): Promise<UserSearchResult[]> {
+  try {
+    const response = await fetch(`${workerOrigin()}/users?q=${encodeURIComponent(q)}&limit=${limit}`);
+    if (!response.ok) return [];
+    const data = (await response.json()) as { users?: UserSearchResult[] };
+    return data.users ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Full archived profile: current info + name/style histories + personal bests. */
+export async function fetchUserProfile(userId: string): Promise<{
+  user: Record<string, unknown> | null;
+  names: { nickname: string; first_seen: string; last_seen: string }[];
+  styles: { car_style: string; first_seen: string; last_seen: string }[];
+  personal_bests: { track_id: string; time_ms: number; verified: number; updated_at: string }[];
+} | null> {
+  try {
+    const response = await fetch(`${workerOrigin()}/users/profile?userId=${userId}`);
+    if (!response.ok) return null;
+    return (await response.json()) as {
+      user: Record<string, unknown> | null;
+      names: { nickname: string; first_seen: string; last_seen: string }[];
+      styles: { car_style: string; first_seen: string; last_seen: string }[];
+      personal_bests: { track_id: string; time_ms: number; verified: number; updated_at: string }[];
+    };
+  } catch {
+    return null;
+  }
+}

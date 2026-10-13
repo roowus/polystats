@@ -49,7 +49,7 @@
   --card-foreground: #f4f4ff;
   --popover: #102052;
   --popover-foreground: #f4f4ff;
-  --primary: #212b58;
+  --primary: #102052;
   --primary-foreground: #f4f4ff;
   --secondary: #212b58;
   --secondary-foreground: #f4f4ff;
@@ -217,7 +217,7 @@ body {
 
 /* Flat force-square inputs */
 .pt-input {
-  background: #212b58;
+  background: #102052;
   border: 2px solid rgba(255, 255, 255, 0.18);
   color: #f4f4ff;
 }
@@ -240,7 +240,7 @@ input, textarea, select {
 
 /* force native dropdown options dark too */
 select, option {
-  background: #212b58;
+  background: #102052;
   color: #f4f4ff;
 }
 

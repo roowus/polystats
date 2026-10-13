@@ -324,7 +324,7 @@ const Utils = () => {
         transition={{ duration: 0.5 }}
         layout
         className={cn(
-          "max-w-2xl w-full space-y-6",
+          "mx-auto w-full max-w-6xl space-y-6 px-4 py-10 sm:px-6",
           "mx-auto"
         )}
       >
@@ -360,7 +360,7 @@ const Utils = () => {
                     setError(null);
                     setUserError(null);
                   }} defaultValue={userInputType}>
-                    <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:border-white/40">
+                    <SelectTrigger className="w-[180px] border-white/10 bg-[#102052] focus:border-white/40">
                       <SelectValue placeholder="Select Input Type" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 text-white border-white/15">
@@ -373,7 +373,7 @@ const Utils = () => {
                     placeholder={inputPlaceholder}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
+                    className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
                   />
                 </div>
               </motion.div>
@@ -419,7 +419,7 @@ const Utils = () => {
                             placeholder="Enter Track ID"
                             value={trackId}
                             onChange={(e) => setTrackId(e.target.value)}
-                            className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
+                            className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
                           />
                           <Button
                             variant="outline"
@@ -444,7 +444,7 @@ const Utils = () => {
                             setTrackId(value);
                           }
                         }} value={trackId || ''}>
-                          <SelectTrigger className="w-full border-white/10 bg-black/30 focus:border-white/40">
+                          <SelectTrigger className="w-full border-white/10 bg-[#102052] focus:border-white/40">
                             <SelectValue placeholder="Select Track" />
                           </SelectTrigger>
                           <SelectContent className="bg-gray-800 text-white border-white/15">

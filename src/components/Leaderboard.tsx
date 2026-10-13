@@ -632,7 +632,7 @@ const Leaderboard = () => {
                               setGoToPosition(''); // Clear go to position
                               setUserNotFoundOnTrack(false); // Reset user not found state
                           }} defaultValue={userInputType}>
-                              <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:border-white/40">
+                              <SelectTrigger className="w-[180px] border-white/10 bg-[#102052] focus:border-white/40">
                                   <SelectValue placeholder="Select Input Type" />
                               </SelectTrigger>
                               <SelectContent className="border border-white/10 bg-[#102052] text-zinc-100">
@@ -648,7 +648,7 @@ const Leaderboard = () => {
                             placeholder={inputPlaceholder}
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
-                            className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
+                            className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
                           />
                       </div>
                   </motion.div>
@@ -675,7 +675,7 @@ const Leaderboard = () => {
                                           placeholder="Enter Track ID"
                                           value={trackId}
                                           onChange={(e) => setTrackId(e.target.value)}
-                                          className="flex-1 border-white/10 bg-black/30 placeholder:text-zinc-500 focus:border-white/40"
+                                          className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
                                       />
                                       <Button
                                           variant="outline"
@@ -700,7 +700,7 @@ const Leaderboard = () => {
                                           setTrackId(value);
                                       }
                                   }} value={trackId || ''}>
-                                      <SelectTrigger className="flex-1 border-white/10 bg-black/30 focus:border-white/40">
+                                      <SelectTrigger className="flex-1 border-white/10 bg-[#102052] focus:border-white/40">
                                           <SelectValue placeholder="Select Track" />
                                       </SelectTrigger>
                                       <SelectContent className="border border-white/10 bg-[#102052] text-zinc-100">
@@ -836,7 +836,7 @@ const Leaderboard = () => {
                {/* User Stats Card */}
                {/* Conditional rendering for User Stats */}
                {loading ? (
-                   <Card className="border-white/10 bg-black/30 shadow-lg w-full">
+                   <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
                        <CardHeader>
                            <CardTitle className="flex items-center gap-2 text-purple-400">
                                <User className="w-5 h-5" />
@@ -851,7 +851,7 @@ const Leaderboard = () => {
                     // Error message is already handled by the main error alert
                     null
                ) : userNotFoundOnTrack ? (
-                   <Card className="border-white/10 bg-black/30 shadow-lg w-full">
+                   <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
                        <CardHeader>
                            <CardTitle className="flex items-center gap-2 text-purple-400">
                                <User className="w-5 h-5" />
@@ -980,7 +980,7 @@ const Leaderboard = () => {
                  </>
                ) : (
                  // This block will now only show if not loading, no error, user not found is false, and userData is null (initial state)
-                 <Card className="border-white/10 bg-black/30 shadow-lg w-full">
+                 <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
                    <CardHeader>
                      <CardTitle className="flex items-center gap-2 text-purple-400">
                        <User className="w-5 h-5" />
@@ -1002,7 +1002,7 @@ const Leaderboard = () => {
                        </p>
                        <p className="text-gray-400">Total Entries: {statsData?.total ?? 'N/A'}</p>
                      </div>
-                     <Card className="border-white/10 bg-black/30 shadow-lg w-full">
+                     <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
                        <CardHeader />
                        <CardContent>
                          <div className="space-y-4">
