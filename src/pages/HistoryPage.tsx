@@ -4,6 +4,7 @@ import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/sh
 import { Freshness, useDataStatus } from '@/components/Freshness';
 import { formatTime, getProxyUrl } from '@/lib/polytrack';
 import { OFFICIAL_TRACKS } from '@/lib/tracks';
+import { getTrackCatalog, mergeCatalog } from '@/lib/liveTracks';
 import { SeasonIcon } from '@/components/SeasonIcon';
 import { cn } from '@/lib/utils';
 
@@ -99,11 +100,16 @@ function ProgressionChart({ rows }: { rows: HistoryRow[] }) {
 }
 
 export default function HistoryPage() {
+  const [catalog, setCatalog] = useState(mergeCatalog([]));
   const [track, setTrack] = useState(OFFICIAL_TRACKS[0]);
   const [rows, setRows] = useState<HistoryRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dataStatus = useDataStatus();
+
+  useEffect(() => {
+    getTrackCatalog().then((c) => setCatalog(c.tracks)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -158,7 +164,7 @@ export default function HistoryPage() {
 
         {/* Track selector */}
         <div className="mb-6 flex flex-wrap gap-1.5">
-          {OFFICIAL_TRACKS.map((t) => (
+          {catalog.filter((t) => /^(Summer|Winter|Desert) \d+$/.test(t.name)).map((t) => (
             <button
               key={t.id}
               onClick={() => setTrack(t)}

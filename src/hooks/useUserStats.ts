@@ -5,7 +5,8 @@ import {
   fetchUserEntryLight,
   type LeaderboardEntry,
 } from '@/lib/polytrack';
-import { ALL_TRACKS } from '@/lib/tracks';
+import { ALL_TRACKS, OFFICIAL_TRACKS } from '@/lib/tracks';
+import { getTrackCatalog } from '@/lib/liveTracks';
 import type { UserTrackEntry } from '@/lib/stats';
 
 export type ScanStatus =
@@ -58,9 +59,21 @@ export function useUserStats() {
     }
     if (!alive()) return;
 
+    // Live catalog: includes tracks added in newer game versions automatically.
+    let catalog = ALL_TRACKS;
+    try {
+      catalog = (await getTrackCatalog()).tracks;
+    } catch {
+      // embedded catalog is the fallback
+    }
+
     const tracks = [
       ...(totwId ? [{ id: totwId, name: `Track of the Week: ${totwName}`, group: 'totw' as const }] : []),
-      ...ALL_TRACKS.map((t) => ({ id: t.id, name: t.name, group: 'catalog' as const })),
+      ...catalog.map((t) => ({
+        id: t.id,
+        name: t.name,
+        group: (OFFICIAL_TRACKS.some((o) => o.id === t.id) ? 'official' : 'community') as 'official' | 'community',
+      })),
     ];
 
     // Phase 1 — light presence check on every track.

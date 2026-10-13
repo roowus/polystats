@@ -4,7 +4,8 @@ import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/sh
 import { Freshness, useDataStatus } from '@/components/Freshness';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { fetchWorldRecord, type LeaderboardEntry } from '@/lib/polytrack';
-import { type TrackInfo } from '@/lib/tracks';
+import { OFFICIAL_TRACKS, COMMUNITY_TRACKS, type TrackInfo } from '@/lib/tracks';
+import { getTrackCatalog } from '@/lib/liveTracks';
 import { fetchTrackOfTheWeek } from '@/lib/polytrack';
 import { cn } from '@/lib/utils';
 import { SeasonIcon } from '@/components/SeasonIcon';
@@ -26,11 +27,21 @@ const WrPage = () => {
     let cancelled = false;
     (async () => {
       try {
-        const { OFFICIAL_TRACKS, COMMUNITY_TRACKS } = await import('@/lib/tracks');
         let tracks: (TrackInfo & { group: 'official' | 'community' | 'totw' })[] = [
           ...OFFICIAL_TRACKS.map((t) => ({ ...t, group: 'official' as const })),
           ...COMMUNITY_TRACKS.map((t) => ({ ...t, group: 'community' as const })),
         ];
+        // live catalog may contain newer tracks than the embedded list
+        try {
+          const { tracks: live } = await getTrackCatalog();
+          const liveExtra: (TrackInfo & { group: 'official' | 'community' | 'totw' })[] = [];
+          const known = new Set(tracks.map((t) => t.id));
+          for (const t of live) {
+            if (!known.has(t.id)) tracks.push({ ...t, group: 'community' });
+          }
+        } catch {
+          // embedded list still works
+        }
         try {
           const totw = await fetchTrackOfTheWeek();
           if (totw) tracks = [{ name: `Track of the Week: ${totw.name}`, id: totw.trackId, group: 'totw' }, ...tracks];

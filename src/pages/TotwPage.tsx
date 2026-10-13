@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote, StatTile } from '@/components/shell';
 import { Freshness, useDataStatus } from '@/components/Freshness';
@@ -35,28 +35,46 @@ const TotwPage = () => {
   const [loading, setLoading] = useState(true);
   const dataStatus = useDataStatus();
 
+  const load = useCallback(async () => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    try {
+      const t = await fetchTrackOfTheWeek();
+      if (!t) throw new Error('No Track of the Week available right now.');
+      if (cancelled) return;
+      setTotw(t);
+      const data = await fetchLeaderboard({ trackId: t.trackId, skip: 0, amount: 50, onlyVerified: false });
+      if (cancelled) return;
+      setEntries(data.entries);
+      setTotal(data.total);
+    } catch (e) {
+      if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load Track of the Week.');
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const t = await fetchTrackOfTheWeek();
-        if (!t) throw new Error('No Track of the Week available right now.');
-        if (cancelled) return;
-        setTotw(t);
-        const data = await fetchLeaderboard({ trackId: t.trackId, skip: 0, amount: 50, onlyVerified: false });
-        if (cancelled) return;
-        setEntries(data.entries);
-        setTotal(data.total);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load Track of the Week.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      await load();
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [load]);
+
+  // Auto-rotate: refetch when the week ends (checked every 30s).
+  useEffect(() => {
+    if (!totw?.endTime) return;
+    const t = setInterval(() => {
+      if (Date.now() >= new Date(totw.endTime!).getTime()) {
+        load();
+      }
+    }, 30000);
+    return () => clearInterval(t);
+  }, [totw, load]);
 
   return (
     <div>
