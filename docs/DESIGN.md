@@ -34,9 +34,34 @@ Text: white primary; `#e2e2f0` secondary; `#cfcfe4` tertiary. No gray-on-gray.
 
 - Body font is **ForcedSquare** (self-hosted, see `public/forced_square.woff2`),
   applied to body text, inputs, and numeric/time values.
-- Page titles: `font-game`, uppercase, 3xl-4xl.
-- Panel section headers: `SectionHeader` (uppercase, tracking-wide, 2px underline border).
+- Page titles: `font-game`, uppercase, 4xl-5xl.
+- Panel section headers: `SectionHeader` (2xl, uppercase, tracking-wide, 2px
+  underline border).
 - Numbers and times keep `tabular-nums` for column alignment.
+
+### Scale
+
+Use the `TEXT` tokens in `src/components/shell.tsx`. Do not hand-write sizes.
+
+| Token | Size | Used for |
+| --- | --- | --- |
+| `TEXT.title` | 36-48px | page title |
+| `TEXT.heading` | 24px | panel / section heading |
+| `TEXT.value` | 24px | stat and metric values |
+| `TEXT.body` | 16px | default body copy |
+| `TEXT.muted` | 15px | secondary copy |
+| `TEXT.label` | 13px | stat labels, table headers, small caps |
+| `.text-timestamp` | 14px | "Data as of" lines |
+
+**13px is the floor.** Nothing on the site renders smaller. Earlier revisions
+used 10-11px labels next to 16-40px panel padding, which read as mostly empty
+boxes; sizes are deliberately paired with tight padding now.
+
+### Padding
+
+Panels are dense on purpose. A single line of text gets a compact strip
+(`px-4 py-5`), not a tall box. Reserve `p-4`/`p-5` for panels with several rows
+of content, and avoid `p-8`+ entirely.
 
 ## 4. Components
 
