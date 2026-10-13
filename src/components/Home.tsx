@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import Navigation from './Navigation';
 import { PageShell, Panel, StatTile } from './shell';
-import { Freshness, useDataStatus } from '@/components/Freshness';
+import { Freshness, useDataStatus, formatTimestamp } from '@/components/Freshness';
 
 const FEATURES = [
   {
@@ -109,7 +109,7 @@ const Home = () => {
             </div>
             {dataStatus.last_backfill_run && (
               <p className="mt-3 text-timestamp">
-                Long-tail backfill last ran {new Date(dataStatus.last_backfill_run.replace(' ', 'T') + 'Z').toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                Long-tail backfill last ran {formatTimestamp(dataStatus.last_backfill_run)}
               </p>
             )}
           </Panel>

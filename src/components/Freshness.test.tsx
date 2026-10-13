@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import { Freshness, parseTimestamp } from './Freshness';
+import { Freshness, parseTimestamp, formatTimestamp } from './Freshness';
 
 describe('parseTimestamp', () => {
   it('parses ISO-8601 that already carries a Z zone', () => {
@@ -44,5 +44,25 @@ describe('Freshness', () => {
   it('renders nothing when no date is given', () => {
     const { container } = render(<Freshness date={null} />);
     expect(container.textContent).toBe('');
+  });
+});
+
+describe('formatTimestamp', () => {
+  it('formats a live /status value', () => {
+    expect(formatTimestamp('2026-10-13T21:35:48.216Z')).not.toBe('');
+  });
+
+  it('returns empty string for missing or unusable values instead of throwing', () => {
+    // HistoryPage passes `last_backfill_run ?? last_fresh_run`; both can be absent
+    // on a first run, which previously produced "Invalid Date" or a TypeError.
+    expect(formatTimestamp(undefined)).toBe('');
+    expect(formatTimestamp(null)).toBe('');
+    expect(formatTimestamp('')).toBe('');
+    expect(formatTimestamp('undefined')).toBe('');
+  });
+
+  it('handles the SQLite shape the history rows use', () => {
+    expect(formatTimestamp('2026-03-10 15:48:59Z')).not.toBe('');
+    expect(formatTimestamp('2026-03-10 15:48:59')).not.toBe('');
   });
 });

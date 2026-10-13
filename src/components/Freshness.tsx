@@ -29,16 +29,19 @@ export function parseTimestamp(value: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** Human-readable form of a worker timestamp, or an empty string if unparseable. */
+export function formatTimestamp(value?: string | null): string {
+  if (!value) return '';
+  const parsed = parseTimestamp(value);
+  if (!parsed) return '';
+  return parsed.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+}
+
 /** Tan "data as of" line, telling users exactly when the archive was updated. */
 export function Freshness({ date }: { date?: string | null }) {
-  if (!date) return null;
-  const parsed = parseTimestamp(date);
-  if (!parsed) return null;
-  return (
-    <p className="text-timestamp">
-      Data as of {parsed.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
-    </p>
-  );
+  const formatted = formatTimestamp(date);
+  if (!formatted) return null;
+  return <p className="text-timestamp">Data as of {formatted}</p>;
 }
 
 /** Fetches the worker's run metadata once per page load. */
