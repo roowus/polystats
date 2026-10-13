@@ -121,7 +121,7 @@ const UserPage = () => {
         />
 
         {nameResults && (
-          <Panel className="mx-auto mb-6 max-w-2xl p-4">
+          <Panel className="mb-6 p-4">
             <p className="mb-2 text-xs uppercase tracking-wider text-zinc-400">
               {nameResults.length} player{safeLen(nameResults)} found. Click one to open:
             </p>
@@ -148,9 +148,10 @@ const UserPage = () => {
         )}
 
         {showSearch && (
-          <Panel className="mx-auto max-w-2xl p-5">
+          <Panel className="p-5">
             <div className="flex flex-col gap-3 sm:flex-row">
               <PlayerSearchInput
+                className="w-full flex-1"
                 value={input}
                 onChange={setInput}
                 onPick={(id: string) => {
@@ -180,7 +181,7 @@ const UserPage = () => {
         )}
 
         {status.phase === 'scanning' && (
-          <Panel className="mx-auto max-w-md p-6 text-center" data-fresh="refreshing">
+          <Panel className="p-6 text-center" data-fresh="refreshing">
             <Spinner className="h-6 w-6" />
             <p className="mt-3 text-sm text-zinc-300">
               Scanning leaderboards… {status.done}/{status.total}
@@ -195,7 +196,7 @@ const UserPage = () => {
         )}
 
         {status.phase === 'enriching' && (
-          <Panel className="mx-auto max-w-md p-6 text-center">
+          <Panel className="p-6 text-center">
             <Spinner className="h-6 w-6" />
             <p className="mt-3 text-sm text-zinc-300">
               Found {status.found} track{status.found === 1 ? '' : 's'}, loading details...
@@ -204,7 +205,7 @@ const UserPage = () => {
         )}
 
         {cachedProfile && status.phase !== 'done' && (
-          <Panel className="mx-auto mb-6 max-w-2xl p-4">
+          <Panel className="mb-6 p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-white">
                 From database: {String((cachedProfile.user as { nickname?: string } | null)?.nickname ?? 'unknown player')}
@@ -227,7 +228,7 @@ const UserPage = () => {
         )}
 
         {status.phase === 'no-entries' && (
-          <div className="mx-auto max-w-xl">
+          <div className="w-full">
             <ErrorNote>
               <p className="font-medium">No leaderboard entries found.</p>
               <p className="mt-1 text-red-200/80">

@@ -1,12 +1,20 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Single source of truth for content width.
+ *
+ * Every page container, panel, and the nav use this, so panels stay aligned
+ * instead of each page picking its own max-width.
+ */
+export const PAGE_WIDTH = 'mx-auto w-full max-w-[1600px] px-4 sm:px-6';
+
 /** Page background + centered content shell with consistent spacing. */
 export function PageShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className="min-h-screen bg-[#212b58] text-white">
       <div className="relative pt-20">
-        <main className={cn('pt-enter mx-auto w-full max-w-6xl px-4 py-10 sm:px-6', className)}>
+        <main className={cn('pt-enter py-10', PAGE_WIDTH, className)}>
           {children}
         </main>
       </div>

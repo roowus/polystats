@@ -137,6 +137,7 @@ const ComparePage = () => {
         <Panel className="mb-6 p-5">
           <div className="flex flex-col gap-3 sm:flex-row">
             <PlayerSearchInput
+              className="w-full flex-1"
               value={input}
               onChange={setInput}
               onPick={(id) => {

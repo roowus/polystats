@@ -52,7 +52,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-[#212b58] text-white">
       <Navigation />
-      <PageShell className="max-w-5xl">
+      <PageShell>
         {/* Hero */}
         <div className="mb-12 text-center">
           <h1 className="font-game text-4xl font-bold uppercase tracking-wide sm:text-5xl">

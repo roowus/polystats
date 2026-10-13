@@ -38,7 +38,7 @@ const HowToUse = () => {
 
       <div className="pt-24 pb-16 px-4 md:px-8">
         <motion.div
-          className="max-w-5xl mx-auto space-y-10"
+          className="mx-auto w-full max-w-[1600px] space-y-10 px-4 sm:px-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"

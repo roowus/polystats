@@ -586,8 +586,7 @@ const Leaderboard = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          "mx-auto w-full space-y-6 px-4 sm:px-6", // Base classes
-          statsData || userNotFoundOnTrack ? "max-w-6xl" : "max-w-2xl" // Conditionally apply max-width based on statsData or userNotFoundOnTrack
+          "mx-auto w-full max-w-[1600px] space-y-6 px-4 sm:px-6", // Full width, matches the rest of the site
         )}
         layout // Enable layout animations for smooth size changes
       >
