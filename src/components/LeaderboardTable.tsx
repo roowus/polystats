@@ -25,7 +25,7 @@ export function VerifiedDot({ state }: { state: number | undefined }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-zinc-500" title="Unverified">
+    <span className="inline-flex items-center gap-1 text-zinc-400" title="Unverified">
       <span className="h-1.5 w-1.5 rounded-full bg-zinc-600" /> unverified
     </span>
   );
@@ -48,18 +48,18 @@ export function LeaderboardTable({
   emptyLabel?: string;
 }) {
   if (rows.length === 0) {
-    return <p className="px-4 py-8 text-center text-sm text-zinc-500">{emptyLabel}</p>;
+    return <p className="px-4 py-5 text-center text-base text-zinc-400">{emptyLabel}</p>;
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="w-full text-base">
         <thead>
-          <tr className="border-b border-white/8 text-left text-[11px] uppercase tracking-wider text-zinc-500">
-            <th className="px-4 py-2.5 font-medium">#</th>
-            <th className="px-4 py-2.5 font-medium">Player</th>
-            <th className="px-4 py-2.5 text-right font-medium">Time</th>
-            {showMedal && <th className="px-4 py-2.5 font-medium">Medal</th>}
-            <th className="px-4 py-2.5 text-right font-medium">Verified</th>
+          <tr className="border-b border-white/8 text-left text-[13px] uppercase tracking-wider text-zinc-400">
+            <th className="px-4 py-3 font-medium">#</th>
+            <th className="px-4 py-3 font-medium">Player</th>
+            <th className="px-4 py-3 text-right font-medium">Time</th>
+            {showMedal && <th className="px-4 py-3 font-medium">Medal</th>}
+            <th className="px-4 py-3 text-right font-medium">Verified</th>
           </tr>
         </thead>
         <tbody>
@@ -77,29 +77,29 @@ export function LeaderboardTable({
                   isSelf && 'bg-purple-500/10 hover:bg-purple-500/15'
                 )}
               >
-                <td className="px-4 py-2.5 tabular-nums text-zinc-400">{row.position ?? startIndex + i + 1}</td>
-                <td className="max-w-[240px] truncate px-4 py-2.5 font-medium">
+                <td className="px-4 py-3 tabular-nums text-zinc-400">{row.position ?? startIndex + i + 1}</td>
+                <td className="max-w-[240px] truncate px-4 py-3 font-medium">
                   {row.nickname ?? 'Unknown'}
                   {row.subtitle && (
-                    <span className="flex items-center gap-1 text-[11px] font-normal text-zinc-400">
+                    <span className="flex items-center gap-1 text-[13px] font-normal text-zinc-400">
                       {row.subtitleSeason && <SeasonIcon trackName={row.subtitle} size={11} />}
                       {row.subtitle}
                     </span>
                   )}
                   {row.countryCode && (
-                    <span className="ml-2 text-[11px] uppercase text-zinc-500">{row.countryCode}</span>
+                    <span className="ml-2 text-[13px] uppercase text-zinc-400">{row.countryCode}</span>
                   )}
-                  {isSelf && <span className="ml-2 rounded bg-purple-500/25 px-1.5 py-0.5 text-[10px] font-semibold text-purple-300">YOU</span>}
+                  {isSelf && <span className="ml-2 rounded bg-purple-500/25 px-1.5 py-0.5 text-[13px] font-semibold text-purple-300">YOU</span>}
                 </td>
-                <td className="px-4 py-2.5 text-right font-mono tabular-nums text-violet-200">
+                <td className="px-4 py-3 text-right font-mono tabular-nums text-violet-200">
                   {formatTime(row.frames)}
                 </td>
                 {showMedal && (
-                  <td className="px-4 py-2.5">
+                  <td className="px-4 py-3">
                     {medal && <MedalBadge {...medal} size="sm" />}
                   </td>
                 )}
-                <td className="px-4 py-2.5 text-right text-xs">
+                <td className="px-4 py-3 text-right text-[15px]">
                   <VerifiedDot state={row.verifiedState} />
                 </td>
               </tr>

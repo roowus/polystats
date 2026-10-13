@@ -122,11 +122,11 @@ const UserPage = () => {
 
         {nameResults && (
           <Panel className="mb-6 p-4">
-            <p className="mb-2 text-xs uppercase tracking-wider text-zinc-400">
+            <p className="mb-2 text-[15px] uppercase tracking-wider text-zinc-400">
               {nameResults.length} player{safeLen(nameResults)} found. Click one to open:
             </p>
             {nameResults.length === 0 ? (
-              <p className="text-sm text-zinc-400">No players with that name in the catalog yet.</p>
+              <p className="text-base text-zinc-400">No players with that name in the catalog yet.</p>
             ) : (
               <div className="divide-y divide-white/10">
                 {nameResults.map((u) => (
@@ -139,7 +139,7 @@ const UserPage = () => {
                     className="flex w-full items-center justify-between px-2 py-2 text-left hover:bg-white/10"
                   >
                     <span className="font-semibold text-white">{u.nickname ?? 'Unknown'}</span>
-                    <span className="font-mono text-xs text-zinc-400">{u.user_id.slice(0, 12)}…</span>
+                    <span className="font-mono text-[15px] text-zinc-400">{u.user_id.slice(0, 12)}…</span>
                   </button>
                 ))}
               </div>
@@ -163,19 +163,19 @@ const UserPage = () => {
               <button
                 onClick={search}
                 disabled={!input.trim()}
-                className="flex items-center justify-center gap-2 bg-[#212b58] border border-white/20 hover:bg-[#1c2f70] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
+                className="flex items-center justify-center gap-2 bg-[#212b58] border border-white/20 hover:bg-[#1c2f70] px-5 py-2.5 text-base font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
               >
                 <Search className="h-4 w-4" /> Search
               </button>
             </div>
             <UserChips label="Saved" users={saved} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
-              <span className="text-zinc-600">No saved players yet. Hit the star on a player page.</span>
+              <span className="text-zinc-400">No saved players yet. Hit the star on a player page.</span>
             } />
             <UserChips label="Recent" users={recents} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
-              <span className="text-zinc-600">Your recent lookups will appear here.</span>
+              <span className="text-zinc-400">Your recent lookups will appear here.</span>
             } />
             <UserChips label="Community favorites" users={community} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
-              <span className="text-zinc-600">The most-saved players will appear here.</span>
+              <span className="text-zinc-400">The most-saved players will appear here.</span>
             } />
           </Panel>
         )}
@@ -183,7 +183,7 @@ const UserPage = () => {
         {status.phase === 'scanning' && (
           <Panel className="p-6 text-center" data-fresh="refreshing">
             <Spinner className="h-6 w-6" />
-            <p className="mt-3 text-sm text-zinc-300">
+            <p className="mt-3 text-base text-zinc-300">
               Scanning leaderboards… {status.done}/{status.total}
             </p>
             <div className="mt-3 h-1.5 overflow-hidden bg-white/10">
@@ -198,7 +198,7 @@ const UserPage = () => {
         {status.phase === 'enriching' && (
           <Panel className="p-6 text-center">
             <Spinner className="h-6 w-6" />
-            <p className="mt-3 text-sm text-zinc-300">
+            <p className="mt-3 text-base text-zinc-300">
               Found {status.found} track{status.found === 1 ? '' : 's'}, loading details...
             </p>
           </Panel>
@@ -207,10 +207,10 @@ const UserPage = () => {
         {cachedProfile && status.phase !== 'done' && (
           <Panel className="mb-6 p-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-white">
+              <p className="text-base font-semibold text-white">
                 From database: {String((cachedProfile.user as { nickname?: string } | null)?.nickname ?? 'unknown player')}
               </p>
-              <span className="flex items-center gap-2 text-xs text-zinc-300">
+              <span className="flex items-center gap-2 text-[15px] text-zinc-300">
                 <Spinner className="h-3 w-3" /> refreshing from PolyTrack…
               </span>
             </div>
@@ -268,13 +268,13 @@ const UserPage = () => {
                       refreshLists();
                       if (nowSaved) shareToCatalog(userId!, nickname ?? undefined);
                     }}
-                    className={cn('text-lg transition', savedFlag ? 'text-amber-300' : 'text-zinc-600 hover:text-zinc-300')}
+                    className={cn('text-lg transition', savedFlag ? 'text-amber-300' : 'text-zinc-400 hover:text-zinc-300')}
                     title={savedFlag ? 'Remove from saved players' : 'Save player'}
                   >
                     {savedFlag ? '★' : '☆'}
                   </button>
                 </h2>
-                <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
+                <div className="mt-1 flex items-center gap-2 text-[15px] text-zinc-400">
                   <span className="max-w-[280px] truncate font-mono sm:max-w-[420px]">{userId}</span>
                   <button onClick={copy} className="text-zinc-400 hover:text-purple-300" title="Copy User ID">
                     {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
@@ -283,7 +283,7 @@ const UserPage = () => {
               </div>
               <button
                 onClick={() => navigate(`/compare?ids=${userId}`)}
-                className="flex items-center gap-2 self-start border border-purple-500/40 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/10"
+                className="flex items-center gap-2 self-start border border-purple-500/40 px-4 py-3 text-base font-medium text-purple-300 transition hover:bg-purple-500/10"
               >
                 <Swords className="h-4 w-4" /> Compare
               </button>
@@ -310,7 +310,7 @@ const UserPage = () => {
             {/* Medals */}
             {Object.keys(medals).length > 0 && (
               <Panel className="mb-6 p-5">
-                <h3 className="mb-3 text-sm font-semibold text-zinc-300">Medals</h3>
+                <h3 className="mb-3 text-base font-semibold text-zinc-300">Medals</h3>
                 <div className="flex flex-wrap gap-2">
                   {MEDAL_ORDER.filter((m) => medals[m]?.length).map((label) => {
                     const medalEntry = medals[label][0];
@@ -320,7 +320,7 @@ const UserPage = () => {
                     return (
                       <span key={label} className="group relative">
                         <MedalBadge icon={medal.icon} label={`${label} ×${medals[label].length}`} color={medal.color} />
-                        <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap border border-white/10 bg-[#212b58] px-2 py-1 text-[11px] text-zinc-300 shadow-xl group-hover:block">
+                        <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap border border-white/10 bg-[#212b58] px-2 py-1 text-[13px] text-zinc-300 shadow-xl group-hover:block">
                           {medals[label].map((e) => e.trackName).join(', ')}
                         </span>
                       </span>
@@ -337,9 +337,9 @@ const UserPage = () => {
                   const e = (kind === 'best' ? extremes.time!.best : extremes.time!.worst)!;
                   return (
                     <Panel key={kind} className="p-4">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{kind} time</p>
+                      <p className="text-[13px] font-medium uppercase tracking-wider text-zinc-400">{kind} time</p>
                       <p className="mt-1 font-mono text-lg text-violet-200">{formatTime(e.frames)}</p>
-                      <p className="truncate text-xs text-zinc-500">{e.trackName}</p>
+                      <p className="truncate text-[15px] text-zinc-400">{e.trackName}</p>
                     </Panel>
                   );
                 })}
@@ -354,7 +354,7 @@ const UserPage = () => {
                     {f === 'totw' ? 'Track of the Week' : f}
                   </Chip>
                 ))}
-                <div className="ml-auto flex items-center gap-1 text-xs text-zinc-500">
+                <div className="ml-auto flex items-center gap-1 text-[15px] text-zinc-400">
                   sort:
                   {(['rank', 'time', 'gap', 'name'] as const).map((k) => (
                     <SortButton key={k} active={sort === k} onClick={() => setSort(k)}>
@@ -364,7 +364,7 @@ const UserPage = () => {
                 </div>
               </div>
               {visible.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-zinc-500">No entries in this category.</p>
+                <p className="px-4 py-5 text-center text-base text-zinc-400">No entries in this category.</p>
               ) : (
                 <div className="divide-y divide-white/5">
                   {visible.map((e) => (
@@ -373,11 +373,11 @@ const UserPage = () => {
                         <span className="text-lg font-bold tabular-nums text-zinc-300">#{e.position}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                        <p className="flex items-center gap-1.5 truncate text-base font-medium">
                           <SeasonIcon trackName={e.trackName} />
                           {e.trackName}
                         </p>
-                        <p className="text-[11px] text-zinc-500">
+                        <p className="text-[13px] text-zinc-400">
                           {formatTime(e.frames)}
                           {e.wrTime !== undefined && ` · WR ${formatTime(e.wrTime)}`}
                           {` · ${(100 - (e.percent ?? 0)).toFixed(1)}th percentile`}
@@ -386,7 +386,7 @@ const UserPage = () => {
                       <div className="hidden shrink-0 items-center gap-2 sm:flex">
                         {e.wrPercentGap !== undefined && (
                           <span
-                            className="text-xs font-medium tabular-nums"
+                            className="text-[15px] font-medium tabular-nums"
                             style={{ color: e.wrPercentGap < 5 ? '#32CD32' : e.wrPercentGap < 15 ? '#FFA500' : '#FF6B6B' }}
                           >
                             +{e.wrPercentGap.toFixed(2)}%
@@ -448,7 +448,7 @@ function UserChips({
 }) {
   return (
     <div className="mt-3">
-      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</p>
+      <p className="mb-1.5 text-[13px] font-medium uppercase tracking-wider text-zinc-400">{label}</p>
       {users.length === 0 ? (
         onEmpty
       ) : (
@@ -457,7 +457,7 @@ function UserChips({
             <button
               key={u.id}
               onClick={() => onPick(u.id)}
-              className="bg-[#212b58] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1c2f70] hover:ring-white/50"
+              className="bg-[#212b58] px-3 py-1 text-[15px] font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1c2f70] hover:ring-white/50"
               title={u.id}
             >
               <span className="flex items-center gap-1.5">

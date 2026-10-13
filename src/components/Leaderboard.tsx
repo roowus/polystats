@@ -73,7 +73,7 @@ const CopyPopup = ({ text }: { text: string }) => (
     initial={{ opacity: 0, y: -10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }} // Add exit animation
-    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-sm px-4 py-2 shadow-lg z-50"
+    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-base px-4 py-3 shadow-lg z-50"
   >
     Copied: {text}
   </motion.div>
@@ -542,7 +542,7 @@ const Leaderboard = () => {
 
     return (
       <div className="flex items-center gap-2 overflow-hidden"> {/* Flex container for text and button */}
-        <span className={cn("font-mono text-sm truncate", textColorClass)}> {/* Applied text color class */}
+        <span className={cn("font-mono text-base truncate", textColorClass)}> {/* Applied text color class */}
           {rec}
         </span>
         {/* Recording Data Copy Button - Added grey/transparent hover */}
@@ -647,7 +647,7 @@ const Leaderboard = () => {
                             placeholder={inputPlaceholder}
                             value={userInput}
                             onChange={(e) => setUserInput(e.target.value)}
-                            className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
+                            className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-400 focus:border-white/40"
                           />
                       </div>
                   </motion.div>
@@ -674,7 +674,7 @@ const Leaderboard = () => {
                                           placeholder="Enter Track ID"
                                           value={trackId}
                                           onChange={(e) => setTrackId(e.target.value)}
-                                          className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
+                                          className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-400 focus:border-white/40"
                                       />
                                       <Button
                                           variant="outline"
@@ -748,7 +748,7 @@ const Leaderboard = () => {
                                ></span>
                            </button>
                            {/* Custom Label Implementation */}
-                           <label htmlFor="verified-toggle" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white">
+                           <label htmlFor="verified-toggle" className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white">
                              Only Verified
                            </label>
                        </div>
@@ -811,7 +811,7 @@ const Leaderboard = () => {
                animate="animate"
                exit="exit"
                variants={alertVariants}
-               className="flex items-center justify-center gap-2 text-yellow-400 text-sm text-center mt-2 p-3 border border-yellow-400 bg-yellow-400/20"
+               className="flex items-center justify-center gap-2 text-yellow-400 text-base text-center mt-2 p-3 border border-yellow-400 bg-yellow-400/20"
              >
                  <TriangleAlert className="h-4 w-4" /> {/* Changed icon */}
                  <span>Suggestion: Please double-check the input value and ensure the correct input type is selected (User ID, User Token, or Rank).</span>
@@ -1182,7 +1182,7 @@ const Leaderboard = () => {
                                placeholder="Go to pos."
                                value={goToPosition}
                                onChange={(e) => setGoToPosition(e.target.value)}
-                               className="w-24 pt-panel text-white border-gray-700 placeholder:text-zinc-500 focus:border-white/40"
+                               className="w-24 pt-panel text-white border-gray-700 placeholder:text-zinc-400 focus:border-white/40"
                                onKeyDown={(e) => { if (e.key === 'Enter') handleGoToPage(); }}
                              />
                              <Button onClick={handleGoToPage} disabled={loading} className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1201,7 +1201,7 @@ const Leaderboard = () => {
        {/* Version and Link - Positioned outside the animated motion.div */}
        {/* Conditionally render this div based on whether statsData is null AND userNotFoundOnTrack is false */}
        {!statsData && !userNotFoundOnTrack && (
-         <div className="text-center text-gray-500 text-sm mt-4 absolute bottom-4 left-1/2 transform -translate-x-1/2">
+         <div className="text-center text-gray-500 text-base mt-4 absolute bottom-4 left-1/2 transform -translate-x-1/2">
            <p>Game version: {API_VERSION}</p>
            <p>
              Play the game: <a href="https://www.kodub.com/apps/polytrack" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Polytrack</a>

@@ -41,7 +41,7 @@ export function Chip({
       onClick={onClick}
       title={title}
       className={cn(
-        'border-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors',
+        'border-2 px-3 py-1.5 text-[15px] font-semibold uppercase tracking-wide transition-colors',
         active
           ? 'border-white/25 bg-[#1a2450] text-white'
           : 'border-transparent text-zinc-300 hover:bg-white/10 hover:text-white',
@@ -59,7 +59,7 @@ export function SortButton({ active, onClick, children }: { active?: boolean; on
     <button
       onClick={onClick}
       className={cn(
-        'px-2 py-0.5 text-xs font-semibold uppercase transition-colors',
+        'px-2 py-0.5 text-[15px] font-semibold uppercase transition-colors',
         active ? 'bg-[#1a2450] text-white' : 'text-zinc-300 hover:text-white'
       )}
     >
@@ -71,7 +71,7 @@ export function SortButton({ active, onClick, children }: { active?: boolean; on
 /** Section header inside a panel (table titles, list headers). */
 export function SectionHeader({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn('border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white', className)}>
+    <div className={cn('border-b-2 border-white/12 px-4 py-3 text-base font-semibold uppercase tracking-wide text-white', className)}>
       {children}
     </div>
   );
@@ -98,7 +98,7 @@ export function TextField({
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={onKeyDown}
       placeholder={placeholder}
-      className={cn('pt-input px-4 py-2.5 text-sm outline-none transition', className)}
+      className={cn('pt-input px-4 py-3 text-base outline-none transition', className)}
     />
   );
 }

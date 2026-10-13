@@ -54,7 +54,7 @@ const CopyPopup = ({ text }: { text: string }) => (
     initial={{ opacity: 0, y: -10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
-    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-sm px-4 py-2 shadow-lg z-50"
+    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-base px-4 py-3 shadow-lg z-50"
   >
     Copied: {text}
   </motion.div>
@@ -284,7 +284,7 @@ const Utils = () => {
               data-tooltip-id={tooltipId}
             >
               <Tooltip id={tooltipId}>
-                <span className="text-xs">{hex}</span>
+                <span className="text-[15px]">{hex}</span>
               </Tooltip>
             </motion.div>
           );
@@ -373,7 +373,7 @@ const Utils = () => {
                     placeholder={inputPlaceholder}
                     value={userInput}
                     onChange={(e) => setUserInput(e.target.value)}
-                    className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
+                    className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-400 focus:border-white/40"
                   />
                 </div>
               </motion.div>
@@ -419,7 +419,7 @@ const Utils = () => {
                             placeholder="Enter Track ID"
                             value={trackId}
                             onChange={(e) => setTrackId(e.target.value)}
-                            className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-500 focus:border-white/40"
+                            className="flex-1 border-white/10 bg-[#102052] placeholder:text-zinc-400 focus:border-white/40"
                           />
                           <Button
                             variant="outline"
@@ -522,7 +522,7 @@ const Utils = () => {
                         </h3>
                         <p className="text-gray-300 flex items-center">
                           User ID:
-                          <span className="font-mono text-sm text-gray-400 ml-2 break-all sm:break-words">{resolvedUserId}</span>
+                          <span className="font-mono text-base text-gray-400 ml-2 break-all sm:break-words">{resolvedUserId}</span>
                           <Button
                             variant="link"
                             size="sm"
@@ -551,7 +551,7 @@ const Utils = () => {
                         )}
                         {/* Conditional note for Rank input type - still relevant */}
                         {userInputType === 'rank' && (
-                          <p className="text-sm text-gray-400 italic">
+                          <p className="text-base text-gray-400 italic">
                             Is Verifier status cannot be determined when looking up by Rank. A User Token is required for this information.
                           </p>
                         )}
@@ -622,7 +622,7 @@ const Utils = () => {
               exit="exit"
               layout
             >
-              <div className="flex items-center justify-center gap-2 text-yellow-400 text-sm text-center mt-2 p-3 border border-yellow-400 bg-yellow-400/20">
+              <div className="flex items-center justify-center gap-2 text-yellow-400 text-base text-center mt-2 p-3 border border-yellow-400 bg-yellow-400/20">
                 <TriangleAlert className="h-4 w-4" />
                 <span>Suggestion: Please double-check your input and ensure the correct Input Type is selected. If using Rank, make sure a Track ID is also provided.</span>
               </div>
@@ -638,7 +638,7 @@ const Utils = () => {
       {/* Conditionally render the version and game link */}
       {!isUserDataSectionVisible && (
         <div
-          className="absolute bottom-0 left-0 right-0 text-center text-gray-400 text-sm space-y-2 p-4"
+          className="absolute bottom-0 left-0 right-0 text-center text-gray-400 text-base space-y-2 p-4"
         >
           <p>Game version: {API_VERSION}</p>
           <p>Play the game: <a href="https://www.kodub.com/apps/polytrack" className="text-purple-400 hover:underline">Polytrack</a></p>

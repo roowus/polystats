@@ -68,7 +68,7 @@ function ProgressionChart({ rows }: { rows: HistoryRow[] }) {
 
   return (
     <Panel className="mb-6 p-4">
-      <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+      <p className="mb-2 text-[13px] font-medium uppercase tracking-wider text-zinc-400">
         Record progression (best time over time)
       </p>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="World record progression chart">
@@ -177,9 +177,9 @@ export default function HistoryPage() {
         </div>
 
         {loading && (
-          <Panel className="p-10 text-center">
+          <Panel className="px-6 py-6 text-center">
             <Spinner className="h-6 w-6" />
-            <p className="mt-3 text-sm text-zinc-400">Loading history…</p>
+            <p className="mt-3 text-base text-zinc-400">Loading history…</p>
           </Panel>
         )}
         {error && <ErrorNote>{error}</ErrorNote>}
@@ -189,26 +189,26 @@ export default function HistoryPage() {
             {stats && (
               <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Panel className="p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-zinc-400">Current WR</p>
+                  <p className="text-[13px] uppercase tracking-wider text-zinc-400">Current WR</p>
                   <p className="mt-1 font-mono text-lg text-white">{formatTime(stats.best.time_ms)}</p>
-                  <p className="text-xs text-zinc-300">{stats.best.player}</p>
+                  <p className="text-[15px] text-zinc-300">{stats.best.player}</p>
                 </Panel>
                 <Panel className="p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-zinc-400">First record</p>
+                  <p className="text-[13px] uppercase tracking-wider text-zinc-400">First record</p>
                   <p className="mt-1 font-mono text-lg text-white">{formatTime(stats.first.time_ms)}</p>
-                  <p className="text-xs text-zinc-300">{stats.first.player}</p>
+                  <p className="text-[15px] text-zinc-300">{stats.first.player}</p>
                 </Panel>
                 <Panel className="p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-zinc-400">Time saved since launch</p>
+                  <p className="text-[13px] uppercase tracking-wider text-zinc-400">Time saved since launch</p>
                   <p className="mt-1 font-mono text-lg text-emerald-300">
                     −{formatTime(stats.first.time_ms - stats.best.time_ms)}
                   </p>
-                  <p className="text-xs text-zinc-300">over {stats.spanDays} days</p>
+                  <p className="text-[15px] text-zinc-300">over {stats.spanDays} days</p>
                 </Panel>
                 <Panel className="p-4">
-                  <p className="text-[11px] uppercase tracking-wider text-zinc-400">Record holders</p>
+                  <p className="text-[13px] uppercase tracking-wider text-zinc-400">Record holders</p>
                   <p className="mt-1 text-lg font-semibold text-white">{stats.holders}</p>
-                  <p className="text-xs text-zinc-300">{stats.total} records total</p>
+                  <p className="text-[15px] text-zinc-300">{stats.total} records total</p>
                 </Panel>
               </div>
             )}
@@ -216,20 +216,20 @@ export default function HistoryPage() {
             {rows && <ProgressionChart rows={rows} />}
 
             <Panel className="overflow-hidden">
-              <div className="border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white">
+              <div className="border-b-2 border-white/12 px-4 py-3 text-base font-semibold uppercase tracking-wide text-white">
                 Progression: {track.name}
               </div>
               {!rows || rows.length === 0 ? (
-                <p className="px-4 py-8 text-center text-sm text-zinc-300">No history recorded for this track yet.</p>
+                <p className="px-4 py-5 text-center text-base text-zinc-300">No history recorded for this track yet.</p>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-base">
                     <thead>
-                      <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-zinc-400">
-                        <th className="px-4 py-2.5 font-medium">Date</th>
-                        <th className="px-4 py-2.5 font-medium">Player</th>
-                        <th className="px-4 py-2.5 text-right font-medium">Time</th>
-                        <th className="px-4 py-2.5 text-right font-medium">Improvement</th>
+                      <tr className="border-b border-white/10 text-left text-[13px] uppercase tracking-wider text-zinc-400">
+                        <th className="px-4 py-3 font-medium">Date</th>
+                        <th className="px-4 py-3 font-medium">Player</th>
+                        <th className="px-4 py-3 text-right font-medium">Time</th>
+                        <th className="px-4 py-3 text-right font-medium">Improvement</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -239,20 +239,20 @@ export default function HistoryPage() {
                         const diff = prev ? prev.time_ms - r.time_ms : 0;
                         return (
                           <tr key={`${r.set_at}-${r.player}-${i}`} className="border-b border-white/5 hover:bg-white/5">
-                            <td className="whitespace-nowrap px-4 py-2.5 text-xs text-zinc-300">
+                            <td className="whitespace-nowrap px-4 py-3 text-[15px] text-zinc-300">
                               {r.set_at.slice(0, 16).replace('T', ' ')}
                             </td>
-                            <td className="px-4 py-2.5 font-medium text-white">{r.player}</td>
-                            <td className="px-4 py-2.5 text-right font-mono tabular-nums text-white">
+                            <td className="px-4 py-3 font-medium text-white">{r.player}</td>
+                            <td className="px-4 py-3 text-right font-mono tabular-nums text-white">
                               {formatTime(r.time_ms)}
                             </td>
-                            <td className="px-4 py-2.5 text-right text-xs">
+                            <td className="px-4 py-3 text-right text-[15px]">
                               {i === 0 ? (
                                 <span className="text-zinc-400">first record</span>
                               ) : isRecord ? (
                                 <span className="font-mono text-emerald-300">−{formatTime(diff)}</span>
                               ) : (
-                                <span className="text-zinc-500">n/a</span>
+                                <span className="text-zinc-400">n/a</span>
                               )}
                             </td>
                           </tr>

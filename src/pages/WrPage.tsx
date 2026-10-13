@@ -94,9 +94,9 @@ const WrPage = () => {
         <Freshness date={dataStatus?.last_fresh_run} />
 
         {loading && (
-          <Panel className="p-10 text-center">
+          <Panel className="px-6 py-6 text-center">
             <Spinner className="h-6 w-6" />
-            <p className="mt-3 text-sm text-zinc-400">Fetching records across all tracks…</p>
+            <p className="mt-3 text-base text-zinc-400">Fetching records across all tracks…</p>
           </Panel>
         )}
         {error && <ErrorNote>{error}</ErrorNote>}
@@ -109,7 +109,7 @@ const WrPage = () => {
                   {f === 'totw' ? 'Track of the Week' : f}
                 </Chip>
               ))}
-              <span className="ml-auto text-xs text-zinc-600">
+              <span className="ml-auto text-[15px] text-zinc-400">
                 {visible.length} tracks{missing > 0 ? ` · ${missing} with no verified time` : ''}
               </span>
             </div>

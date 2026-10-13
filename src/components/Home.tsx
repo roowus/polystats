@@ -59,7 +59,7 @@ const Home = () => {
             <span className="text-white">Poly</span>
             <span className="text-[#7f9cf5]">Stats</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-zinc-400 sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-base text-zinc-400 sm:text-base">
             Deep statistics for{' '}
             <a
               href="https://www.kodub.com/apps/polytrack"
@@ -87,9 +87,9 @@ const Home = () => {
               </div>
               <h3 className="flex items-center gap-1.5 font-semibold">
                 {title}
-                <ArrowRight className="h-3.5 w-3.5 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:text-purple-300" />
+                <ArrowRight className="h-3.5 w-3.5 text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-purple-300" />
               </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-zinc-400">{description}</p>
+              <p className="mt-1.5 text-base leading-relaxed text-zinc-400">{description}</p>
             </button>
           ))}
         </div>
@@ -97,7 +97,7 @@ const Home = () => {
         {dataStatus && typeof dataStatus.users === 'number' && (
           <Panel className="mt-10 p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="font-game text-sm font-bold uppercase tracking-wider text-white">Database</h2>
+              <h2 className="font-game text-base font-bold uppercase tracking-wider text-white">Database</h2>
               <Freshness date={dataStatus.last_fresh_run} />
             </div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -115,7 +115,7 @@ const Home = () => {
           </Panel>
         )}
 
-        <Panel className="mt-6 flex flex-col items-center justify-between gap-3 p-4 text-xs text-zinc-500 sm:flex-row">
+        <Panel className="mt-6 flex flex-col items-center justify-between gap-3 p-4 text-[15px] text-zinc-400 sm:flex-row">
           <span>Data: vps.kodub.com v6 API · game 0.6.3</span>
           <a
             href="https://www.kodub.com/apps/polytrack"

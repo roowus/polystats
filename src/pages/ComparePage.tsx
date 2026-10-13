@@ -38,7 +38,7 @@ function PlayerPanel({
   return (
     <Panel className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="truncate text-sm font-bold text-white" title={id}>
+        <h3 className="truncate text-base font-bold text-white" title={id}>
           {status.phase === 'done' ? (status.nickname ?? `${id.slice(0, 10)}…`) : `${id.slice(0, 10)}…`}
         </h3>
         {onRemove && (
@@ -49,27 +49,27 @@ function PlayerPanel({
       </div>
       {status.phase === 'done' ? (
         avg ? (
-          <div className="mt-2 grid grid-cols-3 gap-1 text-center text-xs">
+          <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[15px]">
             <div>
-              <p className="text-[10px] uppercase text-zinc-400">Tracks</p>
+              <p className="text-[13px] uppercase text-zinc-400">Tracks</p>
               <p className="font-semibold tabular-nums text-white">{avg.tracks}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase text-zinc-400">Avg rank</p>
+              <p className="text-[13px] uppercase text-zinc-400">Avg rank</p>
               <p className="font-semibold tabular-nums text-white">{Math.round(avg.avgRank)}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase text-zinc-400">Avg gap</p>
+              <p className="text-[13px] uppercase text-zinc-400">Avg gap</p>
               <p className="font-semibold tabular-nums text-white">{avg.avgWrGapPercent.toFixed(1)}%</p>
             </div>
           </div>
         ) : (
-          <p className="mt-2 text-xs text-zinc-400">No entries found</p>
+          <p className="mt-2 text-[15px] text-zinc-400">No entries found</p>
         )
       ) : status.phase === 'error' ? (
-        <p className="mt-2 text-xs text-red-300">{status.message}</p>
+        <p className="mt-2 text-[15px] text-red-300">{status.message}</p>
       ) : (
-        <div className="mt-2 flex items-center gap-2 text-xs text-zinc-400">
+        <div className="mt-2 flex items-center gap-2 text-[15px] text-zinc-400">
           <Spinner className="h-3.5 w-3.5" /> scanning…
         </div>
       )}
@@ -156,7 +156,7 @@ const ComparePage = () => {
             </button>
           </div>
           {ids.length > 0 && (
-            <p className="mt-2 text-xs text-zinc-400">
+            <p className="mt-2 text-[15px] text-zinc-400">
               {ids.length}/{MAX_PLAYERS} players loaded
             </p>
           )}
@@ -177,24 +177,24 @@ const ComparePage = () => {
 
         {trackMap.length > 0 && (
           <Panel className="overflow-hidden">
-            <div className="border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white">
+            <div className="border-b-2 border-white/12 px-4 py-3 text-base font-semibold uppercase tracking-wide text-white">
               Head-to-head: {trackMap.length} shared track{trackMap.length === 1 ? '' : 's'}
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead>
-                  <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-zinc-400">
-                    <th className="px-4 py-2.5 font-medium">Track</th>
+                  <tr className="border-b border-white/10 text-left text-[13px] uppercase tracking-wider text-zinc-400">
+                    <th className="px-4 py-3 font-medium">Track</th>
                     {doneIds.map((id, i) => (
                       <th
                         key={id}
-                        className="px-4 py-2.5 text-right font-medium"
+                        className="px-4 py-3 text-right font-medium"
                         style={{ color: playerColors[i % playerColors.length] }}
                       >
                         {results[id]?.nickname ?? `${id.slice(0, 8)}…`}
                       </th>
                     ))}
-                    <th className="px-4 py-2.5 text-right font-medium">Best</th>
+                    <th className="px-4 py-3 text-right font-medium">Best</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,19 +202,19 @@ const ComparePage = () => {
                     const best = Math.min(...Object.values(times));
                     return (
                       <tr key={trackId} className="border-b border-white/5 hover:bg-white/5">
-                        <td className="max-w-[220px] truncate px-4 py-2.5">{trackName}</td>
+                        <td className="max-w-[220px] truncate px-4 py-3">{trackName}</td>
                         {doneIds.map((id) => (
-                          <td key={id} className="px-4 py-2.5 text-right font-mono tabular-nums">
+                          <td key={id} className="px-4 py-3 text-right font-mono tabular-nums">
                             {times[id] !== undefined ? (
                               <span className={times[id] === best ? 'font-semibold text-emerald-300' : 'text-zinc-200'}>
                                 {formatTime(times[id])}
                               </span>
                             ) : (
-                              <span className="text-zinc-600">—</span>
+                              <span className="text-zinc-400">—</span>
                             )}
                           </td>
                         ))}
-                        <td className="px-4 py-2.5 text-right font-mono text-xs text-zinc-400">
+                        <td className="px-4 py-3 text-right font-mono text-[15px] text-zinc-400">
                           {formatTime(best)}
                         </td>
                       </tr>

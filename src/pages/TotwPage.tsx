@@ -78,9 +78,9 @@ const TotwPage = () => {
         <Freshness date={dataStatus?.last_fresh_run} />
 
         {loading && (
-          <Panel className="p-10 text-center">
+          <Panel className="px-6 py-6 text-center">
             <Spinner className="h-6 w-6" />
-            <p className="mt-3 text-sm text-zinc-400">Loading…</p>
+            <p className="mt-3 text-base text-zinc-400">Loading…</p>
           </Panel>
         )}
         {error && <ErrorNote>{error}</ErrorNote>}
@@ -97,13 +97,13 @@ const TotwPage = () => {
                 />
               )}
               <div className="relative bg-gradient-to-r from-[#1a2450]/95 to-[#1a2450]/70 p-6 sm:p-8">
-                <p className="text-[11px] font-medium uppercase tracking-widest text-fuchsia-300">
+                <p className="text-[13px] font-medium uppercase tracking-widest text-fuchsia-300">
                   {ENV_NAMES[totw.environment] ?? 'Unknown'} environment
                 </p>
                 <h2 className="mt-1 text-3xl font-bold">{totw.name}</h2>
-                <p className="mt-1 text-sm text-zinc-400">by {totw.author}</p>
+                <p className="mt-1 text-base text-zinc-400">by {totw.author}</p>
                 {totw.endTime && (
-                  <p className="mt-4 text-sm text-zinc-400">
+                  <p className="mt-4 text-base text-zinc-400">
                     Rotates in <Countdown endTime={totw.endTime} />
                   </p>
                 )}
@@ -113,18 +113,18 @@ const TotwPage = () => {
             <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <StatTile label="Entries" value={total.toLocaleString()} />
               <StatTile label="WR" value={entries[0] ? entries[0].nickname : 'n/a'} hint={entries[0] ? undefined : 'no verified times'} />
-              <StatTile label="Track ID" value={<span className="font-mono text-sm">{totw.trackId.slice(0, 12)}…</span>} />
+              <StatTile label="Track ID" value={<span className="font-mono text-base">{totw.trackId.slice(0, 12)}…</span>} />
             </div>
 
             <Panel className="overflow-hidden">
-              <div className="border-b border-white/8 px-4 py-3 text-sm font-semibold text-zinc-300">
+              <div className="border-b border-white/8 px-4 py-3 text-base font-semibold text-zinc-300">
                 Leaderboard — top {entries.length}
-                <span className="ml-2 text-xs font-normal text-zinc-500">of {total.toLocaleString()}</span>
+                <span className="ml-2 text-[15px] font-normal text-zinc-400">of {total.toLocaleString()}</span>
               </div>
               <LeaderboardTable rows={entries} showMedal />
             </Panel>
 
-            <p className="mt-3 text-xs text-zinc-600">
+            <p className="mt-3 text-[15px] text-zinc-400">
               Also known in PolyStats scans as “{trackName(totw.trackId) !== totw.trackId ? trackName(totw.trackId) : `Track of the Week: ${totw.name}`}”.
             </p>
           </>

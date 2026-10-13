@@ -9,6 +9,30 @@ import { cn } from '@/lib/utils';
  */
 export const PAGE_WIDTH = 'mx-auto w-full max-w-[1600px] px-4 sm:px-6';
 
+/**
+ * Type scale.
+ *
+ * Sizes are generous on purpose: panels carry real padding, so small text left
+ * a lot of dead space. Body copy is 16px, secondary 15px, and the smallest tier
+ * is 13px (previously 10-11px, which was unreadable).
+ */
+export const TEXT = {
+  /** Page title */
+  title: 'font-game text-4xl font-bold uppercase tracking-wide sm:text-5xl',
+  /** Sub-heading under a page title */
+  subtitle: 'text-base text-zinc-300',
+  /** Panel / section heading */
+  heading: 'font-game text-2xl font-bold uppercase tracking-wide',
+  /** Stat label, table header, small caps */
+  label: 'text-[13px] font-semibold uppercase tracking-wider text-zinc-300',
+  /** Default body copy */
+  body: 'text-base text-zinc-200',
+  /** Secondary copy */
+  muted: 'text-[15px] text-zinc-300',
+  /** Numeric / time values */
+  value: 'text-2xl font-semibold tabular-nums',
+} as const;
+
 /** Page background + centered content shell with consistent spacing. */
 export function PageShell({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -28,7 +52,7 @@ export function PageTitle({ title, subtitle }: { title: string; subtitle?: strin
       <h1 className="font-game text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
         {title}
       </h1>
-      {subtitle && <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">{subtitle}</p>}
+      {subtitle && <p className="mt-1.5 max-w-2xl text-base text-zinc-400">{subtitle}</p>}
     </header>
   );
 }
@@ -55,12 +79,12 @@ export function StatTile({
   hint?: string;
 }) {
   return (
-    <Panel>
-      <p className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums" style={accent ? { color: accent } : undefined}>
+    <Panel className="p-4">
+      <p className={TEXT.label}>{label}</p>
+      <p className={cn(TEXT.value, 'mt-1.5')} style={accent ? { color: accent } : undefined}>
         {value}
       </p>
-      {hint && <p className="mt-0.5 text-[11px] text-zinc-500">{hint}</p>}
+      {hint && <p className="mt-1 text-[14px] text-zinc-400">{hint}</p>}
     </Panel>
   );
 }
@@ -69,8 +93,8 @@ export function MedalBadge({ icon, label, color, size = 'md' }: { icon: string; 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
-        size === 'sm' && 'px-1.5 py-0 text-[11px]'
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[13px] font-medium',
+        size === 'sm' && 'px-1.5 py-0 text-[12px]'
       )}
       style={{ color, borderColor: `${color}44`, backgroundColor: `${color}14` }}
       title={label}
@@ -93,7 +117,7 @@ export function Spinner({ className }: { className?: string }) {
 
 export function ErrorNote({ children }: { children: ReactNode }) {
   return (
-    <div className="border border-red-500/25 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+    <div className="border border-red-500/25 bg-red-500/8 px-4 py-3 text-base text-red-300">
       {children}
     </div>
   );
