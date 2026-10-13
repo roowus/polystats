@@ -1,15 +1,13 @@
-# Car rendering: findings and options
+# Car rendering: findings, experiments and decision
 
-## What PolyTrack actually does
+## What PolyTrack does (verified from main.bundle.js)
 
-The game renders car thumbnails **entirely client-side**, with its own WebGL
-scene. The generator lives in the game bundle (module `3787`, exported as a
-function taking `(carStyle, game, opts)`):
+The game renders car thumbnails **client-side only**, with its own WebGL scene.
+Generator lives in bundle module `3787`, exported as `carThumbnail(carStyle, game, opts)`:
 
 ```js
-// reconstructed from main.bundle.js
 l = document.createElement("canvas"); l.width = 200; l.height = 200;
-c = new Scene(l, null, false);                 // WebGL renderer
+c = new Scene(l, null, false);          // WebGL renderer
 h = new PerspectiveCamera(-1, 1, 1, -1, .1, 1e4);
 c.scene.add(h); c.setCamera(h);
 o = new CarModel(null, {position, quaternion}, ..., c, ...);
@@ -18,42 +16,51 @@ h.lookAt(opts.look ?? new Vector3(.1, .3, 0));
 h.zoom = opts.zoom ?? .5;
 o.setCarStyle(carStyle);
 c.update(new Time());
-return l.toDataURL();          // <- the data:image/png;base64,… you saw
+return l.toDataURL();                   // the data:image/png;base64,… bytes
 ```
 
-Key points:
-- It is **not an HTTP API**. There is no URL that returns a car PNG; every car
-  image you have seen was produced in a browser by this code.
-- It needs a live game instance (`game.addCancelCallback`).
+Its two call sites (leaderboard rows, replay list) both:
+- key a cache on `carStyle.serialize()` (so identical styles render once),
+- show `images/car_thumbnail_placeholder.png` until the render resolves,
+- take the car style from the leaderboard entry.
 
-## Why we did not bundle it
+**The input is the player's `carStyle` — the same 16-byte string PolyStats already
+stores for every player. There is no user-ID lookup and no HTTP endpoint.**
 
-Measured dependency closure from the minified bundle:
+## Why the `data:image/png` looked like a fetch
+
+`img.src = dataUrl` shows up in DevTools as a request-like entry. It is the
+*output* of `canvas.toDataURL()`, not a network call. Nothing to call server-side.
+
+## Headless experiments (all run, results recorded)
+
+| Experiment | Result |
+| --- | --- |
+| Boot `app-polytrack.kodub.com/0.6.3/` in headless Chromium | ✅ Works |
+| Read module registry via `window.webpackChunk` after boot | ❌ Empty — webpack consumes/clears it, module `3787` unreachable |
+| Hook `webpackChunk` via `addInitScript` before entry runs | ❌ Hook not triggered (chunk array created before the hook installs) |
+| Harvest `data:image` car thumbnails from the booted page | ❌ Main menu renders only DOM icons; cars render later on canvas-driven screens |
+
+## Dependency closure if porting instead
 
 | Piece | Size |
 | --- | --- |
-| Car model class (module 641) | 34 KB |
+| Car model (module 641) | 34 KB |
 | Camera/controller (module 1507) | 27 KB |
-| Core engine: Vector3, Quaternion, PerspectiveCamera, WebGL renderer, scene graph, meshes (module 4922) | **255 KB** |
-| Plus car texture assets referenced by the material | n/a |
+| Core engine: Vector3, Quaternion, PerspectiveCamera, WebGL renderer, scene graph (module 4922) | **255 KB** |
+| Car texture assets | n/a |
 
-**~320 KB of engine code**, wired through the bundle's internal private-field
-helpers (`R.gn`, `l.GG`), `WeakMap` state, and a game-instance argument. It is
-extractable in principle, but it is effectively porting the game engine, and it
-would break on every PolyTrack update.
+≈320 KB of engine, wired through the bundle's private-field helpers and needing a
+live game instance. Only reasonable with automated extraction per game release.
 
-## Options
+## Decision
 
-1. **SVG approximation (current).** `CarPic` decodes the 16-byte `carStyle`
-   (pattern, rims, exhaust, four RGB colours) and draws a stylised top-down
-   open-wheel car in those exact colours. Instant, no dependency, never breaks.
-2. **Hidden game iframe.** Load `app-polytrack.kodub.com` offscreen and call the
-   real generator per player, caching the PNGs in D1/R2. Pixel-exact, but pulls
-   ~1.8 MB into the page and needs fragile wiring into the game's internals.
-3. **Bundled car-only renderer.** Extract the car mesh + materials + engine math
-   (~320 KB) and ship it. Exact body shapes, but days of reverse-engineering and
-   ongoing maintenance against game updates.
+**Keep the SVG renderer (`CarPic`).** It decodes the real 16-byte `carStyle`
+(pattern, rims, exhaust, four RGB colours) and draws the car in the player's
+exact colours. It costs ~2 KB, renders instantly, and never breaks on game
+updates.
 
-Rail-relative costs and the fact that the car is a *28px icon* in our UI are why
-option 1 remains the default. Option 2 is the best exactness/effort tradeoff if
-pixel-accurate cars become a requirement.
+Reproducing the pixel-exact render requires either driving the game's canvas UI
+headlessly (needs a canvas-aware harness, and would need re-verification on every
+game release) or porting ~320 KB of engine. Neither is justified for a 28px icon;
+revisit only if a large, prominent car view becomes a core feature.
