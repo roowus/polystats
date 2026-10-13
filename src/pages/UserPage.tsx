@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Search, Copy, Check, Swords } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { PlayerSearchInput } from '@/components/PlayerSearchInput';
+import { CarPic } from '@/components/CarPic';
 import { PageShell, PageTitle, Panel, StatTile, MedalBadge, Spinner, ErrorNote } from '@/components/shell';
 import { useUserStats } from '@/hooks/useUserStats';
 import { sha256Hex, formatTime } from '@/lib/polytrack';
@@ -252,6 +253,7 @@ const UserPage = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="flex items-center gap-2 truncate text-xl font-bold">
+                  <CarPic carStyle={status.entries[0]?.carStyle} size={16} />
                   {nickname ?? 'Unknown player'}
                   <button
                     onClick={() => {

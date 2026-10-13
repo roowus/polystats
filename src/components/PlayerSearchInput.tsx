@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { searchUsers, type UserSearchResult } from '@/lib/catalog';
 import { cn } from '@/lib/utils';
+import { CarPic } from './CarPic';
 
 /**
  * Text input with live autocomplete against the player catalog.
@@ -74,7 +75,10 @@ export function PlayerSearchInput({
               }}
               className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-white/10"
             >
-              <span className="truncate font-semibold text-white">{u.nickname ?? 'Unknown'}</span>
+              <span className="flex min-w-0 items-center gap-2.5">
+                <CarPic carStyle={u.car_style} size={12} />
+                <span className="truncate font-semibold text-white">{u.nickname ?? 'Unknown'}</span>
+              </span>
               <span className="font-mono text-xs text-zinc-400">{u.user_id.slice(0, 12)}…</span>
             </button>
           ))}
