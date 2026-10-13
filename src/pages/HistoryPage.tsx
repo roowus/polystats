@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/shell';
+import { Freshness, useDataStatus } from '@/components/Freshness';
 import { formatTime, getProxyUrl } from '@/lib/polytrack';
 import { OFFICIAL_TRACKS } from '@/lib/tracks';
 import { SeasonIcon } from '@/components/SeasonIcon';
@@ -31,15 +32,16 @@ function ProgressionChart({ rows }: { rows: HistoryRow[] }) {
 
   const series = useMemo(() => {
     let best = Infinity;
-    return rows
-      .filter((r) => {
-        if (r.time_ms < best) {
-          best = r.time_ms;
-          return true;
-        }
-        return false;
-      })
-      .map((r) => ({ t: new Date(r.set_at.replace(' ', 'T') + 'Z').getTime(), ms: r.time_ms, player: r.player }));
+    const out: { t: number; ms: number; player: string }[] = [];
+    for (const r of rows) {
+      const t = Date.parse(r.set_at.includes('T') ? r.set_at : r.set_at.replace(' ', 'T') + 'Z');
+      if (!Number.isFinite(t)) continue;
+      if (r.time_ms < best) {
+        best = r.time_ms;
+        out.push({ t, ms: r.time_ms, player: r.player });
+      }
+    }
+    return out;
   }, [rows]);
 
   if (series.length < 2) return null;
@@ -101,6 +103,7 @@ export default function HistoryPage() {
   const [rows, setRows] = useState<HistoryRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dataStatus = useDataStatus();
 
   useEffect(() => {
     let cancelled = false;
@@ -151,6 +154,7 @@ export default function HistoryPage() {
           title="Record History"
           subtitle="Every world-record progression on the official tracks — who held it, when, and how fast."
         />
+        <Freshness date={dataStatus?.last_backfill_run ?? dataStatus?.last_fresh_run} />
 
         {/* Track selector */}
         <div className="mb-6 flex flex-wrap gap-1.5">

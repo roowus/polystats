@@ -23,7 +23,8 @@ import {
   toggleSavedUser,
   type StoredUser,
 } from '@/lib/userStore';
-import { fetchCatalog, searchUsers, shareToCatalog, upsertUserProfile, type UserSearchResult } from '@/lib/catalog';
+import { fetchCatalog, fetchUserProfile, searchUsers, shareToCatalog, upsertUserProfile, type UserSearchResult } from '@/lib/catalog';
+import { Freshness, useDataStatus } from '@/components/Freshness';
 
 type SortKey = 'name' | 'time' | 'rank' | 'gap';
 
@@ -45,6 +46,8 @@ const UserPage = () => {
   const [sort, setSort] = useState<SortKey>('rank');
   const [filter, setFilter] = useState<'all' | 'official' | 'community' | 'totw'>('all');
   const [nameResults, setNameResults] = useState<UserSearchResult[] | null>(null);
+  const [cachedProfile, setCachedProfile] = useState<Awaited<ReturnType<typeof fetchUserProfile>>>(null);
+  const dataStatus = useDataStatus();
   const [recents, setRecents] = useState<StoredUser[]>([]);
   const [saved, setSaved] = useState<StoredUser[]>([]);
   const [community, setCommunity] = useState<StoredUser[]>([]);
@@ -169,7 +172,7 @@ const UserPage = () => {
         )}
 
         {status.phase === 'scanning' && (
-          <Panel className="mx-auto max-w-md p-6 text-center">
+          <Panel className="mx-auto max-w-md p-6 text-center" data-fresh="refreshing">
             <Spinner className="h-6 w-6" />
             <p className="mt-3 text-sm text-zinc-300">
               Scanning leaderboards… {status.done}/{status.total}
@@ -189,6 +192,29 @@ const UserPage = () => {
             <p className="mt-3 text-sm text-zinc-300">
               Found {status.found} track{status.found === 1 ? '' : 's'} — loading details…
             </p>
+          </Panel>
+        )}
+
+        {cachedProfile && status.phase !== 'done' && (
+          <Panel className="mx-auto mb-6 max-w-2xl p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold text-white">
+                From database: {String((cachedProfile.user as { nickname?: string } | null)?.nickname ?? 'unknown player')}
+              </p>
+              <span className="flex items-center gap-2 text-xs text-zinc-300">
+                <Spinner className="h-3 w-3" /> refreshing from PolyTrack…
+              </span>
+            </div>
+            {cachedProfile.names.length > 0 && (
+              <p className="mt-1 text-timestamp">
+                Known as: {cachedProfile.names.map((n) => n.nickname).join(' → ')}
+              </p>
+            )}
+            {cachedProfile.styles.length > 0 && (
+              <p className="mt-1 text-timestamp">
+                {cachedProfile.styles.length} car style{cachedProfile.styles.length === 1 ? '' : 's'} on record
+              </p>
+            )}
           </Panel>
         )}
 

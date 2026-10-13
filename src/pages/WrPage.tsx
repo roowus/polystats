@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/shell';
+import { Freshness, useDataStatus } from '@/components/Freshness';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { fetchWorldRecord, type LeaderboardEntry } from '@/lib/polytrack';
 import { type TrackInfo } from '@/lib/tracks';
@@ -18,6 +19,7 @@ const WrPage = () => {
   const [missing, setMissing] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dataStatus = useDataStatus();
   const [filter, setFilter] = useState<'all' | 'official' | 'community' | 'totw'>('all');
 
   useEffect(() => {
@@ -80,6 +82,7 @@ const WrPage = () => {
           title="World Records"
           subtitle="The verified world record on every track — official, community, and the current Track of the Week."
         />
+        <Freshness date={dataStatus?.last_fresh_run} />
 
         {loading && (
           <Panel className="p-10 text-center">

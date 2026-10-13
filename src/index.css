@@ -45,9 +45,9 @@
   --radius: 0.625rem;
   --background: #10102a;
   --foreground: #f4f4ff;
-  --card: #102052;
+  --card: #1a2450;
   --card-foreground: #f4f4ff;
-  --popover: #102052;
+  --popover: #1a2450;
   --popover-foreground: #f4f4ff;
   --primary: #102052;
   --primary-foreground: #f4f4ff;
@@ -249,4 +249,11 @@ select, option {
 .tabular-nums {
   font-family: 'ForcedSquare', 'Trebuchet MS', sans-serif;
   font-variant-numeric: tabular-nums;
+}
+
+/* Tan "as of" timestamps shown next to data */
+.text-timestamp {
+  color: #d9b878;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }

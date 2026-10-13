@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote, StatTile } from '@/components/shell';
+import { Freshness, useDataStatus } from '@/components/Freshness';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { fetchLeaderboard, fetchTrackOfTheWeek, type LeaderboardEntry, type TrackOfTheWeek } from '@/lib/polytrack';
 import { trackName } from '@/lib/tracks';
@@ -32,6 +33,7 @@ const TotwPage = () => {
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const dataStatus = useDataStatus();
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +66,7 @@ const TotwPage = () => {
           title="Track of the Week"
           subtitle="The current community spotlight track — its leaderboard resets when the week ends."
         />
+        <Freshness date={dataStatus?.last_fresh_run} />
 
         {loading && (
           <Panel className="p-10 text-center">
@@ -84,7 +87,7 @@ const TotwPage = () => {
                   onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
               )}
-              <div className="relative bg-gradient-to-r from-[#102052]/95 to-[#102052]/70 p-6 sm:p-8">
+              <div className="relative bg-gradient-to-r from-[#1a2450]/95 to-[#1a2450]/70 p-6 sm:p-8">
                 <p className="text-[11px] font-medium uppercase tracking-widest text-fuchsia-300">
                   {ENV_NAMES[totw.environment] ?? 'Unknown'} environment
                 </p>

@@ -13,9 +13,13 @@ const H1 = '5803f9e963625804e3de3246d043dc7dde847aa32e991f7f7326b0453f1fa038';
 
 function mockHistory(rows: unknown) {
   (getProxyUrl as ReturnType<typeof vi.fn>).mockReturnValue('https://worker.example/?url=');
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-    new Response(JSON.stringify({ history: rows }), { status: 200 })
-  );
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async (url: unknown) => {
+    const u = String(url);
+    if (u.includes('/status')) {
+      return new Response(JSON.stringify({ last_fresh_run: '2026-10-13T00:00:00Z', last_backfill_run: null }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ history: rows }), { status: 200 });
+  });
 }
 
 beforeEach(() => vi.clearAllMocks());
@@ -64,8 +68,9 @@ describe('HistoryPage', () => {
         <HistoryPage />
       </MemoryRouter>
     );
-    await waitFor(() =>
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toContain(`/history?trackId=${H1}`)
-    );
+    await waitFor(() => {
+      const calls = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls.map((c) => String(c[0]));
+      expect(calls.some((u) => u.includes(`/history?trackId=${H1}`))).toBe(true);
+    });
   });
 });

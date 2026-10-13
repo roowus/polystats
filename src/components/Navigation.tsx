@@ -42,7 +42,7 @@ const Navigation = () => {
                 className={cn(
                   'pt-skew flex items-center px-3 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors',
                   'border-0', // no borders — the full-height fill is the highlight
-                  active ? 'bg-[#102052]' : 'hover:bg-white/10'
+                  active ? 'bg-[#1a2450]' : 'hover:bg-white/10'
                 )}
               >
                 <span className="flex items-center gap-1.5">

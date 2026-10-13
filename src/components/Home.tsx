@@ -80,7 +80,7 @@ const Home = () => {
               onClick={() => navigate(path)}
               className="group border border-white/10 bg-[#212b58] p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-[rgba(28,28,62,0.7)]"
             >
-              <div className="mb-3 inline-flex bg-[#102052] p-2.5 text-[#bed8f7]">
+              <div className="mb-3 inline-flex bg-[#1a2450] p-2.5 text-[#bed8f7]">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="flex items-center gap-1.5 font-semibold">
