@@ -332,7 +332,7 @@ const Utils = () => {
           variants={titleVariants}
           initial="hidden"
           animate="visible"
-          className="bg-gradient-to-r from-violet-300 via-purple-300 to-fuchsia-300 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl"
+          className="font-game inline-block -skew-x-[6deg] text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl"
         >
           Utils
         </motion.h1>
@@ -484,7 +484,7 @@ const Utils = () => {
                 <Button
                   onClick={processInputAndGetUserId}
                   disabled={loading || !userInput || (userInputType === 'rank' && !trackId)}
-                  className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-full transition-all duration-300 hover:from-purple-600 hover:to-blue-600 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus:outline-none focus:ring-0"
+                  className="pt-skew pt-btn w-full"
                 >
                   {loading ? (
                     <>

@@ -27,11 +27,13 @@ const Navigation = () => {
           aria-label="PolyStats home"
         >
           <BrandMark />
-          <span className="text-white">Poly</span>
-          <span className="text-[#7f9cf5]">Stats</span>
+          <span className="whitespace-nowrap">
+            <span className="text-white">Poly</span>
+            <span className="text-[#7f9cf5]">Stats</span>
+          </span>
         </button>
 
-        <div className="flex items-center gap-0.5 overflow-x-auto">
+        <div className="flex h-full items-stretch gap-0.5 px-2">
           {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
             const active = pathname === path || (path !== '/' && pathname.startsWith(path));
             return (
@@ -39,9 +41,9 @@ const Navigation = () => {
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  'pt-skew px-2.5 py-2 my-0.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors',
-                  'border-2 border-transparent', // every tab reserves the same border box
-                  active ? 'bg-[#112052] border-white/40' : 'hover:bg-white/8'
+                  'pt-skew flex items-center px-3 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors',
+                  'border-0', // no borders — the full-height fill is the highlight
+                  active ? 'bg-[#112052]' : 'hover:bg-white/10'
                 )}
               >
                 <span className="flex items-center gap-1.5">

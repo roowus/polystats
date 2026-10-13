@@ -575,7 +575,7 @@ const Leaderboard = () => {
     <>
       <Navigation />
       {/* Main container with background and consistent flex centering */}
-      <div className="min-h-screen bg-[#10102a] p-4 md:p-8 pt-24 flex flex-col justify-center items-center"> 
+      <div className="min-h-screen bg-[#10102a] pt-24"> 
       <AnimatePresence>
         {copiedText && <CopyPopup text={copiedText} />}
       </AnimatePresence>
@@ -596,7 +596,7 @@ const Leaderboard = () => {
           variants={titleVariants} // Use new title variants
           initial="hidden"
           animate="visible"
-          className="bg-gradient-to-r from-violet-300 via-purple-300 to-fuchsia-300 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl"
+          className="font-game inline-block -skew-x-[6deg] text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl"
         >
           Leaderboard
         </motion.h1>
@@ -762,7 +762,7 @@ const Leaderboard = () => {
                         onClick={processUserInputAndFetchData}
                         // Corrected: Disable if input or trackId is empty (now required for all)
                         disabled={loading || !userInput || !trackId}
-                        className="w-full bg-gradient-to-r from-purple-500 to-blue-500 text-white px-6 py-3 rounded-full transition-all duration-300 hover:from-purple-600 hover:to-blue-600 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 focus:outline-none focus:ring-0"
+                        className="pt-skew pt-btn w-full"
                       >
                         {loading ? (
                           <>

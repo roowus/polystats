@@ -146,7 +146,8 @@ html {
 
 body {
   background: var(--pt-navy-deep);
-  color: #f4f4ff;
+  color: #ffffff;
+  font-family: 'ForcedSquare', 'Trebuchet MS', sans-serif;
   overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
 }
