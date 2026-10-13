@@ -836,7 +836,7 @@ const Leaderboard = () => {
                {/* User Stats Card */}
                {/* Conditional rendering for User Stats */}
                {loading ? (
-                   <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
+                   <Card className="border-white/10 bg-[#212b58] shadow-lg w-full">
                        <CardHeader>
                            <CardTitle className="flex items-center gap-2 text-purple-400">
                                <User className="w-5 h-5" />
@@ -851,7 +851,7 @@ const Leaderboard = () => {
                     // Error message is already handled by the main error alert
                     null
                ) : userNotFoundOnTrack ? (
-                   <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
+                   <Card className="border-white/10 bg-[#212b58] shadow-lg w-full">
                        <CardHeader>
                            <CardTitle className="flex items-center gap-2 text-purple-400">
                                <User className="w-5 h-5" />
@@ -875,11 +875,11 @@ const Leaderboard = () => {
                    {(() => {
                        const medal = getMedal(userData.percent as number | undefined);
                        const posMedal = getPosMedal(userData.rank as number | undefined);
-                       let userStatsBoxStyle = 'bg-[#102052] border-white/15';
+                       let userStatsBoxStyle = 'bg-[#212b58] border-white/15';
                        let userStatsDataTextStyle = 'text-blue-400';
 
                        if (posMedal && posMedal.color === 'black') { // WR
-                           userStatsBoxStyle = 'bg-[#102052] border-2 border-black/50';
+                           userStatsBoxStyle = 'bg-[#212b58] border-2 border-black/50';
                            userStatsDataTextStyle = 'text-gray-100';
                        } else if (posMedal && posMedal.color === 'purple') { // Podium (Updated condition to 'purple')
                            userStatsBoxStyle = 'bg-purple-500/20 border-2 border-purple-500/50';
@@ -907,7 +907,7 @@ const Leaderboard = () => {
                                    userStatsDataTextStyle = 'text-orange-300'; // Still using orange-300 for text
                                    break;
                                default: // Fallback
-                                   userStatsBoxStyle = 'bg-[#102052] border-white/15';
+                                   userStatsBoxStyle = 'bg-[#212b58] border-white/15';
                                    userStatsDataTextStyle = 'text-blue-400';
                            }
                        }
@@ -980,7 +980,7 @@ const Leaderboard = () => {
                  </>
                ) : (
                  // This block will now only show if not loading, no error, user not found is false, and userData is null (initial state)
-                 <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
+                 <Card className="border-white/10 bg-[#212b58] shadow-lg w-full">
                    <CardHeader>
                      <CardTitle className="flex items-center gap-2 text-purple-400">
                        <User className="w-5 h-5" />
@@ -1002,7 +1002,7 @@ const Leaderboard = () => {
                        </p>
                        <p className="text-gray-400">Total Entries: {statsData?.total ?? 'N/A'}</p>
                      </div>
-                     <Card className="border-white/10 bg-[#102052] shadow-lg w-full">
+                     <Card className="border-white/10 bg-[#212b58] shadow-lg w-full">
                        <CardHeader />
                        <CardContent>
                          <div className="space-y-4">
@@ -1020,7 +1020,7 @@ const Leaderboard = () => {
                                if (isCurrentUserEntry) {
                                  // User's entry - apply specific styles based on rank/medal
                                  if (posMedal && posMedal.color === 'black') { // WR
-                                     entryBoxStyle = 'bg-[#102052] border-2 border-black/50';
+                                     entryBoxStyle = 'bg-[#212b58] border-2 border-black/50';
                                      entryDataTextStyle = 'text-gray-100'; // White/gray for contrast
                                  } else if (posMedal && posMedal.color === 'purple') { // Podium (Updated condition to 'purple')
                                      entryBoxStyle = 'bg-purple-500/20 border-2 border-purple-500/50';

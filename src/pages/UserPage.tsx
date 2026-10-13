@@ -151,7 +151,7 @@ const UserPage = () => {
               <button
                 onClick={search}
                 disabled={!input.trim()}
-                className="flex items-center justify-center gap-2 bg-[#102052] border border-white/20 hover:bg-[#1c2f70] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
+                className="flex items-center justify-center gap-2 bg-[#212b58] border border-white/20 hover:bg-[#1c2f70] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
               >
                 <Search className="h-4 w-4" /> Search
               </button>
@@ -432,7 +432,7 @@ function UserChips({
             <button
               key={u.id}
               onClick={() => onPick(u.id)}
-              className="bg-[#102052] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1c2f70] hover:ring-white/50"
+              className="bg-[#212b58] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1c2f70] hover:ring-white/50"
               title={u.id}
             >
               <span className="flex items-center gap-1.5">

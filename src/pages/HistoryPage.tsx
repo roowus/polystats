@@ -161,7 +161,7 @@ export default function HistoryPage() {
               className={cn(
                 'px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors',
                 track.id === t.id
-                  ? 'bg-[#102052] text-white ring-2 ring-white/30'
+                  ? 'bg-[#212b58] text-white ring-2 ring-white/30'
                   : 'text-zinc-300 hover:bg-white/10 hover:text-white'
               )}
             >
