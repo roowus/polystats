@@ -53,14 +53,66 @@ stores for every player. There is no user-ID lookup and no HTTP endpoint.**
 ≈320 KB of engine, wired through the bundle's private-field helpers and needing a
 live game instance. Only reasonable with automated extraction per game release.
 
+## Solved: drive the real client and harvest the renders
+
+The blocker was never that the renderer is unreachable. It is that PolyTrack only
+calls `carThumbnail()` while building **leaderboard player rows**, and a fresh
+headless session has no such rows on screen.
+
+Two corrections to earlier assumptions in this document:
+
+- **`carStyle` is not served per player by an image endpoint.** It arrives as a
+  field on every leaderboard entry from
+  `https://vps.kodub.com/v6/leaderboard?version=0.6.3&trackId=…`, alongside
+  `nickname` and `frames`. The endpoint is public and needs no token.
+- **Drive the UI instead of reimplementing it.** A headless Chromium running the
+  real game opens a leaderboard, the game renders each row's car with its own
+  WebGL scene, and the resulting PNGs are read straight out of the DOM.
+
+The rendered `<img>` carries a `data:image/png;base64,…` URL at the native
+200x200. DOM order matches leaderboard entry order, so entry *N*'s `carStyle`
+pairs with the *N*th rendered image — that mapping is what lets the output be
+cached by style rather than by player.
+
+`scripts/gen-car-pngs.mjs` implements this:
+
+```bash
+node scripts/gen-car-pngs.mjs --tracks 4 --limit 10
+```
+
+It writes `public/cars/<carStyle>.png`, regenerates
+`src/lib/nativeCarStyles.ts`, and takes roughly three minutes for 22 unique cars
+at about 12 KB each.
+
+## Performance characteristics
+
+Rendering happens **offline, as a build step**, never per request. Nothing about
+serving the site starts a browser.
+
+| Metric | Value |
+| --- | --- |
+| Generator wall time | ~190 s for 4 tracks / 22 unique cars |
+| Cost per car | ~12 KB PNG, 200x200 RGBA |
+| Runtime cost to serve | one static file request, cached `immutable` for a year |
+| Client cost | none, a plain `<img>` |
+
+The reason this must stay offline: a headless Chromium with WebGL costs hundreds
+of MB of RAM and seconds of CPU. Doing that on demand would be far more
+expensive than rendering the car in the browser ever was.
+
+Two deliberate limits: the harvest only covers styles that actually appear on the
+scanned leaderboards, so coverage grows as more tracks and pages are scanned; and
+a style with no PNG falls back to the SVG below rather than requesting a missing
+file.
+
 ## Decision
 
-**Keep the SVG renderer (`CarPic`).** It decodes the real 16-byte `carStyle`
-(pattern, rims, exhaust, four RGB colours) and draws the car in the player's
-exact colours. It costs ~2 KB, renders instantly, and never breaks on game
-updates.
+Native PolyTrack renders, keyed by `carStyle`, generated offline into
+`public/cars/` and served as static files. `CarPic` prefers the native PNG and
+falls back to the SVG schematic for styles not yet harvested, so the UI never
+shows a broken image.
 
-Reproducing the pixel-exact render requires either driving the game's canvas UI
-headlessly (needs a canvas-aware harness, and would need re-verification on every
-game release) or porting ~320 KB of engine. Neither is justified for a 28px icon;
-revisit only if a large, prominent car view becomes a core feature.
+The earlier "keep the SVG only" conclusion is superseded: harvesting avoids the
+~320 KB engine port entirely and produces the game's real output. The tradeoff is
+a regeneration step when the catalog should expand, which is why the fallback
+stays in place.
