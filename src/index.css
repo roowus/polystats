@@ -243,3 +243,10 @@ select, option {
   background: #212b58;
   color: #f4f4ff;
 }
+
+/* Times and numbers render in the blocky game font too (overrides mono) */
+.font-mono,
+.tabular-nums {
+  font-family: 'ForcedSquare', 'Trebuchet MS', sans-serif;
+  font-variant-numeric: tabular-nums;
+}
