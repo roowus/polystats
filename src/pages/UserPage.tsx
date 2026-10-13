@@ -377,7 +377,7 @@ function UserChips({
             <button
               key={u.id}
               onClick={() => onPick(u.id)}
-              className="pt-skew bg-[#112052] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1a2d6e] hover:ring-white/50"
+              className="bg-[#112052] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1a2d6e] hover:ring-white/50"
               title={u.id}
             >
               <span className="flex items-center gap-1.5">

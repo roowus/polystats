@@ -1,7 +1,6 @@
 import { Home, BarChart2, Users, Settings, Info, Trophy, Swords, CalendarDays } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { BrandMark } from './BrandMark';
 
 const NAV_ITEMS = [
   { path: '/', icon: Home, label: 'Home' },
@@ -23,10 +22,9 @@ const Navigation = () => {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 font-game text-base font-bold uppercase tracking-wider"
+          className="font-game text-base font-bold uppercase tracking-wider opacity-100 transition-opacity duration-200 hover:opacity-60"
           aria-label="PolyStats home"
         >
-          <BrandMark />
           <span className="whitespace-nowrap">
             <span className="text-white">Poly</span>
             <span className="text-[#7f9cf5]">Stats</span>

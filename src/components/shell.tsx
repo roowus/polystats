@@ -17,7 +17,7 @@ export function PageShell({ children, className }: { children: ReactNode; classN
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="mb-8">
-      <h1 className="font-game inline-block -skew-x-[6deg] text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
+      <h1 className="font-game text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
         {title}
       </h1>
       {subtitle && <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">{subtitle}</p>}

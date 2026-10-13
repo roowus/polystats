@@ -762,7 +762,7 @@ const Leaderboard = () => {
                         onClick={processUserInputAndFetchData}
                         // Corrected: Disable if input or trackId is empty (now required for all)
                         disabled={loading || !userInput || !trackId}
-                        className="pt-skew pt-btn w-full"
+                        className="pt-btn w-full"
                       >
                         {loading ? (
                           <>

@@ -484,7 +484,7 @@ const Utils = () => {
                 <Button
                   onClick={processInputAndGetUserId}
                   disabled={loading || !userInput || (userInputType === 'rank' && !trackId)}
-                  className="pt-skew pt-btn w-full"
+                  className="pt-btn w-full"
                 >
                   {loading ? (
                     <>
