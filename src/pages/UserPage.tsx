@@ -22,6 +22,7 @@ import {
   toggleSavedUser,
   type StoredUser,
 } from '@/lib/userStore';
+import { fetchCatalog, shareToCatalog } from '@/lib/catalog';
 
 type SortKey = 'name' | 'time' | 'rank' | 'gap';
 
@@ -44,6 +45,7 @@ const UserPage = () => {
   const [filter, setFilter] = useState<'all' | 'official' | 'community' | 'totw'>('all');
   const [recents, setRecents] = useState<StoredUser[]>([]);
   const [saved, setSaved] = useState<StoredUser[]>([]);
+  const [community, setCommunity] = useState<StoredUser[]>([]);
   const [savedFlag, setSavedFlag] = useState(false);
 
   const refreshLists = useCallback(() => {
@@ -54,6 +56,9 @@ const UserPage = () => {
 
   useEffect(() => {
     refreshLists();
+    fetchCatalog(12).then((users) => {
+      if (users) setCommunity(users.map((u) => ({ id: u.user_id, nickname: u.nickname ?? undefined, at: Date.now() })));
+    });
   }, [refreshLists]);
 
   useEffect(() => {
@@ -127,6 +132,9 @@ const UserPage = () => {
             <UserChips label="Recent" users={recents} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
               <span className="text-zinc-600">Your recent lookups will appear here.</span>
             } />
+            <UserChips label="Community favorites" users={community} onPick={(id) => navigate(`/user/${id}`)} onEmpty={
+              <span className="text-zinc-600">The most-saved players will appear here.</span>
+            } />
           </Panel>
         )}
 
@@ -187,6 +195,7 @@ const UserPage = () => {
                       const nowSaved = toggleSavedUser(userId!, nickname ?? undefined);
                       setSavedFlag(nowSaved);
                       refreshLists();
+                      if (nowSaved) shareToCatalog(userId!, nickname ?? undefined);
                     }}
                     className={cn('text-lg transition', savedFlag ? 'text-amber-300' : 'text-zinc-600 hover:text-zinc-300')}
                     title={savedFlag ? 'Remove from saved players' : 'Save player'}

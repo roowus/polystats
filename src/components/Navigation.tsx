@@ -39,10 +39,9 @@ const Navigation = () => {
                 key={path}
                 onClick={() => navigate(path)}
                 className={cn(
-                  'pt-skew relative px-2.5 py-1.5 text-[13px] font-semibold uppercase tracking-wide transition-colors',
-                  active
-                    ? 'bg-[#112052] text-white ring-2 ring-white/30'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/8'
+                  'pt-skew px-2.5 py-2 my-0.5 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors',
+                  'border-2 border-transparent', // every tab reserves the same border box
+                  active ? 'bg-[#112052] border-white/40' : 'hover:bg-white/8'
                 )}
               >
                 <span className="flex items-center gap-1.5">
