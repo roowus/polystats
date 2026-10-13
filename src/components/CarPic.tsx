@@ -27,40 +27,107 @@ export function carImageUrl(carStyle?: string | null): string | null {
   return NATIVE_STYLES.has(carStyle) ? `/cars/${encodeURIComponent(carStyle)}.png` : null;
 }
 
-/** Schematic fallback drawn from the decoded car style. */
+/**
+ * Schematic car drawn from the decoded PolyTrack car style.
+ *
+ * Matches the game's thumbnail framing: a 3/4 view with the nose toward the
+ * lower left, four exposed wheels, a rear wing and a sidepod. PolyTrack shades
+ * its model so the top face reads lighter than the sides, which is what gives
+ * the render its 3D look, so the body is split into a lit top plane and a
+ * darker side plane.
+ *
+ * Colours come from `decodeCarStyle`, which returns four RGB triples in
+ * PolyTrack's own order: body, accent (wings/pods), wheel hubs, detail.
+ */
 function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size: number; className?: string }) {
   const hex = decodeCarStyle(carStyle ?? '');
-  const body = hex ? `#${hex.slice(0, 6)}` : '#8b7cf0';
-  const accent = hex ? `#${hex.slice(6, 12)}` : '#f4f4ff';
-  const pods = hex ? `#${hex.slice(12, 18)}` : '#2a2a3a';
-  const dark = '#14141e';
+  const pick = (i: number, fallback: string) =>
+    hex && hex.length >= (i + 1) * 6 ? `#${hex.slice(i * 6, i * 6 + 6)}` : fallback;
+
+  const body = pick(0, '#8b7cf0');
+  const accent = pick(1, '#f4f4ff');
+  const hub = pick(2, '#2a2a3a');
+  const detail = pick(3, '#14141e');
+  const tire = '#15151c';
+
+  // Shade a hex colour so planes read as lit rather than flat.
+  const shade = (c: string, f: number) => {
+    const n = parseInt(c.slice(1), 16);
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
+      Math.max(0, Math.min(255, Math.round(v * f)))
+    );
+    return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+  };
 
   return (
     <svg
       width={size}
-      height={size * 1.6}
-      viewBox="0 0 40 64"
+      height={size}
+      viewBox="0 0 100 100"
       className={className}
       aria-label="Player car"
       role="img"
     >
-      <rect x="1" y="10" width="8" height="13" rx="2" fill={dark} />
-      <rect x="31" y="10" width="8" height="13" rx="2" fill={dark} />
-      <rect x="1" y="38" width="8" height="14" rx="2" fill={dark} />
-      <rect x="31" y="38" width="8" height="14" rx="2" fill={dark} />
-      <path d="M6 4h28l-3 5H9z" fill={pods} />
+      {/* Rear wing, furthest back and highest */}
+      <path d="M63 30 L86 20 L88 26 L65 36 Z" fill={accent} stroke={detail} strokeWidth="0.8" />
+      <path d="M66 34 L68 30 L69 44 L67 47 Z" fill={shade(accent, 0.6)} />
+
+      {/* Wheels sit behind/around the body; rear pair first */}
+      <g>
+        <ellipse cx="72" cy="49" rx="12" ry="12" fill={tire} />
+        <ellipse cx="72" cy="49" rx="6" ry="6" fill={hub} />
+        <ellipse cx="68" cy="45" rx="2.4" ry="2.4" fill={shade(hub, 1.5)} opacity="0.8" />
+      </g>
+      <g>
+        <ellipse cx="30" cy="62" rx="11" ry="11" fill={tire} />
+        <ellipse cx="30" cy="62" rx="5.4" ry="5.4" fill={hub} />
+        <ellipse cx="26.5" cy="58.5" rx="2.2" ry="2.2" fill={shade(hub, 1.5)} opacity="0.8" />
+      </g>
+
+      {/* Main body: pointed nose lower-left widening to a boxy tail */}
       <path
-        d="M20 2 L26 10 L27 26 L30 34 L30 54 L10 54 L10 34 L13 26 L14 10 Z"
+        d="M20 60
+           L34 46
+           L52 38
+           L70 34
+           L78 40
+           L78 54
+           L62 58
+           L40 64
+           L28 68
+           Z"
         fill={body}
-        stroke={dark}
-        strokeWidth="1.2"
+        stroke={detail}
+        strokeWidth="1"
+        strokeLinejoin="round"
       />
-      <path d="M8 30 L13 28 L13 48 L8 46 Z" fill={pods} />
-      <path d="M32 30 L27 28 L27 48 L32 46 Z" fill={pods} />
-      <path d="M19 4 L21 10 L21 52 L17 52 L17 10 Z" fill={accent} opacity="0.85" />
-      <path d="M15 30 h10 l-1.5 9 h-7 z" fill={dark} />
-      <rect x="8" y="52" width="24" height="5" fill={pods} stroke={dark} strokeWidth="1" />
-      <rect x="16" y="2.5" width="8" height="2.5" fill="#fff8d6" />
+      {/* Lit top plane */}
+      <path
+        d="M34 46 L52 38 L70 34 L76 39 L58 45 L40 51 L33 50 Z"
+        fill={shade(body, 1.28)}
+        stroke={detail}
+        strokeWidth="0.6"
+      />
+      {/* Cockpit opening */}
+      <path d="M50 41 L62 37 L66 41 L54 46 Z" fill={detail} opacity="0.85" />
+
+      {/* Sidepod along the flank */}
+      <path d="M40 52 L58 46 L60 54 L44 59 Z" fill={accent} stroke={detail} strokeWidth="0.8" />
+
+      {/* Front wing across the nose */}
+      <path d="M14 62 L30 55 L32 59 L16 67 Z" fill={accent} stroke={detail} strokeWidth="0.8" />
+
+      {/* Front wheels, nearer the viewer */}
+      <g>
+        <ellipse cx="22" cy="76" rx="10" ry="10" fill={tire} />
+        <ellipse cx="22" cy="76" rx="5" ry="5" fill={hub} />
+        <ellipse cx="19" cy="73" rx="2" ry="2" fill={shade(hub, 1.5)} opacity="0.8" />
+      </g>
+      <g>
+        <ellipse cx="64" cy="70" rx="10.5" ry="10.5" fill={tire} />
+        <ellipse cx="64" cy="70" rx="5" ry="5" fill={hub} />
+        <ellipse cx="60.5" cy="66.5" rx="2" ry="2" fill={shade(hub, 1.5)} opacity="0.8" />
+      </g>
     </svg>
   );
 }
