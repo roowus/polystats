@@ -24,11 +24,11 @@ page.on('pageerror', (e) => errors.push(String(e)));
 // 1. Home loads, dark background everywhere (no white flash zones)
 await page.goto(BASE + '/', { waitUntil: 'networkidle' });
 const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-check('body is navy (no white)', bodyBg === 'rgb(16, 16, 42)', bodyBg);
+check('body is PolyTrack navy (no white)', bodyBg === 'rgb(39, 52, 105)', bodyBg);
 
 // overscroll area behind the page is dark
 const htmlBg = await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
-check('html is navy (overscroll fixed)', htmlBg === 'rgb(16, 16, 42)', htmlBg);
+check('html is PolyTrack navy (overscroll fixed)', htmlBg === 'rgb(39, 52, 105)', htmlBg);
 
 // 2. Blocky font applied site-wide
 const font = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
@@ -82,6 +82,9 @@ check('Leaderboard text is white', lbText === 'rgb(255, 255, 255)', lbText);
 
 await page.goto(BASE + '/utils', { waitUntil: 'networkidle' });
 check('Utils page renders', await page.locator('h1:has-text("Utils")').count() > 0);
+
+await page.goto(BASE + '/history', { waitUntil: 'networkidle' });
+check('Record History page renders', await page.locator('h1:has-text("Record History")').count() > 0);
 
 // 9. No rounded corner boxes on any page
 for (const path of ['/', '/totw', '/user', '/compare', '/leaderboard', '/utils']) {

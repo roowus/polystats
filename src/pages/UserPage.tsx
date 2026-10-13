@@ -14,6 +14,7 @@ import {
   type UserTrackEntry,
 } from '@/lib/stats';
 import { cn } from '@/lib/utils';
+import { SeasonIcon } from '@/components/SeasonIcon';
 import {
   getRecentUsers,
   getSavedUsers,
@@ -121,7 +122,7 @@ const UserPage = () => {
               <button
                 onClick={search}
                 disabled={!input.trim()}
-                className="flex items-center justify-center gap-2 bg-[#112052] border border-white/20 hover:bg-[#1a2d6e] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
+                className="flex items-center justify-center gap-2 bg-[#102052] border border-white/20 hover:bg-[#1c2f70] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
               >
                 <Search className="h-4 w-4" /> Search
               </button>
@@ -254,7 +255,7 @@ const UserPage = () => {
                     return (
                       <span key={label} className="group relative">
                         <MedalBadge icon={medal.icon} label={`${label} ×${medals[label].length}`} color={medal.color} />
-                        <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap border border-white/10 bg-[#171022] px-2 py-1 text-[11px] text-zinc-300 shadow-xl group-hover:block">
+                        <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap border border-white/10 bg-[#212b58] px-2 py-1 text-[11px] text-zinc-300 shadow-xl group-hover:block">
                           {medals[label].map((e) => e.trackName).join(', ')}
                         </span>
                       </span>
@@ -318,7 +319,10 @@ const UserPage = () => {
                         <span className="text-lg font-bold tabular-nums text-zinc-300">#{e.position}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{e.trackName}</p>
+                        <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                          <SeasonIcon trackName={e.trackName} />
+                          {e.trackName}
+                        </p>
                         <p className="text-[11px] text-zinc-500">
                           {formatTime(e.frames)}
                           {e.wrTime !== undefined && ` · WR ${formatTime(e.wrTime)}`}
@@ -394,7 +398,7 @@ function UserChips({
             <button
               key={u.id}
               onClick={() => onPick(u.id)}
-              className="bg-[#112052] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1a2d6e] hover:ring-white/50"
+              className="bg-[#102052] px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 transition hover:bg-[#1c2f70] hover:ring-white/50"
               title={u.id}
             >
               <span className="flex items-center gap-1.5">

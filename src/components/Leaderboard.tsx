@@ -575,7 +575,7 @@ const Leaderboard = () => {
     <>
       <Navigation />
       {/* Main container with background and consistent flex centering */}
-      <div className="min-h-screen bg-[#10102a] pt-24"> 
+      <div className="min-h-screen bg-[#273469] pt-24"> 
       <AnimatePresence>
         {copiedText && <CopyPopup text={copiedText} />}
       </AnimatePresence>
@@ -635,7 +635,7 @@ const Leaderboard = () => {
                               <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:border-white/40">
                                   <SelectValue placeholder="Select Input Type" />
                               </SelectTrigger>
-                              <SelectContent className="border border-white/10 bg-[#171022] text-zinc-100">
+                              <SelectContent className="border border-white/10 bg-[#212b58] text-zinc-100">
                                   <SelectItem value="userid">User ID</SelectItem>
                                   <SelectItem value="usertoken">User Token</SelectItem>
                                   <SelectItem value="rank">Rank</SelectItem>
@@ -703,7 +703,7 @@ const Leaderboard = () => {
                                       <SelectTrigger className="flex-1 border-white/10 bg-black/30 focus:border-white/40">
                                           <SelectValue placeholder="Select Track" />
                                       </SelectTrigger>
-                                      <SelectContent className="border border-white/10 bg-[#171022] text-zinc-100">
+                                      <SelectContent className="border border-white/10 bg-[#212b58] text-zinc-100">
                                           {PREDEFINED_TRACKS.map((track) => (
                                               <SelectItem key={track.id} value={track.id}>
                                                   {track.name}
@@ -875,11 +875,11 @@ const Leaderboard = () => {
                    {(() => {
                        const medal = getMedal(userData.percent as number | undefined);
                        const posMedal = getPosMedal(userData.rank as number | undefined);
-                       let userStatsBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-white/15';
+                       let userStatsBoxStyle = 'bg-[#102052] border-white/15';
                        let userStatsDataTextStyle = 'text-blue-400';
 
                        if (posMedal && posMedal.color === 'black') { // WR
-                           userStatsBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-2 border-black/50';
+                           userStatsBoxStyle = 'bg-[#102052] border-2 border-black/50';
                            userStatsDataTextStyle = 'text-gray-100';
                        } else if (posMedal && posMedal.color === 'purple') { // Podium (Updated condition to 'purple')
                            userStatsBoxStyle = 'bg-purple-500/20 border-2 border-purple-500/50';
@@ -907,7 +907,7 @@ const Leaderboard = () => {
                                    userStatsDataTextStyle = 'text-orange-300'; // Still using orange-300 for text
                                    break;
                                default: // Fallback
-                                   userStatsBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-white/15';
+                                   userStatsBoxStyle = 'bg-[#102052] border-white/15';
                                    userStatsDataTextStyle = 'text-blue-400';
                            }
                        }
@@ -1020,7 +1020,7 @@ const Leaderboard = () => {
                                if (isCurrentUserEntry) {
                                  // User's entry - apply specific styles based on rank/medal
                                  if (posMedal && posMedal.color === 'black') { // WR
-                                     entryBoxStyle = 'bg-[rgba(16,16,42,0.9)] border-2 border-black/50';
+                                     entryBoxStyle = 'bg-[#102052] border-2 border-black/50';
                                      entryDataTextStyle = 'text-gray-100'; // White/gray for contrast
                                  } else if (posMedal && posMedal.color === 'purple') { // Podium (Updated condition to 'purple')
                                      entryBoxStyle = 'bg-purple-500/20 border-2 border-purple-500/50';

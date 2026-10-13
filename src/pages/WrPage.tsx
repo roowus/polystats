@@ -6,6 +6,7 @@ import { fetchWorldRecord, type LeaderboardEntry } from '@/lib/polytrack';
 import { type TrackInfo } from '@/lib/tracks';
 import { fetchTrackOfTheWeek } from '@/lib/polytrack';
 import { cn } from '@/lib/utils';
+import { SeasonIcon } from '@/components/SeasonIcon';
 
 interface WrRow extends LeaderboardEntry {
   trackName: string;
@@ -107,7 +108,7 @@ const WrPage = () => {
                 {visible.length} tracks{missing > 0 ? ` · ${missing} with no verified time` : ''}
               </span>
             </div>
-            <LeaderboardTable rows={visible.map((r) => ({ ...r, subtitle: r.trackName }))} showMedal emptyLabel="No records loaded." />
+            <LeaderboardTable rows={visible.map((r) => ({ ...r, subtitle: r.trackName, subtitleSeason: true }))} showMedal emptyLabel="No records loaded." />
           </Panel>
         )}
       </PageShell>

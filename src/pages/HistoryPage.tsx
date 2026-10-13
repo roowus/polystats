@@ -3,6 +3,7 @@ import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/shell';
 import { formatTime, getProxyUrl } from '@/lib/polytrack';
 import { OFFICIAL_TRACKS } from '@/lib/tracks';
+import { SeasonIcon } from '@/components/SeasonIcon';
 import { cn } from '@/lib/utils';
 
 interface HistoryRow {
@@ -19,6 +20,80 @@ async function fetchHistory(trackId: string): Promise<HistoryRow[]> {
   if (!response.ok) throw new Error(`History request failed: ${response.status}`);
   const data = (await response.json()) as { history?: HistoryRow[] };
   return (data.history ?? []).sort((a, b) => a.set_at.localeCompare(b.set_at));
+}
+
+
+/** Lightweight SVG line chart of the record progression (best-so-far). */
+function ProgressionChart({ rows }: { rows: HistoryRow[] }) {
+  const W = 720;
+  const H = 220;
+  const PAD = { l: 56, r: 16, t: 14, b: 26 };
+
+  const series = useMemo(() => {
+    let best = Infinity;
+    return rows
+      .filter((r) => {
+        if (r.time_ms < best) {
+          best = r.time_ms;
+          return true;
+        }
+        return false;
+      })
+      .map((r) => ({ t: new Date(r.set_at.replace(' ', 'T') + 'Z').getTime(), ms: r.time_ms, player: r.player }));
+  }, [rows]);
+
+  if (series.length < 2) return null;
+
+  const t0 = series[0].t;
+  const t1 = series[series.length - 1].t;
+  const span = Math.max(1, t1 - t0);
+  const msMin = series[series.length - 1].ms;
+  const msMax = series[0].ms;
+  const msPad = Math.max(200, (msMax - msMin) * 0.1);
+  const lo = msMin - msPad;
+  const hi = msMax + msPad;
+
+  const x = (t: number) => PAD.l + ((t - t0) / span) * (W - PAD.l - PAD.r);
+  const y = (ms: number) => PAD.t + (1 - (ms - lo) / (hi - lo)) * (H - PAD.t - PAD.b);
+
+  const points = series.map((p) => `${x(p.t)},${y(p.ms)}`).join(' ');
+  const fmt = (ms: number) => {
+    const m = Math.floor(ms / 60000);
+    const sec = ((ms % 60000) / 1000).toFixed(2);
+    return `${String(m).padStart(2, '0')}:${sec.padStart(5, '0')}`;
+  };
+
+  return (
+    <Panel className="mb-6 p-4">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-400">
+        Record progression (best time over time)
+      </p>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="World record progression chart">
+        {/* gridlines */}
+        {[hi, lo + (hi - lo) / 2, lo].map((ms, i) => (
+          <g key={i}>
+            <line x1={PAD.l} x2={W - PAD.r} y1={y(ms)} y2={y(ms)} stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+            <text x={PAD.l - 6} y={y(ms) + 3} textAnchor="end" fontSize="9" fill="#cfcfe4">
+              {fmt(ms)}
+            </text>
+          </g>
+        ))}
+        <polyline points={points} fill="none" stroke="#7f9cf5" strokeWidth="2" />
+        {series.map((p, i) => (
+          <g key={i}>
+            <circle cx={x(p.t)} cy={y(p.ms)} r="3" fill="#fff" />
+            <title>{`${p.player} — ${fmt(p.ms)}`}</title>
+          </g>
+        ))}
+        <text x={PAD.l} y={H - 8} fontSize="9" fill="#cfcfe4">
+          {new Date(t0).toLocaleDateString()}
+        </text>
+        <text x={W - PAD.r} y={H - 8} textAnchor="end" fontSize="9" fill="#cfcfe4">
+          {new Date(t1).toLocaleDateString()}
+        </text>
+      </svg>
+    </Panel>
+  );
 }
 
 export default function HistoryPage() {
@@ -86,11 +161,14 @@ export default function HistoryPage() {
               className={cn(
                 'px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors',
                 track.id === t.id
-                  ? 'bg-[#112052] text-white ring-2 ring-white/30'
+                  ? 'bg-[#102052] text-white ring-2 ring-white/30'
                   : 'text-zinc-300 hover:bg-white/10 hover:text-white'
               )}
             >
-              {t.name}
+              <span className="flex items-center gap-1.5">
+                <SeasonIcon trackName={t.name} size={12} />
+                {t.name}
+              </span>
             </button>
           ))}
         </div>
@@ -131,6 +209,8 @@ export default function HistoryPage() {
                 </Panel>
               </div>
             )}
+
+            {rows && <ProgressionChart rows={rows} />}
 
             <Panel className="overflow-hidden">
               <div className="border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white">

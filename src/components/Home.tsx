@@ -48,7 +48,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#10102a] text-zinc-100">
+    <div className="min-h-screen bg-[#273469] text-zinc-100">
       <Navigation />
       <PageShell className="max-w-5xl">
         {/* Hero */}
@@ -78,9 +78,9 @@ const Home = () => {
             <button
               key={path}
               onClick={() => navigate(path)}
-              className="group border border-white/10 bg-[rgba(20,20,45,0.6)] p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-[rgba(28,28,62,0.7)]"
+              className="group border border-white/10 bg-[#212b58] p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-[rgba(28,28,62,0.7)]"
             >
-              <div className="mb-3 inline-flex bg-[#112052] p-2.5 text-[#bed8f7]">
+              <div className="mb-3 inline-flex bg-[#102052] p-2.5 text-[#bed8f7]">
                 <Icon className="h-5 w-5" />
               </div>
               <h3 className="flex items-center gap-1.5 font-semibold">

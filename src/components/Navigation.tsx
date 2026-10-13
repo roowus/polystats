@@ -19,7 +19,7 @@ const Navigation = () => {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b-2 border-white/12 bg-[#10102a]">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b-2 border-white/12 bg-[#273469]">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <button
           onClick={() => navigate('/')}
@@ -42,7 +42,7 @@ const Navigation = () => {
                 className={cn(
                   'pt-skew flex items-center px-3 text-[13px] font-semibold uppercase tracking-wide text-white transition-colors',
                   'border-0', // no borders — the full-height fill is the highlight
-                  active ? 'bg-[#112052]' : 'hover:bg-white/10'
+                  active ? 'bg-[#102052]' : 'hover:bg-white/10'
                 )}
               >
                 <span className="flex items-center gap-1.5">

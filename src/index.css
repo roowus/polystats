@@ -45,17 +45,17 @@
   --radius: 0.625rem;
   --background: #10102a;
   --foreground: #f4f4ff;
-  --card: #14142d;
+  --card: #212b58;
   --card-foreground: #f4f4ff;
-  --popover: #14142d;
+  --popover: #212b58;
   --popover-foreground: #f4f4ff;
-  --primary: #112052;
+  --primary: #102052;
   --primary-foreground: #f4f4ff;
-  --secondary: #1c1c3d;
+  --secondary: #273469;
   --secondary-foreground: #f4f4ff;
-  --muted: #1c1c3d;
+  --muted: #273469;
   --muted-foreground: #9a9ab8;
-  --accent: #1c1c3d;
+  --accent: #273469;
   --accent-foreground: #f4f4ff;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -132,20 +132,20 @@
 }
 
 :root {
-  --pt-navy: #14142d;        /* panel chrome */
-  --pt-navy-deep: #10102a;   /* page background */
-  --pt-blue: #112052;        /* accent panels */
+  --pt-base: #273469;        /* lighter — general UI base */
+  --pt-deep: #102052;        /* darker — buttons, inputs */
+  --pt-panel: #212b58;       /* intermediate — panels on top of base */
   --pt-border: rgba(255, 255, 255, 0.12);
 }
 
 html {
-  background: var(--pt-navy-deep);
+  background: var(--pt-base);
   /* stop the white rubber-band at the page edges */
   overscroll-behavior: none;
 }
 
 body {
-  background: var(--pt-navy-deep);
+  background: var(--pt-base);
   color: #ffffff;
   font-family: 'ForcedSquare', 'Trebuchet MS', sans-serif;
   overscroll-behavior-y: none;
@@ -179,7 +179,7 @@ body {
 
 /* Flat panel — no blur, no shadows, exact game chrome color */
 .pt-panel {
-  background: rgba(20, 20, 45, 0.85);
+  background: rgba(33, 43, 88, 1);
   border: 2px solid rgba(255, 255, 255, 0.14);
   border-radius: 0;
 }
@@ -198,7 +198,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: #112052;
+  background: #102052;
   border: 2px solid rgba(255, 255, 255, 0.35);
   color: #fff;
   font-weight: 700;
@@ -217,7 +217,7 @@ body {
 
 /* Flat force-square inputs */
 .pt-input {
-  background: rgba(16, 16, 42, 0.9);
+  background: #102052;
   border: 2px solid rgba(255, 255, 255, 0.18);
   color: #f4f4ff;
 }
@@ -240,6 +240,6 @@ input, textarea, select {
 
 /* force native dropdown options dark too */
 select, option {
-  background: #14142d;
+  background: #102052;
   color: #f4f4ff;
 }

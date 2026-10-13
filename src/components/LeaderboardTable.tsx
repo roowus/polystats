@@ -2,11 +2,13 @@ import { formatTime } from '@/lib/polytrack';
 import { medalFor, type Medal } from '@/lib/stats';
 import { MedalBadge } from './shell';
 import { cn } from '@/lib/utils';
+import { SeasonIcon } from '@/components/SeasonIcon';
 
 export interface RowEntry {
   trackId?: string;
   nickname?: string;
   subtitle?: string;
+  subtitleSeason?: boolean;
   frames: number;
   position?: number;
   verifiedState?: number;
@@ -79,7 +81,10 @@ export function LeaderboardTable({
                 <td className="max-w-[240px] truncate px-4 py-2.5 font-medium">
                   {row.nickname ?? 'Unknown'}
                   {row.subtitle && (
-                    <span className="block text-[11px] font-normal text-zinc-500">{row.subtitle}</span>
+                    <span className="flex items-center gap-1 text-[11px] font-normal text-zinc-400">
+                      {row.subtitleSeason && <SeasonIcon trackName={row.subtitle} size={11} />}
+                      {row.subtitle}
+                    </span>
                   )}
                   {row.countryCode && (
                     <span className="ml-2 text-[11px] uppercase text-zinc-500">{row.countryCode}</span>
