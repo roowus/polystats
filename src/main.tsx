@@ -10,6 +10,7 @@ import TotwPage from "./pages/TotwPage";
 import WrPage from "./pages/WrPage";
 import ComparePage from "./pages/ComparePage";
 import HistoryPage from "./pages/HistoryPage";
+import Analytics from "./components/Analytics";
 import "./index.css";
 
 const router = createBrowserRouter([

@@ -5,6 +5,10 @@ import TotwPage from '@/pages/TotwPage';
 import WrPage from '@/pages/WrPage';
 import * as polytrack from '@/lib/polytrack';
 
+vi.mock('@/lib/liveTracks', () => ({
+  getTrackCatalog: vi.fn(async () => ({ tracks: [], source: 'embedded' })),
+}));
+
 vi.mock('@/lib/polytrack', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/polytrack')>();
   return {

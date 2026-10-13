@@ -2,8 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Settings, ExternalLink, Swords, Trophy, CalendarDays, BarChart2, ArrowRight,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Navigation from './Navigation';
-import { PageShell, Panel } from './shell';
+import { PageShell, Panel, StatTile } from './shell';
+import { Freshness, useDataStatus } from '@/components/Freshness';
 
 const FEATURES = [
   {
@@ -46,6 +48,7 @@ const FEATURES = [
 
 const Home = () => {
   const navigate = useNavigate();
+  const dataStatus = useDataStatus();
 
   return (
     <div className="min-h-screen bg-[#212b58] text-white">
@@ -92,7 +95,28 @@ const Home = () => {
           ))}
         </div>
 
-        <Panel className="mt-10 flex flex-col items-center justify-between gap-3 p-4 text-xs text-zinc-500 sm:flex-row">
+        {dataStatus && typeof dataStatus.users === 'number' && (
+          <Panel className="mt-10 p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="font-game text-sm font-bold uppercase tracking-wider text-white">Database</h2>
+              <Freshness date={dataStatus.last_fresh_run} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <StatTile label="Players cataloged" value={dataStatus.users.toLocaleString()} />
+              <StatTile label="Best times stored" value={(dataStatus.results ?? 0).toLocaleString()} />
+              <StatTile label="WR records" value={(dataStatus.wr_history ?? 0).toLocaleString()} />
+              <StatTile label="Daily snapshots" value={(dataStatus.snapshots ?? 0).toLocaleString()} />
+              <StatTile label="TOTW archived" value={(dataStatus.totw_archive ?? 0).toLocaleString()} />
+            </div>
+            {dataStatus.last_backfill_run && (
+              <p className="mt-3 text-timestamp">
+                Long-tail backfill last ran {new Date(dataStatus.last_backfill_run.replace(' ', 'T') + 'Z').toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+              </p>
+            )}
+          </Panel>
+        )}
+
+        <Panel className="mt-6 flex flex-col items-center justify-between gap-3 p-4 text-xs text-zinc-500 sm:flex-row">
           <span>Data: vps.kodub.com v6 API · game 0.6.3</span>
           <a
             href="https://www.kodub.com/apps/polytrack"
