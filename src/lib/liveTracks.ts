@@ -22,7 +22,6 @@ export interface LiveCatalog {
 }
 
 const CACHE_KEY = 'polystats_live_tracks';
-const CACHE_TTL_MS = 24 * 3600 * 1000;
 const GAME_VERSION_RE = /app-polytrack\.kodub\.com\/([\d.]+)/;
 const TRACK_RE = /\{id:"([a-f0-9]{64})",group:"([^"]*)",trackMetadata:\{name:"((?:[^"\\]|\\.)*)",author:"((?:[^"\\]|\\.)*)",lastModified:(?:null|"[^"]*")\},environment:Cl\.A\.(\w+)/g;
 

@@ -36,33 +36,24 @@ const TotwPage = () => {
   const dataStatus = useDataStatus();
 
   const load = useCallback(async () => {
-    let cancelled = false;
     setLoading(true);
     setError(null);
     try {
       const t = await fetchTrackOfTheWeek();
       if (!t) throw new Error('No Track of the Week available right now.');
-      if (cancelled) return;
       setTotw(t);
       const data = await fetchLeaderboard({ trackId: t.trackId, skip: 0, amount: 50, onlyVerified: false });
-      if (cancelled) return;
       setEntries(data.entries);
       setTotal(data.total);
     } catch (e) {
-      if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load Track of the Week.');
+      setError(e instanceof Error ? e.message : 'Failed to load Track of the Week.');
     } finally {
-      if (!cancelled) setLoading(false);
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      await load();
-    })();
-    return () => {
-      cancelled = true;
-    };
+    void load();
   }, [load]);
 
   // Auto-rotate: refetch when the week ends (checked every 30s).

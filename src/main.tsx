@@ -23,6 +23,8 @@ const router = createBrowserRouter([
   { path: "/how-to-use", Component: HowToUse },
   { path: "/leaderboard", Component: Leaderboard },
   { path: "/utils", Component: Utils },
+  // Mounted on every route so SPA navigations report a page_view to GA.
+  { path: "*", Component: Analytics },
 ]);
 
 const rootElement = document.getElementById("root");

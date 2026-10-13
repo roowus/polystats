@@ -6,7 +6,7 @@ import { formatTime, getProxyUrl } from '@/lib/polytrack';
 import { OFFICIAL_TRACKS } from '@/lib/tracks';
 import { getTrackCatalog, mergeCatalog } from '@/lib/liveTracks';
 import { SeasonIcon } from '@/components/SeasonIcon';
-import { cn } from '@/lib/utils';
+import { Chip } from '@/components/ui-system';
 
 interface HistoryRow {
   track_id: string;
@@ -164,23 +164,16 @@ export default function HistoryPage() {
 
         {/* Track selector */}
         <div className="mb-6 flex flex-wrap gap-1.5">
-          {catalog.filter((t) => /^(Summer|Winter|Desert) \d+$/.test(t.name)).map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTrack(t)}
-              className={cn(
-                'px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors',
-                track.id === t.id
-                  ? 'bg-[#212b58] text-white ring-2 ring-white/30'
-                  : 'text-zinc-300 hover:bg-white/10 hover:text-white'
-              )}
-            >
-              <span className="flex items-center gap-1.5">
-                <SeasonIcon trackName={t.name} size={12} />
-                {t.name}
-              </span>
-            </button>
-          ))}
+          {catalog
+            .filter((t) => /^(Summer|Winter|Desert) \d+$/.test(t.name))
+            .map((t) => (
+              <Chip key={t.id} active={track.id === t.id} onClick={() => setTrack(t)}>
+                <span className="flex items-center gap-1.5">
+                  <SeasonIcon trackName={t.name} size={12} />
+                  {t.name}
+                </span>
+              </Chip>
+            ))}
         </div>
 
         {loading && (

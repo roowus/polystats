@@ -4,9 +4,10 @@ import { Search, Copy, Check, Swords } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import { PlayerSearchInput } from '@/components/PlayerSearchInput';
 import { CarPic } from '@/components/CarPic';
+import { Chip, SortButton } from '@/components/ui-system';
 import { PageShell, PageTitle, Panel, StatTile, MedalBadge, Spinner, ErrorNote } from '@/components/shell';
 import { useUserStats } from '@/hooks/useUserStats';
-import { sha256Hex, formatTime } from '@/lib/polytrack';
+import { formatTime } from '@/lib/polytrack';
 import {
   computeAverages,
   groupMedals,
@@ -26,7 +27,6 @@ import {
   type StoredUser,
 } from '@/lib/userStore';
 import { fetchCatalog, fetchUserProfile, searchUsers, shareToCatalog, upsertUserProfile, type UserSearchResult } from '@/lib/catalog';
-import { Freshness, useDataStatus } from '@/components/Freshness';
 
 type SortKey = 'name' | 'time' | 'rank' | 'gap';
 
@@ -48,8 +48,7 @@ const UserPage = () => {
   const [sort, setSort] = useState<SortKey>('rank');
   const [filter, setFilter] = useState<'all' | 'official' | 'community' | 'totw'>('all');
   const [nameResults, setNameResults] = useState<UserSearchResult[] | null>(null);
-  const [cachedProfile, setCachedProfile] = useState<Awaited<ReturnType<typeof fetchUserProfile>>>(null);
-  const dataStatus = useDataStatus();
+  const [cachedProfile, setCachedProfile] = useState<Awaited<ReturnType<typeof fetchUserProfile>> | null>(null);
   const [recents, setRecents] = useState<StoredUser[]>([]);
   const [saved, setSaved] = useState<StoredUser[]>([]);
   const [community, setCommunity] = useState<StoredUser[]>([]);
@@ -70,6 +69,12 @@ const UserPage = () => {
 
   useEffect(() => {
     if (userId && /^[a-f0-9]{64}$/i.test(userId)) {
+      // DB-first: show what we already know instantly, then refresh live.
+      fetchUserProfile(userId)
+        .then((p) => {
+          if (p && (p.user || p.names.length > 0)) setCachedProfile(p);
+        })
+        .catch(() => {});
       scan(userId);
     }
     return () => reset();
@@ -344,27 +349,16 @@ const UserPage = () => {
             <Panel className="overflow-hidden">
               <div className="flex flex-wrap items-center gap-2 border-b border-white/8 px-4 py-3">
                 {(['all', 'official', 'community', 'totw'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={cn(
-                      'px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition border-2',
-                      filter === f ? 'bg-purple-500/20 text-purple-200 ring-1 ring-purple-500/40' : 'text-zinc-500 hover:text-zinc-300'
-                    )}
-                  >
+                  <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>
                     {f === 'totw' ? 'Track of the Week' : f}
-                  </button>
+                  </Chip>
                 ))}
                 <div className="ml-auto flex items-center gap-1 text-xs text-zinc-500">
                   sort:
                   {(['rank', 'time', 'gap', 'name'] as const).map((k) => (
-                    <button
-                      key={k}
-                      onClick={() => setSort(k)}
-                      className={cn('rounded px-1.5 py-0.5', sort === k ? 'bg-white/10 text-zinc-200' : 'hover:text-zinc-300')}
-                    >
+                    <SortButton key={k} active={sort === k} onClick={() => setSort(k)}>
                       {k}
-                    </button>
+                    </SortButton>
                   ))}
                 </div>
               </div>

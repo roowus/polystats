@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, Settings, ExternalLink, Swords, Trophy, CalendarDays, BarChart2, ArrowRight,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import Navigation from './Navigation';
 import { PageShell, Panel, StatTile } from './shell';
 import { Freshness, useDataStatus } from '@/components/Freshness';

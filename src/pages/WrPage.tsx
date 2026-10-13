@@ -3,12 +3,11 @@ import Navigation from '@/components/Navigation';
 import { PageShell, PageTitle, Panel, Spinner, ErrorNote } from '@/components/shell';
 import { Freshness, useDataStatus } from '@/components/Freshness';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
+import { Chip } from '@/components/ui-system';
 import { fetchWorldRecord, type LeaderboardEntry } from '@/lib/polytrack';
 import { OFFICIAL_TRACKS, COMMUNITY_TRACKS, type TrackInfo } from '@/lib/tracks';
 import { getTrackCatalog } from '@/lib/liveTracks';
 import { fetchTrackOfTheWeek } from '@/lib/polytrack';
-import { cn } from '@/lib/utils';
-import { SeasonIcon } from '@/components/SeasonIcon';
 
 interface WrRow extends LeaderboardEntry {
   trackName: string;
@@ -34,7 +33,6 @@ const WrPage = () => {
         // live catalog may contain newer tracks than the embedded list
         try {
           const { tracks: live } = await getTrackCatalog();
-          const liveExtra: (TrackInfo & { group: 'official' | 'community' | 'totw' })[] = [];
           const known = new Set(tracks.map((t) => t.id));
           for (const t of live) {
             if (!known.has(t.id)) tracks.push({ ...t, group: 'community' });
@@ -107,16 +105,9 @@ const WrPage = () => {
           <Panel className="overflow-hidden">
             <div className="flex flex-wrap items-center gap-2 border-b border-white/8 px-4 py-3">
               {(['all', 'official', 'community', 'totw'] as const).map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition border-2',
-                    filter === f ? 'bg-purple-500/20 text-purple-200 ring-1 ring-purple-500/40' : 'text-zinc-500 hover:text-zinc-300'
-                  )}
-                >
+                <Chip key={f} active={filter === f} onClick={() => setFilter(f)}>
                   {f === 'totw' ? 'Track of the Week' : f}
-                </button>
+                </Chip>
               ))}
               <span className="ml-auto text-xs text-zinc-600">
                 {visible.length} tracks{missing > 0 ? ` · ${missing} with no verified time` : ''}

@@ -112,6 +112,36 @@ await page.screenshot({ path: '/tmp/shot-user.png', fullPage: true });
 await page.goto(BASE + '/', { waitUntil: 'networkidle' });
 await page.screenshot({ path: '/tmp/shot-home.png', fullPage: true });
 
+
+// 11. Filter chips use one consistent, subtle border on every page
+for (const path of ['/wr', '/user', '/history']) {
+  await page.goto(BASE + path, { waitUntil: 'networkidle' });
+  const { count, borders, heights, radii } = await page.evaluate(() => {
+    const chips = [...document.querySelectorAll('button')].filter(
+      (b) => /uppercase/.test(b.className) && /border-2/.test(b.className)
+    );
+    const cs = chips.map((b) => getComputedStyle(b));
+    return {
+      count: chips.length,
+      borders: [...new Set(cs.map((c) => c.borderTopColor))],
+      heights: [...new Set(chips.map((b) => Math.round(b.getBoundingClientRect().height)))],
+      radii: [...new Set(cs.map((c) => c.borderTopLeftRadius))],
+    };
+  });
+  // Every chip must be square and the same height, with only two border colours
+  // (white at 25% for selected, transparent for the rest).
+  const borderOk = borders.every(
+    (c) => c === 'rgba(0, 0, 0, 0)' || /255, 255, 255, 0\.25|oklab\([^)]*\/ 0\.25\)/.test(c)
+  );
+  // /user only renders its chip row after a lookup, so zero chips is valid there.
+  const ok = count === 0 ? path === '/user' : borderOk && heights.length === 1 && radii.every((r) => r === '0px');
+  check(
+    `filter chips consistent on ${path}`,
+    ok,
+    `${count} chips, borders=${borders.join(' | ')}, heights=${heights.join(',')}, radii=${radii.join(',')}`
+  );
+}
+
 await browser.close();
 preview.kill();
 const failed = results.filter((r) => !r.ok);

@@ -7,16 +7,9 @@ import { PlayerSearchInput } from '@/components/PlayerSearchInput';
 import { formatTime } from '@/lib/polytrack';
 import { useUserStats } from '@/hooks/useUserStats';
 import { computeAverages, type UserTrackEntry } from '@/lib/stats';
-import { cn } from '@/lib/utils';
 
 const HEX64 = /^[a-f0-9]{64}$/i;
 const MAX_PLAYERS = 6;
-
-interface DoneStatus {
-  phase: 'done';
-  nickname: string | null;
-  entries: UserTrackEntry[];
-}
 
 /** One player column: runs its own scan and reports results upward. */
 function PlayerPanel({
