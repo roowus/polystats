@@ -1,4 +1,4 @@
-import { Home, BarChart2, Users, Settings, Info, Trophy, Swords, CalendarDays } from 'lucide-react';
+import { Home, BarChart2, Users, Settings, Info, Trophy, Swords, CalendarDays, History } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { path: '/totw', icon: CalendarDays, label: 'Track of the Week' },
   { path: '/user', icon: Users, label: 'User Stats' },
   { path: '/compare', icon: Swords, label: 'Compare' },
+  { path: '/history', icon: History, label: 'Record History' },
   { path: '/wr', icon: Trophy, label: 'World Records' },
   { path: '/leaderboard', icon: BarChart2, label: 'Leaderboard' },
   { path: '/utils', icon: Settings, label: 'Utils' },

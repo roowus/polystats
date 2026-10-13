@@ -9,6 +9,7 @@ import UserPage from "./pages/UserPage";
 import TotwPage from "./pages/TotwPage";
 import WrPage from "./pages/WrPage";
 import ComparePage from "./pages/ComparePage";
+import HistoryPage from "./pages/HistoryPage";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
   { path: "/totw", Component: TotwPage },
   { path: "/wr", Component: WrPage },
   { path: "/compare", Component: ComparePage },
+  { path: "/history", Component: HistoryPage },
   { path: "/how-to-use", Component: HowToUse },
   { path: "/leaderboard", Component: Leaderboard },
   { path: "/utils", Component: Utils },
