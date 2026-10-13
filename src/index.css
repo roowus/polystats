@@ -45,17 +45,17 @@
   --radius: 0.625rem;
   --background: #10102a;
   --foreground: #f4f4ff;
-  --card: #212b58;
+  --card: #102052;
   --card-foreground: #f4f4ff;
-  --popover: #212b58;
+  --popover: #102052;
   --popover-foreground: #f4f4ff;
-  --primary: #102052;
+  --primary: #212b58;
   --primary-foreground: #f4f4ff;
-  --secondary: #273469;
+  --secondary: #212b58;
   --secondary-foreground: #f4f4ff;
-  --muted: #273469;
+  --muted: #212b58;
   --muted-foreground: #9a9ab8;
-  --accent: #273469;
+  --accent: #212b58;
   --accent-foreground: #f4f4ff;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -179,7 +179,7 @@ body {
 
 /* Flat panel — no blur, no shadows, exact game chrome color */
 .pt-panel {
-  background: rgba(33, 43, 88, 1);
+  background: #102052;
   border: 2px solid rgba(255, 255, 255, 0.14);
   border-radius: 0;
 }
@@ -198,7 +198,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: #102052;
+  background: #212b58;
   border: 2px solid rgba(255, 255, 255, 0.35);
   color: #fff;
   font-weight: 700;
@@ -217,7 +217,7 @@ body {
 
 /* Flat force-square inputs */
 .pt-input {
-  background: #102052;
+  background: #212b58;
   border: 2px solid rgba(255, 255, 255, 0.18);
   color: #f4f4ff;
 }
@@ -240,6 +240,6 @@ input, textarea, select {
 
 /* force native dropdown options dark too */
 select, option {
-  background: #102052;
+  background: #212b58;
   color: #f4f4ff;
 }

@@ -84,7 +84,7 @@ const TotwPage = () => {
                   onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
                 />
               )}
-              <div className="relative bg-gradient-to-r from-[#150d26]/95 to-[#150d26]/70 p-6 sm:p-8">
+              <div className="relative bg-gradient-to-r from-[#102052]/95 to-[#102052]/70 p-6 sm:p-8">
                 <p className="text-[11px] font-medium uppercase tracking-widest text-fuchsia-300">
                   {ENV_NAMES[totw.environment] ?? 'Unknown'} environment
                 </p>

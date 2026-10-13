@@ -635,7 +635,7 @@ const Leaderboard = () => {
                               <SelectTrigger className="w-[180px] border-white/10 bg-black/30 focus:border-white/40">
                                   <SelectValue placeholder="Select Input Type" />
                               </SelectTrigger>
-                              <SelectContent className="border border-white/10 bg-[#212b58] text-zinc-100">
+                              <SelectContent className="border border-white/10 bg-[#102052] text-zinc-100">
                                   <SelectItem value="userid">User ID</SelectItem>
                                   <SelectItem value="usertoken">User Token</SelectItem>
                                   <SelectItem value="rank">Rank</SelectItem>
@@ -703,7 +703,7 @@ const Leaderboard = () => {
                                       <SelectTrigger className="flex-1 border-white/10 bg-black/30 focus:border-white/40">
                                           <SelectValue placeholder="Select Track" />
                                       </SelectTrigger>
-                                      <SelectContent className="border border-white/10 bg-[#212b58] text-zinc-100">
+                                      <SelectContent className="border border-white/10 bg-[#102052] text-zinc-100">
                                           {PREDEFINED_TRACKS.map((track) => (
                                               <SelectItem key={track.id} value={track.id}>
                                                   {track.name}

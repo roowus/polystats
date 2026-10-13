@@ -78,7 +78,7 @@ const Home = () => {
             <button
               key={path}
               onClick={() => navigate(path)}
-              className="group border border-white/10 bg-[#212b58] p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-[rgba(28,28,62,0.7)]"
+              className="group border border-white/10 bg-[#102052] p-5 text-left backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-white/25 hover:bg-[rgba(28,28,62,0.7)]"
             >
               <div className="mb-3 inline-flex bg-[#102052] p-2.5 text-[#bed8f7]">
                 <Icon className="h-5 w-5" />
