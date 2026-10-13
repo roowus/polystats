@@ -17,7 +17,7 @@ export function PageShell({ children, className }: { children: ReactNode; classN
 export function PageTitle({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header className="mb-8">
-      <h1 className="font-game inline-block -skew-x-6 text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
+      <h1 className="font-game inline-block -skew-x-[6deg] text-3xl font-bold uppercase tracking-wide text-white sm:text-4xl">
         {title}
       </h1>
       {subtitle && <p className="mt-1.5 max-w-2xl text-sm text-zinc-400">{subtitle}</p>}
@@ -85,7 +85,7 @@ export function Spinner({ className }: { className?: string }) {
 
 export function ErrorNote({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-red-500/25 bg-red-500/8 px-4 py-3 text-sm text-red-300">
+    <div className="border border-red-500/25 bg-red-500/8 px-4 py-3 text-sm text-red-300">
       {children}
     </div>
   );

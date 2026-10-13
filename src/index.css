@@ -180,11 +180,12 @@ body {
 .pt-panel {
   background: rgba(20, 20, 45, 0.85);
   border: 2px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0;
 }
 
 /* Parallelogram: skew the box, counter-skew the content */
 .pt-skew {
-  transform: skewX(-8deg);
+  transform: skewX(-6deg);
 }
 .pt-skew > * {
   transform: skewX(8deg);

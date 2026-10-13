@@ -73,7 +73,7 @@ const CopyPopup = ({ text }: { text: string }) => (
     initial={{ opacity: 0, y: -10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }} // Add exit animation
-    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-sm px-4 py-2 rounded-md shadow-lg z-50"
+    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-sm px-4 py-2 shadow-lg z-50"
   >
     Copied: {text}
   </motion.div>
@@ -519,7 +519,7 @@ const Leaderboard = () => {
           <Copy className="w-3 h-3" />
         </Button>
         {/* Tooltip for color circles */}
-        <Tooltip id="colorTooltip" className="rounded-md" style={{ backgroundColor: "rgb(27, 21, 49)", color: "white", fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
+        <Tooltip id="colorTooltip" className="" style={{ backgroundColor: "rgb(27, 21, 49)", color: "white", fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
       </div>
     );
   };
@@ -812,7 +812,7 @@ const Leaderboard = () => {
                animate="animate"
                exit="exit"
                variants={alertVariants}
-               className="flex items-center justify-center gap-2 text-yellow-400 text-sm text-center mt-2 p-3 border border-yellow-400 rounded-md bg-yellow-400/20"
+               className="flex items-center justify-center gap-2 text-yellow-400 text-sm text-center mt-2 p-3 border border-yellow-400 bg-yellow-400/20"
              >
                  <TriangleAlert className="h-4 w-4" /> {/* Changed icon */}
                  <span>Suggestion: Please double-check the input value and ensure the correct input type is selected (User ID, User Token, or Rank).</span>
@@ -926,7 +926,7 @@ const Leaderboard = () => {
                                                      data-tooltip-content={posMedal?.label} style={{ color: iconColor }}>
                                                    {posMedal?.icon}
                                                </span>
-                                               <Tooltip id="statsPosMedal" className="rounded-md" style={{ backgroundColor: "rgb(27, 21, 49)", color: iconColor, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
+                                               <Tooltip id="statsPosMedal" className="" style={{ backgroundColor: "rgb(27, 21, 49)", color: iconColor, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
                                            </>
                                        ) : null}
                                        <span className='truncate'>{userData.name || 'Name Unavailable'}</span>
@@ -937,7 +937,7 @@ const Leaderboard = () => {
                                                      data-tooltip-content={medal?.label} style={{ color: medal?.color }}>
                                                    {medal?.icon}
                                                </span>
-                                               <Tooltip id="statsMedal" className="rounded-md" style={{ backgroundColor: "rgb(27, 21, 49)", color: medal?.color, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
+                                               <Tooltip id="statsMedal" className="" style={{ backgroundColor: "rgb(27, 21, 49)", color: medal?.color, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
                                            </>
                                        ) : null}
                                    </CardTitle>
@@ -1074,7 +1074,7 @@ const Leaderboard = () => {
                                    exit="hidden" // Animate out when removed (e.g., changing page)
                                    layout // Enable layout animations
                                    className={cn(
-                                     'p-4 rounded-lg',
+                                     'p-4 ',
                                      entryBoxStyle, // Use the determined box style
                                      'overflow-hidden'
                                    )}
@@ -1112,8 +1112,8 @@ const Leaderboard = () => {
                                            <span className="ml-1" data-tooltip-id={`medal-${entry.id}`} data-tooltip-content={medal?.label} style={{ color: medal?.color }}>{medal ? medal.icon : ''}</span>
                                          ) : null}
                                        </div>
-                                       <Tooltip id={`medal-${entry.id}`} className="rounded-md" style={{ backgroundColor: "rgb(27, 21, 49)", color: medal?.color, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
-                                       <Tooltip id={`posMedal-${entry.id}`} className="rounded-md" style={{ backgroundColor: "rgb(27, 21, 49)", color: iconColor, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
+                                       <Tooltip id={`medal-${entry.id}`} className="" style={{ backgroundColor: "rgb(27, 21, 49)", color: medal?.color, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
+                                       <Tooltip id={`posMedal-${entry.id}`} className="" style={{ backgroundColor: "rgb(27, 21, 49)", color: iconColor, fontSize: "1rem", padding: "0.25rem 0.5rem" }} />
                                      </div>
                                      {/* Verified */}
                                      <div className="flex items-center gap-1">

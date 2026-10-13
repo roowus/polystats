@@ -54,7 +54,7 @@ const CopyPopup = ({ text }: { text: string }) => (
     initial={{ opacity: 0, y: -10 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
-    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-sm px-4 py-2 rounded-md shadow-lg z-50"
+    className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white text-sm px-4 py-2 shadow-lg z-50"
   >
     Copied: {text}
   </motion.div>
@@ -622,7 +622,7 @@ const Utils = () => {
               exit="exit"
               layout
             >
-              <div className="flex items-center justify-center gap-2 text-yellow-400 text-sm text-center mt-2 p-3 border border-yellow-400 rounded-md bg-yellow-400/20">
+              <div className="flex items-center justify-center gap-2 text-yellow-400 text-sm text-center mt-2 p-3 border border-yellow-400 bg-yellow-400/20">
                 <TriangleAlert className="h-4 w-4" />
                 <span>Suggestion: Please double-check your input and ensure the correct Input Type is selected. If using Rank, make sure a Track ID is also provided.</span>
               </div>

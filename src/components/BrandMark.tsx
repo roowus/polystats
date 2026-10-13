@@ -1,12 +1,12 @@
-/** Inline SVG version of the PolyStats mark for the navbar. */
+/** Inline SVG version of the PolyStats mark (italic P, transparent bg). */
 export function BrandMark({ size = 26 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden>
-      <path d="M-4 46h34l-4 6H-8zM-8 54h30l-4 6H-12z" fill="#2e4182" />
-      <path d="M14 8h34l-8 48H6z" fill="#112052" stroke="#ffffff" strokeWidth="2.5" />
+    <svg width={size} height={size * 0.72} viewBox="0 0 72 52" aria-hidden>
+      <path d="M2 38h30l-2.5 6H-.5zM-2 46h26l-2.5 6H-4.5z" fill="#2e4182" opacity="0.9" />
       <path
-        d="M26 16h10c6 0 9.5 3.8 9.5 8.6 0 5-3.7 8.7-9.8 8.7H33l-1.4 8.7h-6.4L26 16zm6 4.4 1.1 8.6h2.7c2.7 0 4.3-1.7 4.3-4.2 0-2.7-1.8-4.4-4.6-4.4H32z"
+        d="M30 2l-9 48h12l3-17h8c9 0 15-5.5 15-14 0-8-6-13-15-13H30zm11 10c4 0 6.5 2 6.5 5.5S45 22.5 41 22.5h-5l1.3-10.5h4.7z"
         fill="#ffffff"
+        transform="skewX(-6)"
       />
     </svg>
   );

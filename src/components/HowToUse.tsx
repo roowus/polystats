@@ -46,7 +46,7 @@ const HowToUse = () => {
           {/* Header */}
           <motion.div className="text-center space-y-4" variants={itemVariants}>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500">
+              <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-500">
                 <Info className="w-8 h-8" />
               </div>
             </div>
@@ -87,7 +87,7 @@ const HowToUse = () => {
 
                 {/* User ID Section */}
                 <motion.div
-                  className="space-y-4 p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30"
+                  className="space-y-4 p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/30"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 }}
@@ -131,7 +131,7 @@ const HowToUse = () => {
 
                   <Button
                     onClick={() => navigate('/utils')}
-                    className="mt-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg hover:scale-105 transition-all"
+                    className="mt-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 hover:scale-105 transition-all"
                   >
                     Go to Utils Page →
                   </Button>
@@ -141,7 +141,7 @@ const HowToUse = () => {
 
                 {/* User Token Section */}
                 <motion.div
-                  className="space-y-4 p-6 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/15"
+                  className="space-y-4 p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-white/15"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 }}
@@ -279,7 +279,7 @@ const HowToUse = () => {
                   Want to share your Polytrack achievements with friends? Polystats makes it easy!
                 </p>
 
-                <div className="space-y-3 p-4 rounded-lg bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                <div className="space-y-3 p-4 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
                   <h4 className="font-semibold text-white">How it works:</h4>
                   <ol className="space-y-2 text-gray-300 text-sm">
                     <li className="flex gap-2">
@@ -345,7 +345,7 @@ const HowToUse = () => {
               </Button>
               <Button
                 onClick={() => navigate('/user')}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:scale-105 transition-all"
+                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 hover:scale-105 transition-all"
               >
                 Get Started →
               </Button>

@@ -116,7 +116,7 @@ const UserPage = () => {
               <button
                 onClick={search}
                 disabled={!input.trim()}
-                className="flex items-center justify-center gap-2 rounded-xl bg-[#112052] border border-white/20 hover:bg-[#1a2d6e] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
+                className="flex items-center justify-center gap-2 bg-[#112052] border border-white/20 hover:bg-[#1a2d6e] px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110 disabled:opacity-40"
               >
                 <Search className="h-4 w-4" /> Search
               </button>
@@ -176,7 +176,7 @@ const UserPage = () => {
           <>
             {/* Player header */}
             <Panel className="mb-6 flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 text-2xl font-bold text-violet-200">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 text-2xl font-bold text-violet-200">
                 {(nickname ?? '?').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
@@ -203,7 +203,7 @@ const UserPage = () => {
               </div>
               <button
                 onClick={() => navigate(`/compare?ids=${userId}`)}
-                className="flex items-center gap-2 self-start rounded-xl border border-purple-500/40 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/10"
+                className="flex items-center gap-2 self-start border border-purple-500/40 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/10"
               >
                 <Swords className="h-4 w-4" /> Compare
               </button>
@@ -240,7 +240,7 @@ const UserPage = () => {
                     return (
                       <span key={label} className="group relative">
                         <MedalBadge icon={medal.icon} label={`${label} ×${medals[label].length}`} color={medal.color} />
-                        <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#171022] px-2 py-1 text-[11px] text-zinc-300 shadow-xl group-hover:block">
+                        <span className="pointer-events-none absolute -top-8 left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap border border-white/10 bg-[#171022] px-2 py-1 text-[11px] text-zinc-300 shadow-xl group-hover:block">
                           {medals[label].map((e) => e.trackName).join(', ')}
                         </span>
                       </span>
