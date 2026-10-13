@@ -575,7 +575,7 @@ const Leaderboard = () => {
     <>
       <Navigation />
       {/* Main container with background and consistent flex centering */}
-      <div className="min-h-screen bg-[#273469] pt-24"> 
+      <div className="min-h-screen bg-[#212b58] pt-24"> 
       <AnimatePresence>
         {copiedText && <CopyPopup text={copiedText} />}
       </AnimatePresence>
@@ -586,7 +586,7 @@ const Leaderboard = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          "w-full space-y-6", // Base classes
+          "mx-auto w-full space-y-6 px-4 sm:px-6", // Base classes
           statsData || userNotFoundOnTrack ? "max-w-6xl" : "max-w-2xl" // Conditionally apply max-width based on statsData or userNotFoundOnTrack
         )}
         layout // Enable layout animations for smooth size changes

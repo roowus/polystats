@@ -312,7 +312,7 @@ const Utils = () => {
     <>
       <Navigation />
       <div className={cn(
-        "min-h-screen bg-[#273469] px-4 pt-24 pb-16 sm:px-6"
+        "min-h-screen bg-[#212b58] px-4 pt-24 pb-16 sm:px-6"
       )}>
         <AnimatePresence>
           {copiedText && <CopyPopup text={copiedText} />}

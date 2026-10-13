@@ -48,7 +48,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#273469] text-zinc-100">
+    <div className="min-h-screen bg-[#212b58] text-zinc-100">
       <Navigation />
       <PageShell className="max-w-5xl">
         {/* Hero */}

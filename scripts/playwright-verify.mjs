@@ -24,11 +24,11 @@ page.on('pageerror', (e) => errors.push(String(e)));
 // 1. Home loads, dark background everywhere (no white flash zones)
 await page.goto(BASE + '/', { waitUntil: 'networkidle' });
 const bodyBg = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-check('body is PolyTrack navy (no white)', bodyBg === 'rgb(39, 52, 105)', bodyBg);
+check('body is PolyTrack navy (no white)', bodyBg === 'rgb(33, 43, 88)', bodyBg);
 
 // overscroll area behind the page is dark
 const htmlBg = await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
-check('html is PolyTrack navy (overscroll fixed)', htmlBg === 'rgb(39, 52, 105)', htmlBg);
+check('html is PolyTrack navy (overscroll fixed)', htmlBg === 'rgb(33, 43, 88)', htmlBg);
 
 // 2. Blocky font applied site-wide
 const font = await page.evaluate(() => getComputedStyle(document.body).fontFamily);

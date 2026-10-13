@@ -19,7 +19,7 @@ const Navigation = () => {
   const { pathname } = useLocation();
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b-2 border-white/12 bg-[#273469]">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b-2 border-white/12 bg-[#212b58]">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <button
           onClick={() => navigate('/')}

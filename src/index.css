@@ -132,9 +132,9 @@
 }
 
 :root {
-  --pt-base: #273469;        /* lighter — general UI base */
+  --pt-base: #212b58;        /* medium — page background */
   --pt-deep: #102052;        /* darker — buttons, inputs */
-  --pt-panel: #212b58;       /* intermediate — panels on top of base */
+  --pt-panel: #212b58;       /* panels (same family as base, separated by border) */
   --pt-border: rgba(255, 255, 255, 0.12);
 }
 
