@@ -91,7 +91,7 @@ const WrPage = () => {
       <PageShell>
         <PageTitle
           title="World Records"
-          subtitle="The verified world record on every track — official, community, and the current Track of the Week."
+          subtitle="The verified world record on every track: official, community, and the current Track of the Week."
         />
         <Freshness date={dataStatus?.last_fresh_run} />
 

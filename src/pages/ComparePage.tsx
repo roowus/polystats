@@ -138,7 +138,7 @@ const ComparePage = () => {
       <PageShell>
         <PageTitle
           title="Compare Players"
-          subtitle={`Head-to-head across shared tracks — up to ${MAX_PLAYERS} players at once.`}
+          subtitle={`Head-to-head across shared tracks, up to ${MAX_PLAYERS} players at once.`}
         />
 
         <Panel className="mb-6 p-5">
@@ -184,7 +184,7 @@ const ComparePage = () => {
         {trackMap.length > 0 && (
           <Panel className="overflow-hidden">
             <div className="border-b-2 border-white/12 px-4 py-3 text-sm font-semibold uppercase tracking-wide text-white">
-              Head-to-head — {trackMap.length} shared track{trackMap.length === 1 ? '' : 's'}
+              Head-to-head: {trackMap.length} shared track{trackMap.length === 1 ? '' : 's'}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">

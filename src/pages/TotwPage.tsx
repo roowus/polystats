@@ -82,7 +82,7 @@ const TotwPage = () => {
       <PageShell>
         <PageTitle
           title="Track of the Week"
-          subtitle="The current community spotlight track — its leaderboard resets when the week ends."
+          subtitle="The current community spotlight track. Its leaderboard resets when the week ends."
         />
         <Freshness date={dataStatus?.last_fresh_run} />
 
@@ -121,7 +121,7 @@ const TotwPage = () => {
 
             <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
               <StatTile label="Entries" value={total.toLocaleString()} />
-              <StatTile label="WR" value={entries[0] ? `${entries[0].nickname}` : '—'} hint={entries[0] ? undefined : 'no verified times'} />
+              <StatTile label="WR" value={entries[0] ? entries[0].nickname : 'n/a'} hint={entries[0] ? undefined : 'no verified times'} />
               <StatTile label="Track ID" value={<span className="font-mono text-sm">{totw.trackId.slice(0, 12)}…</span>} />
             </div>
 
