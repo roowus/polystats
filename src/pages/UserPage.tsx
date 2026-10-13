@@ -180,9 +180,9 @@ const UserPage = () => {
             <p className="mt-3 text-sm text-zinc-300">
               Scanning leaderboards… {status.done}/{status.total}
             </p>
-            <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-3 h-1.5 overflow-hidden bg-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all"
+                className="h-full bg-[#7f9cf5] transition-all"
                 style={{ width: `${(status.done / status.total) * 100}%` }}
               />
             </div>
@@ -348,7 +348,7 @@ const UserPage = () => {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={cn(
-                      'rounded-full px-3 py-1 text-xs font-medium capitalize transition',
+                      'px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition border-2',
                       filter === f ? 'bg-purple-500/20 text-purple-200 ring-1 ring-purple-500/40' : 'text-zinc-500 hover:text-zinc-300'
                     )}
                   >
