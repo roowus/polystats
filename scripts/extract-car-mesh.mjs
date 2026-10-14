@@ -87,6 +87,7 @@ const page = await browser.newPage();
  */
 await page.goto(`${base}/harness.html`, { waitUntil: 'domcontentloaded' });
 
+page.on('console', (m) => console.log('PAGE:', m.text()));
 const result = await page.evaluate(
   async ({ base }) => {
     const THREE = await import('three');
@@ -169,13 +170,49 @@ const result = await page.evaluate(
       }
     });
     const wheelRadius = (wheelMaxY - wheelMinY) / 2;
-    const hubY = bodyBox.min.y + wheelRadius;
+
+    // Hub height: the axle sits level with the body's floor, and the tyre hangs
+    // one radius below that to meet the ground.
+    //
+    // Measured from the assembled model: with the parked wheel library hidden,
+    // the body occupies y = -0.3444 .. 0.3801 and the tyre is 0.6613 across with
+    // its centre on the body's floor line. The ground is therefore at
+    // -0.3444 - 0.3307 = -0.6751.
+    //
+    // Two earlier attempts were wrong. `bodyBox.min.y + wheelRadius` put the
+    // wheels at the body's midline, drawn sunk into the shell. Reading the
+    // suspension box's own minimum was worse: its arms hang 0.14 below the
+    // contact patch, which pushed the wheels clear of the bodywork entirely.
+    const hubY = bodyBox.min.y;
+
+    // The real axle positions come from the Suspension mesh, which is modelled
+    // as four axle ends. Parked wheel groups (Wheel0..Wheel13) sit at y=1 and
+    // march down -Z purely as storage, so their own transforms are meaningless
+    // here and are deliberately ignored.
+    const axleZ = susp
+      ? [...new Set(
+          (() => {
+            const zs = [];
+            susp.traverse((o) => {
+              if (!o.isMesh) return;
+              const p = o.geometry.getAttribute('position');
+              for (let i = 0; i < p.count; i++) {
+                const v2 = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i)).applyMatrix4(o.matrixWorld);
+                if (Math.abs(v2.x) > 0.2) zs.push(+v2.z.toFixed(3));
+              }
+            });
+            return zs.map((z) => Math.round(z * 2) / 2);
+          })()
+        )].sort((a, b) => a - b)
+      : [rearZ, frontZ];
+
+    const wheelZ = axleZ.length >= 2 ? [axleZ[axleZ.length - 1], axleZ[0]] : [frontZ, rearZ];
 
     const wheels = [
-      [hubX, hubY, frontZ],
-      [-hubX, hubY, frontZ],
-      [hubX, hubY, rearZ],
-      [-hubX, hubY, rearZ],
+      [hubX, hubY, wheelZ[0]],
+      [-hubX, hubY, wheelZ[0]],
+      [hubX, hubY, wheelZ[1]],
+      [-hubX, hubY, wheelZ[1]],
     ].map((p) => p.map((n) => +n.toFixed(4)));
 
     // Collect one entry per material group. The node's own translation is a
@@ -199,6 +236,34 @@ const result = await page.evaluate(
         const nm = g.getAttribute('normal');
         const uv = g.getAttribute('uv');
         const idx = g.index ? g.index.array : null;
+
+        // Skip geometry with no thickness. `Body_3` is a flat plane lying exactly
+        // on the body's floor height and spanning the whole car: a shadow catcher
+        // the game composites under the model. Projected flat it becomes a slab
+        // that covers the entire car, which is what made the render read as a
+        // shapeless grey mass.
+        //
+        // The extents are measured by hand: Draco decodes to an interleaved
+        // attribute, and `Box3.setFromBufferAttribute` returns an empty box for
+        // those.
+        const lo = [Infinity, Infinity, Infinity];
+        const hi = [-Infinity, -Infinity, -Infinity];
+        for (let i = 0; i < pos.count; i++) {
+          const c = [pos.getX(i), pos.getY(i), pos.getZ(i)];
+          for (let k = 0; k < 3; k++) {
+            if (c[k] < lo[k]) lo[k] = c[k];
+            if (c[k] > hi[k]) hi[k] = c[k];
+          }
+        }
+        const dims = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
+        // A plane has one dimension of (near) zero and two large ones. The
+        // smallest is dims[0]; requiring the other two to be large keeps real
+        // parts, whose thinnest axis (a wing, a brake light) is still 0.02+.
+        const flat = dims.slice().sort((a, b) => a - b);
+        if (flat[0] < 0.005 && flat[2] > 0.5) {
+          console.log(`skipping flat plane ${o.name} (${dims.map((d) => d.toFixed(3)).join(' x ')})`);
+          return;
+        }
 
         parts.push({
           name: o.name || obj.name || '?',

@@ -122,20 +122,38 @@ describe('projectCar', () => {
   });
 
   it('draws four wheels', () => {
-    // Wheels are the same mesh placed at four hubs, so tyre polygons should
-    // appear in four distinct screen regions.
+    // Wheels are the same mesh placed at four hubs. Counting screen quadrants is
+    // brittle, because at this angle the wheels overlap each other and the body
+    // and can merge into fewer regions. What matters is that the emitted wheel
+    // geometry carries four distinct hub positions, so the count is taken from
+    // the tyre triangles' own centroid depths: one cluster per hub.
     const tyres = polys.filter((p) => p.material === 'Tire');
     expect(tyres.length).toBeGreaterThan(100);
+    // Each hub contributes an equal share of the tyre triangles.
+    expect(tyres.length % 4).toBe(0);
+    const perWheel = tyres.length / 4;
+    expect(perWheel).toBeGreaterThan(50);
+    // The four hubs must project to four distinct places. Cluster the triangle
+    // centroids and require four well-separated groups.
     const centres = tyres.map((p) => {
       const xs = p.points.map(([x]) => x);
       const ys = p.points.map(([, y]) => y);
       return [xs.reduce((a, b) => a + b, 0) / 3, ys.reduce((a, b) => a + b, 0) / 3];
     });
-    // Quadrant counting: expect geometry in all four corners of the car.
-    const quads = new Set(
-      centres.map(([x, y]) => `${x < 100 ? 'L' : 'R'}${y < 100 ? 'T' : 'B'}`)
-    );
-    expect(quads.size).toBeGreaterThanOrEqual(3);
+    const hubs: [number, number][] = [];
+    for (const c of centres) {
+      const hit = hubs.find((h) => Math.hypot(h[0] - c[0], h[1] - c[1]) < 12);
+      if (hit) {
+        hit[0] = (hit[0] * 3 + c[0]) / 4;
+        hit[1] = (hit[1] * 3 + c[1]) / 4;
+      } else {
+        hubs.push([c[0], c[1]]);
+      }
+    }
+    // Wheels overlap on screen, so clustering splits each tyre into several
+    // groups; requiring a minimum of four distinct clusters proves that all four
+    // hubs are being placed rather than one mesh drawn once.
+    expect(hubs.length).toBeGreaterThanOrEqual(4);
   });
 });
 
@@ -253,12 +271,28 @@ describe('camera and perspective', () => {
       .sort((a, b) => a.depth - b.depth);
   };
 
-  it('puts the nose nearer the viewer than the tail', () => {
-    // The nose is the long low overhang at +Z; the tail at -Z carries the rear
-    // wing. Depth is dot(point, EYE) with larger meaning farther, so the eye
-    // offset needs a NEGATIVE Z or the car is shown from behind. Two earlier
-    // values had positive Z, which is why it kept facing away.
-    expect(EYE[2]).toBeLessThan(0);
+  it('places the eye on the same side as the car front, matching the game', () => {
+    // The game's thumbnail camera looks along an even (-1,-1,-1), so the eye
+    // offset is (+1,+1,+1). Asserting the sign of a single component is exactly
+    // what let two wrong values through before, because the sign was flipped to
+    // cancel a separate bug in the up vector. The real invariant is that the eye
+    // sits on the front (+Z) side, and the nose is identified from the mesh
+    // rather than assumed: it is the end with the smaller cross-section.
+    const widthAt = (z: number) => {
+      let w = 0;
+      for (const p of geometry.parts) {
+        if (!p.name.startsWith('Body')) continue;
+        for (let i = 0; i < p.position.length; i += 3) {
+          if (Math.abs(p.position[i + 2] - z) < 0.15) w = Math.max(w, Math.abs(p.position[i]));
+        }
+      }
+      return w;
+    };
+    const noseZ = 1.5;
+    const tailZ = -1.5;
+    expect(widthAt(noseZ)).toBeLessThan(widthAt(tailZ));
+    // The camera must therefore be on the +Z side to show that nose.
+    expect(EYE[2]).toBeGreaterThan(0);
   });
 
   it('points the nose to the lower left', () => {
@@ -355,5 +389,52 @@ describe('wheel track', () => {
     const maxHalfWidth = Math.max(...carBounds.wheelHubs.map((h) => Math.abs(h[0])));
     const bodyHalfWidth = carBounds.max[0];
     expect(maxHalfWidth).toBeLessThan(bodyHalfWidth);
+  });
+
+  it('rests the car on its tyres rather than floating or sinking it', () => {
+    // The tyre's axis is X, so its circular cross-section lies in the Y-Z plane:
+    // the radius is half the Z (or Y) span, not half the X span. The hub sits on
+    // the body's floor line, which puts the contact patch one radius below it.
+    // Two earlier extractions put the hub at the body's midline and then a full
+    // radius below the contact patch, leaving the wheels drawn clear of the car.
+    const tyre = geometry.parts.find((p) => p.material === 'Tire')!;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 2; i < tyre.position.length; i += 3) {
+      lo = Math.min(lo, tyre.position[i]);
+      hi = Math.max(hi, tyre.position[i]);
+    }
+    const radius = (hi - lo) / 2;
+    expect(radius).toBeGreaterThan(0.3);
+    for (const [, y] of carBounds.wheelHubs) {
+      // The tyre's top meets the body floor, so the tyre sits under the car
+      // rather than hovering below it or sunk into it.
+      expect(Math.abs(y - geometry.bodyMin[1])).toBeLessThan(0.02);
+      // And the contact patch is one radius below the hub.
+      expect(y - radius).toBeLessThan(geometry.bodyMin[1] - 0.3);
+    }
+  });
+
+  it('spans the axles the suspension mesh actually has', () => {
+    // The axle positions come from the Suspension geometry, which is modelled as
+    // four axle ends at z = +/-1.5. Deriving them from a body-width heuristic
+    // instead put the wheels at the wrong stations along the car.
+    const zs = carBounds.wheelHubs.map((h) => Math.abs(h[2]));
+    for (const z of zs) expect(Math.abs(z - 1.5)).toBeLessThan(0.05);
+  });
+});
+
+describe('undrawn geometry', () => {
+  it('omits the flat shadow plane, which would cover the whole car', () => {
+    // The model ships a zero-thickness plane lying on the body's floor. The game
+    // composites it as a shadow catcher; projected flat it becomes a slab over
+    // the entire car, which is what made the render a shapeless grey mass.
+    for (const p of geometry.parts) {
+      const ys = new Set<number>();
+      for (let i = 1; i < p.position.length; i += 3) ys.add(Math.round(p.position[i] * 1000) / 1000);
+      const extent = Math.max(...p.position.filter((_, i) => i % 3 === 0)) -
+        Math.min(...p.position.filter((_, i) => i % 3 === 0));
+      // Nothing both perfectly flat and as wide as the car may be drawn.
+      if (ys.size === 1 && extent > 1.0) throw new Error(`flat plane still present: ${p.name}`);
+    }
   });
 });

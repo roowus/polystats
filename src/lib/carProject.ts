@@ -67,23 +67,22 @@ function applyMatrix(m: number[], x: number, y: number, z: number): Vec3 {
 /**
  * Where the camera sits relative to the car.
  *
- * The mesh's nose is at +Z (it is the narrow, low end; the tail carries the wide
- * rear wing), so the camera must be on the +Z side to show the front of the car.
- * The game's own thumbnail camera sits at (1000.1, 1000.3, 1000), an even 45
- * degrees: at that azimuth the car reads as a side-on three-quarter view from
- * above, and the nose points away to the lower left.
+ * This is the game's own thumbnail camera, converted rather than approximated.
+ * The engine places the eye at (1000.1, 1000.3, 1000) looking at (0.1, 0.3, 0),
+ * so the view direction is an even (-1, -1, -1) and the eye offset, pointing from
+ * the car back to the viewer, is (+1, +1, +1): 45 degrees of azimuth on the +Z
+ * side at 35 degrees of elevation.
  *
- * This uses a shallower azimuth (closer to straight ahead) and a lower elevation,
- * which is what brings the nose toward the viewer and shows the front of the car
- * rather than its roof. Both values were chosen by rendering a sweep of angles
- * and looking at them.
+ * The nose is at +Z (the narrow, low end; the tail carries the wide rear wing),
+ * so an eye on the +Z side looks at the car's front, which is what the game's own
+ * thumbnails show. Earlier versions had a negative Z here. That was compensating
+ * for an inverted up vector rather than fixing it, and it is why the car rendered
+ * back-to-front and, once the up vector was corrected, upside down.
+ *
+ * Exported for tests, which assert which end of the car faces the viewer.
  */
-/** Exported for tests, which assert which end of the car faces the viewer. */
 export const EYE: Vec3 = (() => {
-  // NEGATIVE Z: depth is dot(point, EYE), larger meaning farther, and the nose
-  // sits at +Z. Positive Z here shows the back of the car, which is what both
-  // earlier values did.
-  const v: Vec3 = [0.42, 0.5, -1.0];
+  const v: Vec3 = [1, 1, 1];
   const len = Math.hypot(...v);
   return [v[0] / len, v[1] / len, v[2] / len];
 })();
@@ -117,6 +116,7 @@ const CAMERA_DISTANCE = 14;
  */
 function viewBasis(dir: Vec3) {
   const worldUp: Vec3 = [0, 1, 0];
+  // right = cross(dir, worldUp), which is the usual right-handed camera basis.
   const right: Vec3 = [
     dir[1] * worldUp[2] - dir[2] * worldUp[1],
     dir[2] * worldUp[0] - dir[0] * worldUp[2],
@@ -124,17 +124,19 @@ function viewBasis(dir: Vec3) {
   ];
   const rl = Math.hypot(...right) || 1;
   right[0] /= rl; right[1] /= rl; right[2] /= rl;
-  // Negated deliberately. With up = cross(right, dir) the car renders inverted
-  // (wheels above the body); the silhouette is near-symmetric, so automated
-  // profile/IoU comparisons report a match either way and cannot be trusted to
-  // settle it. This sign is verified by the landmark test below, which asserts
-  // the wheels sit below the body in the rendered output.
-  const trueUp: Vec3 = [
-    right[2] * dir[1] - right[1] * dir[2],
-    right[0] * dir[2] - right[2] * dir[0],
-    right[1] * dir[0] - right[0] * dir[1],
+  // up = cross(right, dir).
+  //
+  // This sign is the one that puts the wheels BELOW the body. An earlier version
+  // negated it and then flipped the eye's Z to compensate; the two errors
+  // cancelled for the silhouette but left the car mirrored and inverted, so a
+  // car facing left had its nose on the wrong side and its paint mirrored.
+  // Deriving both from the game's camera keeps them consistent.
+  const up: Vec3 = [
+    right[1] * dir[2] - right[2] * dir[1],
+    right[2] * dir[0] - right[0] * dir[2],
+    right[0] * dir[1] - right[1] * dir[0],
   ];
-  return { right, up: trueUp };
+  return { right, up };
 }
 
 const BASIS = viewBasis(VIEW_DIR);
@@ -219,9 +221,13 @@ export function projectCar(size: number): FlatPolygon[] {
   // carry the silhouette.
   const dropFineDetail = size <= 64;
 
+  // Frame the car by its projected footprint rather than by its axis-aligned
+  // size. At a 45 degree view the car's diagonal is much longer than either
+  // spanX or spanY, so scaling by those left a wide empty margin and the car
+  // sat small in its box.
   const spanX = BOUNDS.maxX - BOUNDS.minX;
   const spanY = BOUNDS.maxY - BOUNDS.minY;
-  const span = Math.max(spanX, spanY) * 1.12; // small margin so nothing touches the edge
+  const span = Math.max(spanX, spanY) * 1.08;
   const cx = (BOUNDS.minX + BOUNDS.maxX) / 2;
   const cy = (BOUNDS.minY + BOUNDS.maxY) / 2;
   const scale = size / span;
