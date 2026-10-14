@@ -102,6 +102,20 @@ const UserPage = () => {
 
   const entries = status.phase === 'done' ? status.entries : [];
   const nickname = status.phase === 'done' ? status.nickname : null;
+
+  /**
+   * Car style for the header image.
+   *
+   * The catalog profile is preferred because it covers every known player, while
+   * a leaderboard entry only exists for someone who has actually set a time. The
+   * styles history is the last resort: it is written whenever a player is seen,
+   * so it still identifies the car for a player with no records.
+   */
+  const headerCarStyle =
+    (cachedProfile?.user?.car_style as string | undefined) ??
+    entries[0]?.carStyle ??
+    cachedProfile?.styles?.at(-1)?.car_style ??
+    null;
   const averages = computeAverages(entries);
   const medals = groupMedals(entries);
   const extremes = bestWorst(entries);
@@ -254,12 +268,9 @@ const UserPage = () => {
           <>
             {/* Player header */}
             <Panel className="mb-6 flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center bg-gradient-to-br from-violet-500/30 to-fuchsia-500/30 text-2xl font-bold text-violet-200">
-                {(nickname ?? '?').charAt(0).toUpperCase()}
-              </div>
+              <CarPic carStyle={headerCarStyle} size={56} className="shrink-0" />
               <div className="min-w-0 flex-1">
                 <h2 className="flex items-center gap-2 truncate text-xl font-bold">
-                  <CarPic carStyle={status.entries[0]?.carStyle} size={16} />
                   {nickname ?? 'Unknown player'}
                   <button
                     onClick={() => {
