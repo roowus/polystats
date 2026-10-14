@@ -280,29 +280,65 @@ const result = await page.evaluate(
     collect(body);
     collect(susp);
 
-    // Wheel variants: the style's `rims` byte picks one. Capture the mesh list
-    // so the app can match the game's choice.
-    const wheelNames = [];
+    // Wheel variants: the style's `rims` byte picks one.
+    //
+    // Every variant is captured, not just variant 0. They differ in rim art, and
+    // a player who chose variant 5 was being drawn with variant 0's wheels, so
+    // the car did not match the one in the game.
+    //
+    // The groups are parked along -Z as storage (Wheel0 at z=0, Wheel1 at z=-1
+    // and so on), so each variant is re-centred on the origin before its meshes
+    // are read. The app places the result at the four hubs.
+    // The tyre is byte-identical in every variant, so it is stored once instead
+    // of twelve times. Only the rim and hub art actually varies; storing all
+    // three per variant tripled the file for no gain.
+    let sharedTyre = null;
+    const wheelVariants = [];
     for (let i = 0; i < 14; i++) {
-      const w = gltf.scene.getObjectByName(i === 0 ? 'Wheel0' : `Wheel${i}`);
-      if (w) wheelNames.push(i === 0 ? 'Wheel0' : `Wheel${i}`);
+      const name = i === 0 ? 'Wheel0' : `Wheel${i}`;
+      const w = gltf.scene.getObjectByName(name);
+      if (!w) continue;
+      // Re-centre: the group's own translation is a storage slot, not a fitment.
+      const saved = w.position.clone();
+      w.position.set(0, 0, 0);
+      w.updateMatrixWorld(true);
+      const start = parts.length;
+      collect(w);
+      const captured = parts.splice(start);
+      w.position.copy(saved);
+      w.updateMatrixWorld(true);
+      const tyre = captured.filter((p) => p.material === 'Tire');
+      if (!sharedTyre && tyre.length) sharedTyre = tyre;
+      wheelVariants.push({
+        index: i,
+        parts: captured.filter((p) => p.material !== 'Tire'),
+      });
     }
-    // Capture variant 0 plus record the names; variants differ only in rim art.
-    collect(gltf.scene.getObjectByName('Wheel0'));
 
-    // Exhaust options, likewise selected by the style's `exhaust` byte.
-    const exhaustNames = [];
+    // Exhaust options, likewise selected by the style's `exhaust` byte. These sit
+    // at the tail and are drawn once, not instanced.
+    const exhaustVariants = [];
     for (let i = 0; i < 8; i++) {
       const e = gltf.scene.getObjectByName(`Exhaust${i}`);
-      if (e) exhaustNames.push(`Exhaust${i}`);
+      if (!e) continue;
+      const saved = e.position.clone();
+      e.position.set(0, 0, 0);
+      e.updateMatrixWorld(true);
+      const start = parts.length;
+      collect(e);
+      const captured = parts.splice(start);
+      e.position.copy(saved);
+      e.updateMatrixWorld(true);
+      exhaustVariants.push({ index: i, parts: captured });
     }
 
     const size = bodyBox.getSize(new THREE.Vector3());
     return {
       parts,
       wheels,
-      wheelNames,
-      exhaustNames,
+      sharedTyre,
+      wheelVariants,
+      exhaustVariants,
       bodySize: [size.x, size.y, size.z].map((n) => +n.toFixed(4)),
       bodyMin: bodyBox.min.toArray().map((n) => +n.toFixed(4)),
       bodyMax: bodyBox.max.toArray().map((n) => +n.toFixed(4)),
@@ -320,7 +356,7 @@ const triangleCount = result.parts.reduce(
 );
 console.log(
   `decoded ${result.parts.length} parts, ${triangleCount} triangles, ` +
-    `${result.wheelNames.length} wheel variants, ${result.exhaustNames.length} exhausts`
+    `${result.wheelVariants.length} wheel variants, ${result.exhaustVariants.length} exhausts`
 );
 console.log(`body size ${result.bodySize.join(' x ')}`);
 

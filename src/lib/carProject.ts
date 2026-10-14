@@ -41,7 +41,7 @@ export interface FlatPolygon {
 
 type Vec3 = [number, number, number];
 
-const PARTS = geometry.parts as {
+interface MeshPart {
   name: string;
   material: string;
   matrix: number[];
@@ -49,7 +49,36 @@ const PARTS = geometry.parts as {
   normal: number[] | null;
   uv: number[] | null;
   index: number[] | null;
-}[];
+}
+
+/** Body and suspension, drawn once at the origin. */
+const PARTS = geometry.parts as MeshPart[];
+
+/**
+ * The tyre, shared by every wheel variant.
+ *
+ * The twelve variants differ only in rim and hub art, so the tyre is stored once
+ * in the geometry file rather than twelve times.
+ */
+const SHARED_TYRE = (geometry.sharedTyre ?? []) as MeshPart[];
+
+/** Rim and hub art per `rims` byte, indexed by the variant's own index. */
+const WHEEL_VARIANTS = (geometry.wheelVariants ?? []) as { index: number; parts: MeshPart[] }[];
+
+/** Exhaust art per `exhaust` byte. */
+const EXHAUST_VARIANTS = (geometry.exhaustVariants ?? []) as { index: number; parts: MeshPart[] }[];
+
+/** The parts a given wheel variant draws: the shared tyre plus its own art. */
+function wheelParts(rimsVariant: number): MeshPart[] {
+  const v = WHEEL_VARIANTS.find((w) => w.index === rimsVariant) ?? WHEEL_VARIANTS[0];
+  return [...SHARED_TYRE, ...(v?.parts ?? [])];
+}
+
+/** The parts a given exhaust variant draws, or none if the byte is unknown. */
+function exhaustParts(exhaustVariant: number): MeshPart[] {
+  const v = EXHAUST_VARIANTS.find((e) => e.index === exhaustVariant);
+  return v?.parts ?? [];
+}
 
 const WHEELS = geometry.wheels as number[][];
 const BODY_MIN = geometry.bodyMin as number[];
@@ -211,7 +240,14 @@ const LIGHT_DIR: Vec3 = (() => {
   return [v[0] / len, v[1] / len, v[2] / len];
 })();
 
-export function projectCar(size: number): FlatPolygon[] {
+/**
+ * Project the car into a `size` x `size` box.
+ *
+ * `rimsVariant` and `exhaustVariant` are the style's `rims` and `exhaust` bytes.
+ * They select which wheel art and exhaust the car wears, so a player's car looks
+ * the same here as it does in the game.
+ */
+export function projectCar(size: number, rimsVariant = 0, exhaustVariant = 0): FlatPolygon[] {
   // Detail that contributes nothing at small sizes but costs a great deal.
   //
   // At 56px the full mesh is one triangle per pixel: they overlap into noise and
@@ -305,8 +341,10 @@ export function projectCar(size: number): FlatPolygon[] {
   };
 
   // Body and suspension sit at the origin.
-  for (const p of PARTS) {
-    if (p.name.startsWith('Wheel')) continue;
+  for (const p of PARTS) emit(p.matrix, p.position, p.index, p.material, undefined, p.uv);
+
+  // Exhaust: the style's `exhaust` byte picks one set, drawn once at the tail.
+  for (const p of exhaustParts(exhaustVariant)) {
     emit(p.matrix, p.position, p.index, p.material, undefined, p.uv);
   }
 
@@ -315,8 +353,7 @@ export function projectCar(size: number): FlatPolygon[] {
   // leaves a fifth set sitting at the origin, on top of the bodywork: with four
   // wheels' worth of extra triangles that covered the car entirely.
   for (const [wx, wy, wz] of WHEELS) {
-    for (const p of PARTS) {
-      if (!p.name.startsWith('Wheel')) continue;
+    for (const p of wheelParts(rimsVariant)) {
       // Keep the tyre for the silhouette; skip the rim and metal when small.
       if (dropFineDetail && p.material !== 'Tire') continue;
       emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz], p.uv);

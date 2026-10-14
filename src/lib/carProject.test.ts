@@ -10,17 +10,27 @@ import geometry from './carGeometry.json';
  */
 describe('extracted mesh', () => {
   it('decoded a full car, not a fragment', () => {
-    // A partial Draco decode silently yields very few triangles.
-    expect(geometry.parts.length).toBeGreaterThan(3);
-    const triangles = geometry.parts.reduce(
-      (a, p) => a + (p.index ? p.index.length / 3 : p.position.length / 9),
-      0
-    );
-    expect(triangles).toBeGreaterThan(500);
+    // A partial Draco decode silently yields very few triangles. The count spans
+    // the body plus the wheel and exhaust variants, because the wheels are stored
+    // per variant rather than in `parts`.
+    const tris = (parts: { index: number[] | null; position: number[] }[]) =>
+      parts.reduce((a, p) => a + (p.index ? p.index.length / 3 : p.position.length / 9), 0);
+    expect(geometry.parts.length).toBeGreaterThan(2);
+    let total = tris(geometry.parts) + tris(geometry.sharedTyre);
+    for (const v of geometry.wheelVariants) total += tris(v.parts);
+    for (const v of geometry.exhaustVariants) total += tris(v.parts);
+    expect(total).toBeGreaterThan(500);
+    // The body itself must be fully present.
+    expect(tris(geometry.parts)).toBeGreaterThan(150);
   });
 
   it('includes the materials the game paints', () => {
-    const materials = new Set(geometry.parts.map((p) => p.material));
+    const materials = new Set([
+      ...geometry.parts.map((p) => p.material),
+      // The tyre is stored once and the rims per variant.
+      ...geometry.sharedTyre.map((p) => p.material),
+      ...geometry.wheelVariants.flatMap((v) => v.parts.map((p) => p.material)),
+    ]);
     // Main is the body; Tire and Rim make up the wheels.
     expect(materials.has('Main')).toBe(true);
     expect(materials.has('Tire')).toBe(true);
@@ -397,7 +407,7 @@ describe('wheel track', () => {
     // the body's floor line, which puts the contact patch one radius below it.
     // Two earlier extractions put the hub at the body's midline and then a full
     // radius below the contact patch, leaving the wheels drawn clear of the car.
-    const tyre = geometry.parts.find((p) => p.material === 'Tire')!;
+    const tyre = geometry.sharedTyre.find((p) => p.material === 'Tire')!;
     let lo = Infinity, hi = -Infinity;
     for (let i = 2; i < tyre.position.length; i += 3) {
       lo = Math.min(lo, tyre.position[i]);
@@ -436,5 +446,39 @@ describe('undrawn geometry', () => {
       // Nothing both perfectly flat and as wide as the car may be drawn.
       if (ys.size === 1 && extent > 1.0) throw new Error(`flat plane still present: ${p.name}`);
     }
+  });
+});
+
+describe('wheel and exhaust variants', () => {
+  it('captures every wheel and exhaust variant the style can select', () => {
+    // The style's `rims` and `exhaust` bytes range over 0-13 and 0-7. An earlier
+    // extraction kept only variant 0, so a player who had chosen variant 5 was
+    // drawn with variant 0's wheels.
+    expect(geometry.wheelVariants.length).toBeGreaterThanOrEqual(12);
+    expect(geometry.exhaustVariants.length).toBeGreaterThanOrEqual(8);
+  });
+
+  it('draws different wheels for different rims bytes', () => {
+    const a = projectCar(200, 0, 0);
+    const b = projectCar(200, 5, 0);
+    const shape = (ps: typeof a) => ps.map((p) => p.points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(';')).join('|');
+    expect(shape(a)).not.toBe(shape(b));
+    // ...while the tyre silhouette stays, since the tyre is shared.
+    expect(a.filter((p) => p.material === 'Tire').length).toBe(
+      b.filter((p) => p.material === 'Tire').length
+    );
+  });
+
+  it('falls back to the first variant when the byte is unknown', () => {
+    // A style from a newer game build must still draw a car rather than nothing.
+    expect(projectCar(120, 99, 99).length).toBeGreaterThan(100);
+  });
+
+  it('draws the exhaust only once, at the tail, not per wheel', () => {
+    // Exhaust art sits at -Z. Emitting it from the wheel loop would repeat it
+    // four times and put it at the hubs.
+    const withExhaust = projectCar(200, 0, 3);
+    const without = projectCar(200, 0, 3).filter((p) => p.material !== 'AirIntake' || p.depth > 0);
+    expect(withExhaust.length).toBeGreaterThan(without.length);
   });
 });

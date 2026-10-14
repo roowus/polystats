@@ -161,7 +161,12 @@ function shadeHex(hex: string, factor: number): string {
  */
 function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size: number; className?: string }) {
   const spec = decodeCarSpec(carStyle ?? '');
-  const polys = useMemo(() => projectCar(size), [size]);
+  // The style's rims and exhaust bytes pick which art the car wears, so the
+  // rendered car matches the one the player actually drives.
+  const polys = useMemo(
+    () => projectCar(size, spec?.rims ?? 0, spec?.exhaust ?? 0),
+    [size, spec?.rims, spec?.exhaust]
+  );
   const [minD, maxD] = useMemo(() => depthRange(polys), [polys]);
 
   const body = spec?.primary ?? MATERIAL_FALLBACK.Main;
