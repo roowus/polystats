@@ -199,6 +199,65 @@ export function decodeCarStyle(carStyle: string): string {
   return colors.join('');
 }
 
+/** A car style broken out into everything the game draws from it. */
+export interface CarSpec {
+  /** Body paint pattern index, 0-15 (see PATTERN_FILES). */
+  pattern: number;
+  /** Rim design index. */
+  rims: number;
+  /** Exhaust design index. */
+  exhaust: number;
+  /** Body paint. Maps to the game's "Main" material. */
+  primary: string;
+  /** Pattern accent. Painted over the body by the pattern artwork. */
+  secondary: string;
+  /** Chassis metal. Maps to the game's "Metal" material. */
+  frame: string;
+  /** Wheel rim colour. Maps to the game's "Rim" material. */
+  rimsColor: string;
+}
+
+/**
+ * Decode a car style into its full specification.
+ *
+ * PolyTrack names these fields in its own `serializeBinary`: pattern, rims and
+ * exhaust occupy bytes 1-3, then four colour triples follow for the Main,
+ * secondary, Metal and Rim materials. Returning them together lets the car be
+ * drawn with the player's actual paint scheme rather than an approximation.
+ *
+ * Returns null when the input cannot be decoded, so callers can fall back.
+ */
+export function decodeCarSpec(carStyle: string): CarSpec | null {
+  if (!carStyle) return null;
+  let bytes: Uint8Array;
+  try {
+    const base64 = carStyle.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const binary = atob(padded);
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  } catch {
+    return null;
+  }
+  if (bytes.length < 16 || bytes[0] !== 0) return null;
+
+  // Each colour is stored little-endian as [low, mid, high] = B, G, R.
+  const colorAt = (o: number) =>
+    `#${[bytes[o + 2], bytes[o + 1], bytes[o]]
+      .map((v) => v.toString(16).padStart(2, '0'))
+      .join('')}`;
+
+  return {
+    pattern: bytes[1],
+    rims: bytes[2],
+    exhaust: bytes[3],
+    primary: colorAt(4),
+    secondary: colorAt(7),
+    frame: colorAt(10),
+    rimsColor: colorAt(13),
+  };
+}
+
 /** Map a raw API entry onto the normalised shape used by the UI. */
 export function normalizeEntry(raw: Record<string, unknown>): LeaderboardEntry {
   const nickname = typeof raw.nickname === 'string' ? raw.nickname : '';

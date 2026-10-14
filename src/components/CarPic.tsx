@@ -3,20 +3,13 @@
  *
  * Prefers the game's own native render, served from R2 by the worker at
  * `/car/<carStyle>.png`. Those images are produced offline by
- * `scripts/render-cars.mjs`, which drives the real PolyTrack client and saves
- * the 200x200 thumbnails its internal `carThumbnail(carStyle)` helper draws.
+ * `scripts/render-cars.mjs`, which drives the real PolyTrack client.
  *
- * The browser asks for any style it has, rather than checking a list of known
- * ones: renders are immutable and cached for a year at the edge, so a hit is
- * cheap and a miss costs one 404 before falling back to the SVG. That means
- * coverage grows automatically as the renderer fills in styles, with no site
- * deploy needed.
- *
- * A style with no render yet falls back to the schematic SVG below, so the UI
- * never shows a broken image.
+ * A style with no render yet falls back to `CarSvg`, which draws from the same
+ * data the game uses (see below).
  */
 import { useEffect, useState } from 'react';
-import { decodeCarStyle, getProxyUrl } from '@/lib/polytrack';
+import { decodeCarStyle, decodeCarSpec, getProxyUrl } from '@/lib/polytrack';
 
 /** Worker origin, derived from the configured proxy URL. */
 function workerOrigin(): string {
@@ -29,37 +22,75 @@ export function carImageUrl(carStyle?: string | null): string | null {
   return `${workerOrigin()}/car/${encodeURIComponent(carStyle)}.png`;
 }
 
+/** Lighten or darken a hex colour, for face shading. */
+function shade(hex: string, factor: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
+    Math.max(0, Math.min(255, Math.round(v * factor)))
+  );
+  return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 /**
- * Schematic car drawn from the decoded PolyTrack car style.
+ * Pattern artwork shipped with the game, indexed by the style's `pattern` byte.
+ * These are the game's own SVG texture maps.
+ */
+const PATTERN_FILES = [
+  'stripe', 'stripe2', 'stripe3', 'double_stripe', 'edge', 'half', 'arrow',
+  'circle', 'horseshoe', 'needle', 'triangle', 'diamonds', 'zigzag',
+  'circles', 'gradient', 'outline',
+] as const;
+
+/**
+ * Build a pattern tile as a data URI, recoloured to the car's palette.
  *
- * Matches the game's thumbnail framing: a 3/4 view with the nose toward the
- * lower left, four exposed wheels, a rear wing and a sidepod. PolyTrack shades
- * its model so the top face reads lighter than the sides, which is what gives
- * the render its 3D look, so the body is split into a lit top plane and a
- * darker side plane.
+ * The game's pattern SVGs are plain artwork painted in placeholder colours
+ * (red = primary, green = secondary) plus neutral #141414 shading. Substituting
+ * those two keys reproduces the paint scheme without a shader: the artwork
+ * itself supplies the stripes, chevrons and gradients.
+ */
+export function patternDataUri(pattern: number, primary: string, secondary: string): string {
+  const name = PATTERN_FILES[pattern];
+  if (!name) return '';
+  // Placeholders in the source art, per the game's own files.
+  const recoloured = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+<linearGradient id="p" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="${primary}"/><stop offset="1" stop-color="${shade(primary, 0.72)}"/>
+</linearGradient>
+<linearGradient id="s" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0" stop-color="${secondary}"/><stop offset="1" stop-color="${shade(secondary, 0.7)}"/>
+</linearGradient>
+</defs>
+<rect width="1024" height="1024" fill="url(#p)"/>
+<image href="/patterns/pattern_${name}.svg" width="1024" height="1024" opacity="0.9"/>
+</svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(recoloured)}`;
+}
+
+/**
+ * Car drawn from the decoded PolyTrack style.
  *
- * Colours come from `decodeCarStyle`, which returns four RGB triples in
- * PolyTrack's own order: body, accent (wings/pods), wheel hubs, detail.
+ * Framing matches the game's thumbnail: a 3/4 view, nose to the lower left,
+ * four exposed wheels, front and rear wings. The game shades its model so the
+ * top face reads lighter than the sides; the body is split into lit top and
+ * darker flank planes for the same effect.
+ *
+ * Colours, pattern and rim choice all come from the style bytes, so two players
+ * with the same car still differ in paint, exactly as in game.
  */
 function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size: number; className?: string }) {
-  const hex = decodeCarStyle(carStyle ?? '');
-  const pick = (i: number, fallback: string) =>
-    hex && hex.length >= (i + 1) * 6 ? `#${hex.slice(i * 6, i * 6 + 6)}` : fallback;
+  const spec = decodeCarSpec(carStyle ?? '');
 
-  const body = pick(0, '#8b7cf0');
-  const accent = pick(1, '#f4f4ff');
-  const hub = pick(2, '#2a2a3a');
-  const detail = pick(3, '#14141e');
-  const tire = '#15151c';
+  const body = spec?.primary ?? '#8b7cf0';
+  const accent = spec?.secondary ?? '#f4f4ff';
+  const frame = spec?.frame ?? '#2a2a3a';
+  const rim = spec?.rimsColor ?? '#c8c8d0';
+  const patternIndex = spec?.pattern ?? 0;
+  const pattern = patternDataUri(patternIndex, body, accent);
+  const patternId = `car-pat-${patternIndex}-${body.slice(1)}-${accent.slice(1)}`;
 
-  // Shade a hex colour so planes read as lit rather than flat.
-  const shade = (c: string, f: number) => {
-    const n = parseInt(c.slice(1), 16);
-    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
-      Math.max(0, Math.min(255, Math.round(v * f)))
-    );
-    return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-  };
+  const tire = '#16161c';
 
   return (
     <svg
@@ -70,65 +101,72 @@ function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size:
       aria-label="Player car"
       role="img"
     >
-      {/* Rear wing, furthest back and highest */}
-      <path d="M63 30 L86 20 L88 26 L65 36 Z" fill={accent} stroke={detail} strokeWidth="0.8" />
-      <path d="M66 34 L68 30 L69 44 L67 47 Z" fill={shade(accent, 0.6)} />
+      {pattern && (
+        <defs>
+          {/* Clip the painted texture to the body silhouette. */}
+          <clipPath id={`${patternId}-body`}>
+            <path d="M25 57 L36 44 L52 36 L69 33 L78 39 L78 53 L62 58 L41 63 L29 66 Z" />
+          </clipPath>
+          <pattern id={patternId} width="100" height="100" patternUnits="userSpaceOnUse">
+            <image href={pattern} width="100" height="100" preserveAspectRatio="none" />
+          </pattern>
+        </defs>
+      )}
 
-      {/* Wheels sit behind/around the body; rear pair first */}
+      {/* Rear wing */}
+      <path d="M64 30 L87 21 L89 27 L66 36 Z" fill={accent} stroke="#0d0d12" strokeWidth="0.7" />
+      <path d="M67 34 L69 30 L70 45 L68 48 Z" fill={shade(accent, 0.6)} />
+
+      {/* Rear wheels */}
       <g>
-        <ellipse cx="72" cy="49" rx="12" ry="12" fill={tire} />
-        <ellipse cx="72" cy="49" rx="6" ry="6" fill={hub} />
-        <ellipse cx="68" cy="45" rx="2.4" ry="2.4" fill={shade(hub, 1.5)} opacity="0.8" />
+        <ellipse cx="73" cy="50" rx="11.5" ry="11.5" fill={tire} />
+        <ellipse cx="73" cy="50" rx="5.6" ry="5.6" fill={rim} />
+        <ellipse cx="73" cy="50" rx="2.2" ry="2.2" fill={shade(rim, 0.55)} />
       </g>
       <g>
-        <ellipse cx="30" cy="62" rx="11" ry="11" fill={tire} />
-        <ellipse cx="30" cy="62" rx="5.4" ry="5.4" fill={hub} />
-        <ellipse cx="26.5" cy="58.5" rx="2.2" ry="2.2" fill={shade(hub, 1.5)} opacity="0.8" />
+        <ellipse cx="34" cy="62" rx="10.5" ry="10.5" fill={tire} />
+        <ellipse cx="34" cy="62" rx="5" ry="5" fill={rim} />
+        <ellipse cx="34" cy="62" rx="2" ry="2" fill={shade(rim, 0.55)} />
       </g>
 
-      {/* Main body: pointed nose lower-left widening to a boxy tail */}
+      {/* Body: painted with the style's pattern, clipped to the silhouette */}
       <path
-        d="M20 60
-           L34 46
-           L52 38
-           L70 34
-           L78 40
-           L78 54
-           L62 58
-           L40 64
-           L28 68
-           Z"
-        fill={body}
-        stroke={detail}
-        strokeWidth="1"
+        d="M25 57 L36 44 L52 36 L69 33 L78 39 L78 53 L62 58 L41 63 L29 66 Z"
+        fill={pattern ? `url(#${patternId})` : body}
+        stroke="#0d0d12"
+        strokeWidth="0.9"
         strokeLinejoin="round"
       />
-      {/* Lit top plane */}
+      {/* Lit top plane: same paint, brightened, so the shape reads as 3D */}
       <path
-        d="M34 46 L52 38 L70 34 L76 39 L58 45 L40 51 L33 50 Z"
-        fill={shade(body, 1.28)}
-        stroke={detail}
-        strokeWidth="0.6"
+        d="M36 44 L52 36 L69 33 L76 38 L59 44 L41 50 L34 49 Z"
+        fill={pattern ? `url(#${patternId})` : body}
+        opacity="0.55"
+        stroke="#0d0d12"
+        strokeWidth="0.5"
       />
-      {/* Cockpit opening */}
-      <path d="M50 41 L62 37 L66 41 L54 46 Z" fill={detail} opacity="0.85" />
+      <path
+        d="M36 44 L52 36 L69 33 L76 38 L59 44 L41 50 L34 49 Z"
+        fill="#ffffff"
+        opacity="0.16"
+      />
 
-      {/* Sidepod along the flank */}
-      <path d="M40 52 L58 46 L60 54 L44 59 Z" fill={accent} stroke={detail} strokeWidth="0.8" />
+      {/* Cockpit */}
+      <path d="M49 41 L61 37 L65 41 L53 46 Z" fill="#0d0d12" opacity="0.88" />
 
-      {/* Front wing across the nose */}
-      <path d="M14 62 L30 55 L32 59 L16 67 Z" fill={accent} stroke={detail} strokeWidth="0.8" />
+      {/* Front wing */}
+      <path d="M18 60 L33 54 L35 58 L20 65 Z" fill={frame} stroke="#0d0d12" strokeWidth="0.7" />
 
-      {/* Front wheels, nearer the viewer */}
+      {/* Front wheels */}
       <g>
-        <ellipse cx="22" cy="76" rx="10" ry="10" fill={tire} />
-        <ellipse cx="22" cy="76" rx="5" ry="5" fill={hub} />
-        <ellipse cx="19" cy="73" rx="2" ry="2" fill={shade(hub, 1.5)} opacity="0.8" />
+        <ellipse cx="24" cy="75" rx="10" ry="10" fill={tire} />
+        <ellipse cx="24" cy="75" rx="4.8" ry="4.8" fill={rim} />
+        <ellipse cx="24" cy="75" rx="1.9" ry="1.9" fill={shade(rim, 0.55)} />
       </g>
       <g>
-        <ellipse cx="64" cy="70" rx="10.5" ry="10.5" fill={tire} />
-        <ellipse cx="64" cy="70" rx="5" ry="5" fill={hub} />
-        <ellipse cx="60.5" cy="66.5" rx="2" ry="2" fill={shade(hub, 1.5)} opacity="0.8" />
+        <ellipse cx="65" cy="69" rx="10.5" ry="10.5" fill={tire} />
+        <ellipse cx="65" cy="69" rx="5" ry="5" fill={rim} />
+        <ellipse cx="65" cy="69" rx="2" ry="2" fill={shade(rim, 0.55)} />
       </g>
     </svg>
   );
