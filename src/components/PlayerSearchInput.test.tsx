@@ -37,7 +37,7 @@ describe('PlayerSearchInput', () => {
     await vi.advanceTimersByTimeAsync(400);
 
     await waitFor(() => {
-      expect(screen.getByText('No user found with this game')).toBeTruthy();
+      expect(screen.getByText('No user found with this name')).toBeTruthy();
     });
   });
 

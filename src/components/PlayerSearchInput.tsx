@@ -87,7 +87,7 @@ export function PlayerSearchInput({
             <div className="px-4 py-3 text-base text-zinc-400">Searching…</div>
           )}
 
-          {showEmpty && <div className="px-4 py-3 text-base text-zinc-400">No user found with this game</div>}
+          {showEmpty && <div className="px-4 py-3 text-base text-zinc-400">No user found with this name</div>}
 
           {suggestions.map((u) => (
             <button
