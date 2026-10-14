@@ -257,16 +257,20 @@ export function projectCar(size: number): FlatPolygon[] {
     }
   };
 
-  for (const p of PARTS) emit(p.matrix, p.position, p.index, p.material, undefined, p.uv);
+  // Body and suspension sit at the origin.
+  for (const p of PARTS) {
+    if (p.name.startsWith('Wheel')) continue;
+    emit(p.matrix, p.position, p.index, p.material, undefined, p.uv);
+  }
 
-  // Wheels: the same mesh at each hub, which the extraction recorded.
-  const wheelPart = PARTS.find((p) => p.material === 'Tire');
-  if (wheelPart) {
-    for (const [wx, wy, wz] of WHEELS) {
-      for (const p of PARTS) {
-        // Every wheel sub-mesh (Tire, Rim, Metal) shares the Wheel root matrix.
-        if (p.name.startsWith('Wheel')) emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz], p.uv);
-      }
+  // Wheels are the SAME mesh instance placed at each hub, so they are emitted
+  // only at the hubs. Emitting them here as well (which an earlier version did)
+  // leaves a fifth set sitting at the origin, on top of the bodywork: with four
+  // wheels' worth of extra triangles that covered the car entirely.
+  for (const [wx, wy, wz] of WHEELS) {
+    for (const p of PARTS) {
+      if (!p.name.startsWith('Wheel')) continue;
+      emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz], p.uv);
     }
   }
 

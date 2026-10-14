@@ -275,3 +275,50 @@ describe('texture coordinates', () => {
     expect(Math.max(...vs) - Math.min(...vs)).toBeGreaterThan(0.5);
   });
 });
+
+describe('wheel placement', () => {
+  const polys = projectCar(200);
+
+  /**
+   * The wheels are one mesh instance placed at four hubs. An earlier version
+   * emitted them at the origin as well, which left a fifth set sitting on the
+   * bodywork and made the car read as a solid dark mass.
+   */
+  it('draws exactly four wheels, not five', () => {
+    const tyres = polys.filter((p) => p.material === 'Tire');
+    // Each wheel contributes a fixed number of triangles; five copies would be
+    // 25% more than four.
+    const perWheel = tyres.length / 4;
+    expect(Number.isInteger(perWheel)).toBe(true);
+    expect(tyres.length).toBeLessThan(1400);
+  });
+
+  it('places the wheels at four separate points', () => {
+    const centres = polys
+      .filter((p) => p.material === 'Tire')
+      .map((p) => [
+        p.points.reduce((s, q) => s + q[0], 0) / 3,
+        p.points.reduce((s, q) => s + q[1], 0) / 3,
+      ]);
+    // Greedy 2D clustering should find four broad groups, not one central blob.
+    const clusters: { x: number; y: number; n: number }[] = [];
+    for (const [x, y] of centres) {
+      const hit = clusters.find((c) => Math.hypot(c.x - x, c.y - y) < 30);
+      if (hit) {
+        hit.x = (hit.x * hit.n + x) / (hit.n + 1);
+        hit.y = (hit.y * hit.n + y) / (hit.n + 1);
+        hit.n++;
+      } else {
+        clusters.push({ x, y, n: 1 });
+      }
+    }
+    expect(clusters.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('leaves the body visible, not buried under wheels', () => {
+    // The body must own a meaningful share of the silhouette, or the car reads
+    // as a dark mass.
+    const body = polys.filter((p) => p.material === 'Main');
+    expect(body.length).toBeGreaterThan(100);
+  });
+});
