@@ -158,17 +158,30 @@ const BOUNDS = (() => {
  * Returns polygons sorted far-to-near so a plain fill order draws correctly:
  * painter's algorithm, which is enough here because the parts do not interleave.
  */
-/** Unit normal of a triangle, from its winding in world space. */
-function faceNormal([a, b, c]: Vec3[]): Vec3 {
+/**
+ * Unit normal of a triangle, oriented toward the camera.
+ *
+ * The winding in the source mesh yields inward normals, which lit the faces
+ * turned away from the light and left the roof dark: the car read as a hollow
+ * shell. A visible face always points at the viewer, so the sign is chosen by
+ * flipping the cross product when it faces away. That is more robust than
+ * depending on winding order, which is not guaranteed.
+ */
+function faceNormal(tri: Vec3[]): Vec3 {
+  const [a, b, c] = tri;
   const u: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
   const v: Vec3 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
-  const n: Vec3 = [
+  let n: Vec3 = [
     u[1] * v[2] - u[2] * v[1],
     u[2] * v[0] - u[0] * v[2],
     u[0] * v[1] - u[1] * v[0],
   ];
   const len = Math.hypot(...n) || 1;
-  return [n[0] / len, n[1] / len, n[2] / len];
+  n = [n[0] / len, n[1] / len, n[2] / len];
+  // Flip toward the camera (the eye offset points from car to viewer).
+  const toward =
+    n[0] * EYE_OFFSET[0] + n[1] * EYE_OFFSET[1] + n[2] * EYE_OFFSET[2];
+  return toward >= 0 ? n : [-n[0], -n[1], -n[2]];
 }
 
 /** Direction the light comes from: above and slightly in front. */
@@ -257,12 +270,11 @@ export function polygonShade(poly: FlatPolygon, minDepth: number, maxDepth: numb
   // away are dim rather than black.
   const n = poly.normal;
   const lambert = Math.max(0, n[0] * LIGHT_DIR[0] + n[1] * LIGHT_DIR[1] + n[2] * LIGHT_DIR[2]);
-  // Faces pointing away from the viewer are back-facing; keep them subdued.
-  const facing = n[0] * EYE_OFFSET[0] + n[1] * EYE_OFFSET[1] + n[2] * EYE_OFFSET[2];
-  const toward = facing >= 0 ? 1 : 0.78;
   // A slight depth term separates near panels from far ones.
   const t = (poly.depth - minDepth) / Math.max(maxDepth - minDepth, 1e-6);
-  return (0.52 + lambert * 0.68) * toward * (1.06 - t * 0.16);
+  // Ambient is generous: on a dark car a low floor makes panels read as black
+  // holes rather than shadowed paint.
+  return (0.74 + lambert * 0.52) * (1.06 - t * 0.16);
 }
 
 /** Depth range across a polygon set, for `polygonShade`. */

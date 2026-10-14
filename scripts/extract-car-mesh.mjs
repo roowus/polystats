@@ -107,7 +107,7 @@ const result = await page.evaluate(
     const bodyBox = new THREE.Box3().setFromObject(body);
     const susp = gltf.scene.getObjectByName('Suspension');
     const suspBox = susp ? new THREE.Box3().setFromObject(susp) : null;
-    const hubX = suspBox ? Math.max(Math.abs(suspBox.min.x), Math.abs(suspBox.max.x)) * 0.85 : 0.74;
+    const wheelMesh = gltf.scene.getObjectByName('Wheel0');
 
     // Sample the underside of the body to locate the arches along z.
     const bottom = [];
@@ -124,6 +124,45 @@ const result = await page.evaluate(
     const frontZ = zs.length ? Math.max(...zs) - 1.2 : 0.93;
     const rearZ = zs.length ? Math.min(...zs) + 0.55 : -1.44;
 
+
+    // Hub X: wheels must sit OUTBOARD of the body shell.
+    //
+    // Two earlier attempts got this wrong and both put the wheels inside the
+    // car, where they drew over the bodywork and the render read as a hollow
+    // shell. The Suspension mesh's extent is not the axle end either.
+    //
+    // The reliable measure is the body's own width at each axle: the hub sits
+    // one wheel half-width beyond that, so the tyre clears the shell. Front and
+    // rear differ, so measure each separately.
+    const wheelHalfWidth = (() => {
+      let mn = Infinity, mx = -Infinity;
+      wheelMesh.traverse((o) => {
+        if (!o.isMesh) return;
+        const p = o.geometry.getAttribute('position');
+        for (let i = 0; i < p.count; i++) {
+          const x = p.getX(i);
+          if (x < mn) mn = x;
+          if (x > mx) mx = x;
+        }
+      });
+      return (mx - mn) / 2;
+    })();
+    const bodyHalfWidthNear = (z) => {
+      let m = 0;
+      body.traverse((o) => {
+        if (!o.isMesh) return;
+        const p = o.geometry.getAttribute('position');
+        for (let i = 0; i < p.count; i++) {
+          const v = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i)).applyMatrix4(o.matrixWorld);
+          if (Math.abs(v.z - z) < 0.35) m = Math.max(m, Math.abs(v.x));
+        }
+      });
+      return m;
+    };
+    const frontHubX = bodyHalfWidthNear(frontZ) + wheelHalfWidth;
+    const rearHubX = bodyHalfWidthNear(rearZ) + wheelHalfWidth;
+
+
     // Hub HEIGHT is the axle, not the body's underside.
     //
     // Sampling the underside put the wheels through the middle of the car, so
@@ -131,7 +170,6 @@ const result = await page.evaluate(
     // radius above the ground plane, and the ground plane is the body's lowest
     // point, so hubY = bodyMin.y + radius. Radius comes from the wheel mesh's
     // own local extent rather than a constant.
-    const wheelMesh = gltf.scene.getObjectByName('Wheel0');
     let wheelMinY = Infinity, wheelMaxY = -Infinity;
     wheelMesh.traverse((o) => {
       if (!o.isMesh) return;
@@ -146,10 +184,10 @@ const result = await page.evaluate(
     const hubY = bodyBox.min.y + wheelRadius;
 
     const wheels = [
-      [hubX, hubY, frontZ],
-      [-hubX, hubY, frontZ],
-      [hubX, hubY, rearZ],
-      [-hubX, hubY, rearZ],
+      [frontHubX, hubY, frontZ],
+      [-frontHubX, hubY, frontZ],
+      [rearHubX, hubY, rearZ],
+      [-rearHubX, hubY, rearZ],
     ].map((p) => p.map((n) => +n.toFixed(4)));
 
     // Collect one entry per material group. The node's own translation is a
