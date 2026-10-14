@@ -67,30 +67,33 @@ about 600 KB, which would otherwise load in every visitor's browser to draw a
 
 ### Orientation
 
-The camera basis is easy to get backwards, and a mirrored or inverted car still
-looks plausibly car-shaped, so it was not settled by eye. Every combination of
-cross-product handedness and screen-Y sign was rendered and scored against the
-game's own 200x200 render, using silhouette overlap (IoU) plus two landmarks a
-flipped image cannot satisfy:
+Earlier versions picked the camera and the up vector separately and adjusted one
+to cancel the other. That worked on the silhouette, which looks car-shaped either
+way, and hid a mirrored, upside-down car: the nose pointed the wrong way and the
+paint was reflected.
 
-- the wheels must sit below the body
-- the nose must be lower-left and the tail upper-right
+Both are now derived from the game's own camera instead of chosen. The engine
+places the eye at `(1000.1, 1000.3, 1000)` looking at `(0.1, 0.3, 0)`, so:
 
-The correct combination scores IoU 0.63 with both landmarks satisfied. The wrong
-ones score 0.26-0.27, or put the wheels above the roof — the margin is wide
-enough to be unambiguous. It is `right = cross(lookDirection, worldUp)` and
-`up = cross(right, lookDirection)`, with no screen-Y flip.
+- the look direction is an even `(-1, -1, -1)`
+- the eye offset — car back to viewer — is `(+1, +1, +1)`
+- `right = cross(lookDirection, worldUp)` and `up = cross(right, lookDirection)`,
+  the ordinary right-handed basis, with no screen-Y flip
 
-Three tests in `carProject.test.ts` pin these landmarks, because this is exactly
-the kind of error that looks fine and silently returns.
+The nose is at `+Z` (it is the narrow, low end; the tail carries the wide rear
+wing), so an eye on the `+Z` side looks at the front of the car, which is what the
+game's thumbnails show.
+
+Tests pin the end that faces the viewer by measuring the mesh's cross-section at
+each end rather than asserting the sign of a component, which is what let two
+wrong values through.
 
 ### Camera
 
-The game's thumbnail camera sits at `(1000.1, 1000.3, 1000)` looking at
-`(0.1, 0.3, 0)`, with a frustum so wide (`-1,1,1,-1` at `near .1`) that it is
-effectively **orthographic**. That is why native renders look flat rather than
-perspective-distorted. `carProject.ts` projects orthographically for the same
-reason.
+The game's thumbnail camera uses a frustum so wide (`-1,1,1,-1` at `near .1`) that
+it is effectively **orthographic**. `carProject.ts` adds a mild perspective divide
+on top, because a flat projection draws the near and far wheels the same size and
+the car reads as deformed without it. `CAMERA_DISTANCE` sets how strong that is.
 
 ### Ordering and shading
 
@@ -101,10 +104,41 @@ orientation and depth, standing in for the lighting the game gets from its scene
 ### Wheel placement
 
 The wheel nodes in the GLB carry their own translations (`[0,1,-N]`), which are
-**storage slots for the 12 variants**, not car positions. Using them directly
-makes the wheels float away from the body. The extraction step therefore drops
-each part's root translation and records hub positions read from the body's wheel
-arches, and the projector places the wheel mesh at each hub.
+**storage slots for the 12 variants**, not car positions: the whole wheel library
+is parked one unit apart along `-Z`, with `Wheel0` a full unit *above* the body.
+Using those transforms directly makes the wheels float away from the car, so the
+extraction step ignores them, re-centres each variant on the origin, and records
+hub positions measured from the model:
+
+- **Axle stations** come from the `Suspension` mesh, which is modelled as four
+  axle ends at `z = +/-1.5`. Deriving them from a body-width heuristic put the
+  wheels at the wrong stations.
+- **Track width** comes from the same mesh's X extent, `+/-0.584`, tucked just
+  inside the widest bodywork. A car has one track; deriving it per axle made the
+  front wheels wider than the rear and read as a car facing backwards.
+- **Hub height** is the body's floor line, `y = -0.3444`, which puts the contact
+  patch one radius below it and rests the car on its tyres. Putting the hub at
+  `bodyMin.y + radius` sank the wheels into the shell; reading the suspension
+  box's own minimum pushed them clear of the car, because its arms hang below the
+  contact patch.
+
+### Wheel and exhaust variants
+
+The style's `rims` byte selects one of twelve wheel designs and `exhaust` one of
+eight tail pipes. `projectCar(size, rims, exhaust)` takes both. The tyre is
+byte-identical across all twelve wheel variants, so it is stored once in
+`sharedTyre` and the variants carry only rim and hub art, which keeps the
+geometry file at 193 KB instead of 263 KB.
+
+### Undrawn geometry
+
+The model ships a zero-thickness plane (`Body_3`) lying exactly on the body's
+floor and spanning the whole car. The game composites it as a shadow catcher;
+projected flat it becomes a slab covering the entire car, so it is excluded. It
+has to be measured by hand: Draco decodes to an interleaved attribute, for which
+`Box3.setFromBufferAttribute` returns an empty box.
+
+`Collision` is likewise never drawn.
 
 ## Measured cost
 
