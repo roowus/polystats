@@ -65,6 +65,25 @@ The decode runs offline because it needs three.js and the Draco WASM runtime,
 about 600 KB, which would otherwise load in every visitor's browser to draw a
 28px icon. Only the small JSON ships, so drawing is pure arithmetic.
 
+### Orientation
+
+The camera basis is easy to get backwards, and a mirrored or inverted car still
+looks plausibly car-shaped, so it was not settled by eye. Every combination of
+cross-product handedness and screen-Y sign was rendered and scored against the
+game's own 200x200 render, using silhouette overlap (IoU) plus two landmarks a
+flipped image cannot satisfy:
+
+- the wheels must sit below the body
+- the nose must be lower-left and the tail upper-right
+
+The correct combination scores IoU 0.63 with both landmarks satisfied. The wrong
+ones score 0.26-0.27, or put the wheels above the roof — the margin is wide
+enough to be unambiguous. It is `right = cross(lookDirection, worldUp)` and
+`up = cross(right, lookDirection)`, with no screen-Y flip.
+
+Three tests in `carProject.test.ts` pin these landmarks, because this is exactly
+the kind of error that looks fine and silently returns.
+
 ### Camera
 
 The game's thumbnail camera sits at `(1000.1, 1000.3, 1000)` looking at

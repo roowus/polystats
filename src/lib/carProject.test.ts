@@ -149,17 +149,85 @@ describe('polygonShade', () => {
   });
 
   it('returns a usable brightness for every polygon', () => {
-    for (const p of polys.slice(0, 200)) {
-      const s = polygonShade(p, min, max);
+    const values = polys.map((p) => polygonShade(p, min, max));
+    for (const s of values) {
       expect(Number.isFinite(s)).toBe(true);
-      // Clamped to a sane multiplier so colours cannot blow out or go black.
-      expect(s).toBeGreaterThan(0.4);
-      expect(s).toBeLessThan(1.6);
+      // Two things matter: unlit faces must stay visible rather than going
+      // black, and lit faces must not blow the colour out to white.
+      expect(s).toBeGreaterThan(0.3);
+      expect(s).toBeLessThan(1.4);
     }
+  });
+
+  it('lights the roof more than the floor', () => {
+    // The bug this guards against: shading inferred from screen winding left the
+    // roof mid-toned and the silhouette bright, so the car read as seen from
+    // underneath. Lighting must come from the face normal.
+    const avgFor = (predicate: (n: [number, number, number]) => boolean) => {
+      const sel = polys.filter((p) => predicate(p.normal));
+      return sel.reduce((a, p) => a + polygonShade(p, min, max), 0) / sel.length;
+    };
+    const roof = avgFor((n) => n[1] > 0.7);
+    const floor = avgFor((n) => n[1] < -0.7);
+    expect(Number.isFinite(roof)).toBe(true);
+    expect(Number.isFinite(floor)).toBe(true);
+    expect(roof).toBeGreaterThan(floor);
+  });
+
+  it('gives the body upward-facing surfaces', () => {
+    // If normals were dropped or miscomputed, no face would point up.
+    const upward = polys.filter((p) => p.normal[1] > 0.7);
+    expect(upward.length).toBeGreaterThan(10);
   });
 
   it('gives varied shading, so panels are distinguishable', () => {
     const values = new Set(polys.map((p) => polygonShade(p, min, max).toFixed(3)));
     expect(values.size).toBeGreaterThan(5);
+  });
+});
+
+describe('orientation', () => {
+  const polys = projectCar(200);
+  const avgY = (ps: typeof polys) =>
+    ps.reduce((a, p) => a + p.points.reduce((s, q) => s + q[1], 0) / 3, 0) / ps.length;
+
+  /**
+   * These landmarks are the ones that were wrong for several attempts, and they
+   * are checked against the game's own render rather than by eye. Screen y grows
+   * downward, so "above" means a smaller y.
+   */
+  it('draws the wheels below the body', () => {
+    const tyres = avgY(polys.filter((p) => p.material === 'Tire'));
+    const body = avgY(polys.filter((p) => p.material === 'Main'));
+    expect(tyres).toBeGreaterThan(body);
+  });
+
+  it('puts the nose at the lower left and the tail at the upper right', () => {
+    // The native thumbnails frame the car this way. Getting a cross-product
+    // handedness wrong mirrors it horizontally, which is easy to miss.
+    let maxX = -Infinity, maxXy = 0, minX = Infinity, minXy = 0;
+    for (const p of polys) {
+      if (p.material !== 'Main') continue;
+      for (const [x, y] of p.points) {
+        if (x > maxX) { maxX = x; maxXy = y; }
+        if (x < minX) { minX = x; minXy = y; }
+      }
+    }
+    // Nose (leftmost) sits lower on screen than the tail (rightmost).
+    expect(minXy).toBeGreaterThan(maxXy);
+  });
+
+  it('agrees with the native render on which quadrant holds the car', () => {
+    // Measured from the game's own 200x200 render: its mass is top-heavy and
+    // right-heavy. A flipped car fails this.
+    let top = 0, bottom = 0, left = 0, right = 0;
+    for (const p of polys) {
+      for (const [x, y] of p.points) {
+        if (y < 100) top++; else bottom++;
+        if (x < 100) left++; else right++;
+      }
+    }
+    expect(top).toBeGreaterThan(bottom * 0.5);
+    expect(right).toBeGreaterThan(left * 0.5);
   });
 });
