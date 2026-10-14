@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Home from '@/components/Home';
+import { resetDataStatusCache } from '@/components/Freshness';
 import { getProxyUrl } from '@/lib/polytrack';
 
 vi.mock('@/lib/polytrack', async (importOriginal) => {
@@ -19,7 +20,12 @@ function mockStatus(status: Record<string, unknown>) {
   });
 }
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  // The status cache is module-level; without this a successful fetch in one
+  // test would satisfy the next one's assertion.
+  resetDataStatusCache();
+});
 afterEach(() => vi.restoreAllMocks());
 
 describe('Home — database stats', () => {

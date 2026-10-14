@@ -45,19 +45,54 @@ export function Freshness({ date }: { date?: string | null }) {
 }
 
 /** Fetches the worker's run metadata once per page load. */
+/**
+ * Cached data status.
+ *
+ * Every page shows a freshness line, so an uncached fetch means one worker call
+ * per navigation. The worker's read budget is shared with the scrapers, so the
+ * result is held for a few minutes and shared across mounts: within that window
+ * navigating the site costs no worker calls at all.
+ */
+const STATUS_TTL_MS = 5 * 60 * 1000;
+let statusCache: { at: number; value: DataStatus } | null = null;
+let statusInFlight: Promise<DataStatus | null> | null = null;
+
+function loadDataStatus(): Promise<DataStatus | null> {
+  if (statusCache && Date.now() - statusCache.at < STATUS_TTL_MS) {
+    return Promise.resolve(statusCache.value);
+  }
+  if (statusInFlight) return statusInFlight;
+
+  const url = `${getProxyUrl().split('?')[0].replace(/\/$/, '')}/status`;
+  statusInFlight = fetch(url)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (d) statusCache = { at: Date.now(), value: d as DataStatus };
+      return (d as DataStatus) ?? null;
+    })
+    .catch(() => null)
+    .finally(() => {
+      statusInFlight = null;
+    });
+  return statusInFlight;
+}
+
 export function useDataStatus(): DataStatus | null {
-  const [status, setStatus] = useState<DataStatus | null>(null);
+  const [status, setStatus] = useState<DataStatus | null>(statusCache?.value ?? null);
   useEffect(() => {
     let cancelled = false;
-    fetch(`${getProxyUrl().split('?')[0].replace(/\/$/, '')}/status`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!cancelled && d) setStatus(d as DataStatus);
-      })
-      .catch(() => {});
+    loadDataStatus().then((d) => {
+      if (!cancelled && d) setStatus(d);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
   return status;
+}
+
+/** Drop the cached status. Exported for tests, which must not share module state. */
+export function resetDataStatusCache(): void {
+  statusCache = null;
+  statusInFlight = null;
 }
