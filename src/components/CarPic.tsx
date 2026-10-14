@@ -51,6 +51,11 @@ const PATTERN_FILES = [
  * the file unchanged therefore shows red and green stripes rather than the
  * player's paint, which is what an earlier version did.
  *
+ * The `gradient` atlas also carries a few opaque green and olive patches that are
+ * not placeholders (`#14ec00`, `#5a0`, `#986700`). Left alone they painted raw
+ * green wedges onto the car whatever the player's colours were. They are wheel
+ * well and vent detail, so they belong to the secondary.
+ *
  * Substitution happens on the source text rather than through an SVG filter so
  * the result is exact, and the recoloured atlas is returned as a data URI that
  * the per-triangle clipping can sample.
@@ -61,7 +66,11 @@ export function recolourPattern(atlasText: string, primary: string, secondary: s
     // Placeholders first: `#f00` before `#f0` style prefixes could match.
     .replace(/#f00(?![0-9a-fA-F])/g, primary)
     .replace(/#0f0(?![0-9a-fA-F])/g, secondary)
-    .replace(/#00f(?![0-9a-fA-F])/g, frame);
+    .replace(/#00f(?![0-9a-fA-F])/g, frame)
+    // Stray detail colours that ship in the gradient atlas.
+    .replace(/#14ec00(?![0-9a-fA-F])/gi, secondary)
+    .replace(/#986700(?![0-9a-fA-F])/gi, secondary)
+    .replace(/#5a0(?![0-9a-fA-F])/gi, secondary);
   return `data:image/svg+xml;utf8,${encodeURIComponent(recoloured)}`;
 }
 
