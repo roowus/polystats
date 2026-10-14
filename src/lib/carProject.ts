@@ -83,7 +83,7 @@ export const EYE: Vec3 = (() => {
   // NEGATIVE Z: depth is dot(point, EYE), larger meaning farther, and the nose
   // sits at +Z. Positive Z here shows the back of the car, which is what both
   // earlier values did.
-  const v: Vec3 = [-0.42, 0.5, -1.0];
+  const v: Vec3 = [0.42, 0.5, -1.0];
   const len = Math.hypot(...v);
   return [v[0] / len, v[1] / len, v[2] / len];
 })();

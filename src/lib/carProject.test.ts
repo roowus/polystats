@@ -229,55 +229,9 @@ describe('orientation', () => {
 describe('camera and perspective', () => {
   const polys = projectCar(200);
 
-  /**
-   * The car must show its FRONT. The mesh's nose is at +Z and depth is
-   * `dot(point, eyeOffset)` with larger meaning farther, so the eye offset needs
-   * a negative Z. Two earlier values had positive Z and showed the back of the
-   * car, which is why it looked like it faced away regardless of azimuth.
-   */
-  it('puts the nose nearer the viewer than the tail', () => {
-    // The nose is the long low overhang at +Z; the tail at -Z carries the rear
-    // wing. Depth is dot(point, EYE) with larger meaning farther, so a negative
-    // Z in the eye offset is what puts the front of the car toward the viewer.
-    const d = (z: number) => z * EYE[2];
-    expect(d(1.65)).toBeLessThan(d(-1.95));
-    expect(EYE[2]).toBeLessThan(0);
-  });
-
-  it('makes nearer geometry larger, so the view has depth', () => {
-    // With a flat projection every wheel draws the same size and the car reads
-    // as deformed. Size must fall as depth rises.
-    const wheels = polys.filter((p) => p.material === 'Tire' || p.material === 'Rim');
-    const data = wheels
-      .map((p) => {
-        const xs = p.points.map(([x]) => x);
-        const ys = p.points.map(([, y]) => y);
-        return {
-          depth: p.depth,
-          size: Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)),
-        };
-      })
-      .filter((d) => d.size > 0.3);
-    expect(data.length).toBeGreaterThan(50);
-    const n = data.length;
-    const md = data.reduce((a, x) => a + x.depth, 0) / n;
-    const ms = data.reduce((a, x) => a + x.size, 0) / n;
-    let num = 0, dd = 0, ds = 0;
-    for (const x of data) {
-      num += (x.depth - md) * (x.size - ms);
-      dd += (x.depth - md) ** 2;
-      ds += (x.size - ms) ** 2;
-    }
-    // Strongly negative correlation: farther means smaller.
-    expect(num / Math.sqrt(dd * ds)).toBeLessThan(-0.05);
-  });
-
-  it('keeps the wheels within a believable size ratio', () => {
-    // Measured per WHEEL, not per triangle: individual triangles vary far more
-    // than the wheels they compose, so a per-triangle ratio is meaningless.
-    // Too strong a perspective balloons the near wheel; too weak loses depth.
+  const wheelClusters = () => {
     const tyres = polys.filter((p) => p.material === 'Tire');
-    const clusters: { x: number; y: number; n: number }[] = [];
+    const clusters: { x: number; y: number; n: number; ds: number; ws: number }[] = [];
     for (const p of tyres) {
       const xs = p.points.map(([x]) => x);
       const ys = p.points.map(([, y]) => y);
@@ -285,27 +239,67 @@ describe('camera and perspective', () => {
       const y = (Math.min(...ys) + Math.max(...ys)) / 2;
       const hit = clusters.find((c) => Math.hypot(c.x - x, c.y - y) < 35);
       if (hit) {
-        hit.x = (hit.x * hit.n + x) / (hit.n + 1);
-        hit.y = (hit.y * hit.n + y) / (hit.n + 1);
         hit.n++;
+        hit.ds += p.depth;
+        hit.ws += Math.max(...xs) - Math.min(...xs);
+        hit.x = (hit.x * (hit.n - 1) + x) / hit.n;
+        hit.y = (hit.y * (hit.n - 1) + y) / hit.n;
       } else {
-        clusters.push({ x, y, n: 1 });
+        clusters.push({ x, y, n: 1, ds: p.depth, ws: Math.max(...xs) - Math.min(...xs) });
       }
     }
-    expect(clusters.length).toBe(4);
+    return clusters
+      .map((c) => ({ ...c, depth: c.ds / c.n, width: c.ws / c.n }))
+      .sort((a, b) => a.depth - b.depth);
+  };
 
-    // Each wheel's on-screen size, taken from the polygons nearest its centre.
-    const sizes = clusters.map((c) => {
-      const xs = tyres
-        .filter((p) => {
-          const px = p.points.reduce((s, q) => s + q[0], 0) / 3;
-          const py = p.points.reduce((s, q) => s + q[1], 0) / 3;
-          return Math.hypot(px - c.x, py - c.y) < 40;
-        })
-        .flatMap((p) => p.points.map(([x]) => x));
-      return Math.max(...xs) - Math.min(...xs);
-    });
-    const ratio = Math.max(...sizes) / Math.min(...sizes);
+  it('puts the nose nearer the viewer than the tail', () => {
+    // The nose is the long low overhang at +Z; the tail at -Z carries the rear
+    // wing. Depth is dot(point, EYE) with larger meaning farther, so the eye
+    // offset needs a NEGATIVE Z or the car is shown from behind. Two earlier
+    // values had positive Z, which is why it kept facing away.
+    expect(EYE[2]).toBeLessThan(0);
+  });
+
+  it('points the nose to the lower left', () => {
+    // Nose left, tail right, with the nose lower than the tail on screen.
+    let minX = Infinity, minXy = 0, maxX = -Infinity, maxXy = 0;
+    for (const p of polys.filter((q) => q.material === 'Main')) {
+      for (const [x, y] of p.points) {
+        if (x < minX) { minX = x; minXy = y; }
+        if (x > maxX) { maxX = x; maxXy = y; }
+      }
+    }
+    expect(minXy).toBeGreaterThan(maxXy);
+  });
+
+  it('keeps the body the right way up, with the tyres below it', () => {
+    // Tyres must reach lower than the bodywork; if the view were inverted they
+    // would sit above it. Comparing average positions is not enough here, since
+    // they are nearly equal either way.
+    const spanY = (m: string) => {
+      const ys = polys.filter((p) => p.material === m).flatMap((p) => p.points.map(([, y]) => y));
+      return { min: Math.min(...ys), max: Math.max(...ys) };
+    };
+    expect(spanY('Tire').max).toBeGreaterThan(spanY('Main').max);
+  });
+
+  it('spaces the near wheels further apart than the far ones', () => {
+    // Perspective: the pair closest to the camera projects wider. Getting this
+    // backwards makes the car look like it is facing away even when it is not.
+    const wheels = wheelClusters();
+    expect(wheels).toHaveLength(4);
+    // Sorted nearest-first, so the first two are the front pair.
+    const nearSpread = Math.abs(wheels[0].x - wheels[1].x);
+    const farSpread = Math.abs(wheels[2].x - wheels[3].x);
+    expect(nearSpread).toBeGreaterThan(farSpread);
+  });
+
+  it('draws nearer wheels larger, and keeps the ratio believable', () => {
+    const wheels = wheelClusters();
+    // Index 0 is nearest, index 3 farthest.
+    expect(wheels[0].width).toBeGreaterThan(wheels[3].width);
+    const ratio = wheels[0].width / wheels[3].width;
     expect(ratio).toBeGreaterThan(1.05);
     expect(ratio).toBeLessThan(3);
   });
