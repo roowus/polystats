@@ -8,8 +8,9 @@
  * A style with no render yet falls back to `CarSvg`, which draws from the same
  * data the game uses (see below).
  */
-import { useEffect, useState } from 'react';
-import { decodeCarStyle, decodeCarSpec, getProxyUrl } from '@/lib/polytrack';
+import { useEffect, useMemo, useState } from 'react';
+import { decodeCarSpec, getProxyUrl } from '@/lib/polytrack';
+import { projectCar, polygonShade, depthRange } from '@/lib/carProject';
 
 /** Worker origin, derived from the configured proxy URL. */
 function workerOrigin(): string {
@@ -68,106 +69,79 @@ export function patternDataUri(pattern: number, primary: string, secondary: stri
   return `data:image/svg+xml;utf8,${encodeURIComponent(recoloured)}`;
 }
 
+/** Paint colours per material, matching the game's named materials. */
+const MATERIAL_FALLBACK: Record<string, string> = {
+  Main: '#8b7cf0',
+  Metal: '#8a8a96',
+  Rim: '#d8d8e0',
+  Tire: '#16161c',
+  AirIntake: '#26262e',
+  BrakeLight: '#c02020',
+};
+
+function shadeHex(hex: string, factor: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
+    Math.max(0, Math.min(255, Math.round(v * factor)))
+  );
+  return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 /**
- * Car drawn from the decoded PolyTrack style.
+ * Car drawn from the game's real mesh.
  *
- * Framing matches the game's thumbnail: a 3/4 view, nose to the lower left,
- * four exposed wheels, front and rear wings. The game shades its model so the
- * top face reads lighter than the sides; the body is split into lit top and
- * darker flank planes for the same effect.
+ * The geometry comes from `scripts/extract-car-mesh.mjs`, which decodes the
+ * game's Draco-compressed model once, offline. Drawing is then pure arithmetic:
+ * the mesh is projected to 2D and painted per material, with the body taking the
+ * player's pattern and colours.
  *
- * Colours, pattern and rim choice all come from the style bytes, so two players
- * with the same car still differ in paint, exactly as in game.
+ * This replaces an earlier hand-drawn silhouette, which did not resemble the
+ * car. Using the actual mesh gives the real shape, wheel design and proportions.
  */
 function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size: number; className?: string }) {
   const spec = decodeCarSpec(carStyle ?? '');
+  const polys = useMemo(() => projectCar(size), [size]);
+  const [minD, maxD] = useMemo(() => depthRange(polys), [polys]);
 
-  const body = spec?.primary ?? '#8b7cf0';
+  const body = spec?.primary ?? MATERIAL_FALLBACK.Main;
   const accent = spec?.secondary ?? '#f4f4ff';
-  const frame = spec?.frame ?? '#2a2a3a';
-  const rim = spec?.rimsColor ?? '#c8c8d0';
-  const patternIndex = spec?.pattern ?? 0;
-  const pattern = patternDataUri(patternIndex, body, accent);
-  const patternId = `car-pat-${patternIndex}-${body.slice(1)}-${accent.slice(1)}`;
+  const frame = spec?.frame ?? MATERIAL_FALLBACK.Metal;
+  const rimColour = spec?.rimsColor ?? MATERIAL_FALLBACK.Rim;
+  const pattern = spec ? patternDataUri(spec.pattern, body, accent) : '';
+  const patternId = `carpat-${spec?.pattern ?? 0}-${body.slice(1)}`;
 
-  const tire = '#16161c';
+  const colourFor = (material: string) =>
+    material === 'Main'
+      ? body
+      : material === 'Rim'
+        ? rimColour
+        : material === 'Metal'
+          ? frame
+          : MATERIAL_FALLBACK[material] ?? '#707080';
 
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 100 100"
+      viewBox={`0 0 ${size} ${size}`}
       className={className}
       aria-label="Player car"
       role="img"
     >
       {pattern && (
         <defs>
-          {/* Clip the painted texture to the body silhouette. */}
-          <clipPath id={`${patternId}-body`}>
-            <path d="M25 57 L36 44 L52 36 L69 33 L78 39 L78 53 L62 58 L41 63 L29 66 Z" />
-          </clipPath>
-          <pattern id={patternId} width="100" height="100" patternUnits="userSpaceOnUse">
-            <image href={pattern} width="100" height="100" preserveAspectRatio="none" />
+          <pattern id={patternId} width={size} height={size} patternUnits="userSpaceOnUse">
+            <image href={pattern} width={size} height={size} preserveAspectRatio="none" />
           </pattern>
         </defs>
       )}
-
-      {/* Rear wing */}
-      <path d="M64 30 L87 21 L89 27 L66 36 Z" fill={accent} stroke="#0d0d12" strokeWidth="0.7" />
-      <path d="M67 34 L69 30 L70 45 L68 48 Z" fill={shade(accent, 0.6)} />
-
-      {/* Rear wheels */}
-      <g>
-        <ellipse cx="73" cy="50" rx="11.5" ry="11.5" fill={tire} />
-        <ellipse cx="73" cy="50" rx="5.6" ry="5.6" fill={rim} />
-        <ellipse cx="73" cy="50" rx="2.2" ry="2.2" fill={shade(rim, 0.55)} />
-      </g>
-      <g>
-        <ellipse cx="34" cy="62" rx="10.5" ry="10.5" fill={tire} />
-        <ellipse cx="34" cy="62" rx="5" ry="5" fill={rim} />
-        <ellipse cx="34" cy="62" rx="2" ry="2" fill={shade(rim, 0.55)} />
-      </g>
-
-      {/* Body: painted with the style's pattern, clipped to the silhouette */}
-      <path
-        d="M25 57 L36 44 L52 36 L69 33 L78 39 L78 53 L62 58 L41 63 L29 66 Z"
-        fill={pattern ? `url(#${patternId})` : body}
-        stroke="#0d0d12"
-        strokeWidth="0.9"
-        strokeLinejoin="round"
-      />
-      {/* Lit top plane: same paint, brightened, so the shape reads as 3D */}
-      <path
-        d="M36 44 L52 36 L69 33 L76 38 L59 44 L41 50 L34 49 Z"
-        fill={pattern ? `url(#${patternId})` : body}
-        opacity="0.55"
-        stroke="#0d0d12"
-        strokeWidth="0.5"
-      />
-      <path
-        d="M36 44 L52 36 L69 33 L76 38 L59 44 L41 50 L34 49 Z"
-        fill="#ffffff"
-        opacity="0.16"
-      />
-
-      {/* Cockpit */}
-      <path d="M49 41 L61 37 L65 41 L53 46 Z" fill="#0d0d12" opacity="0.88" />
-
-      {/* Front wing */}
-      <path d="M18 60 L33 54 L35 58 L20 65 Z" fill={frame} stroke="#0d0d12" strokeWidth="0.7" />
-
-      {/* Front wheels */}
-      <g>
-        <ellipse cx="24" cy="75" rx="10" ry="10" fill={tire} />
-        <ellipse cx="24" cy="75" rx="4.8" ry="4.8" fill={rim} />
-        <ellipse cx="24" cy="75" rx="1.9" ry="1.9" fill={shade(rim, 0.55)} />
-      </g>
-      <g>
-        <ellipse cx="65" cy="69" rx="10.5" ry="10.5" fill={tire} />
-        <ellipse cx="65" cy="69" rx="5" ry="5" fill={rim} />
-        <ellipse cx="65" cy="69" rx="2" ry="2" fill={shade(rim, 0.55)} />
-      </g>
+      {polys.map((p, i) => (
+        <polygon
+          key={i}
+          points={p.points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')}
+          fill={shadeHex(colourFor(p.material), polygonShade(p, minD, maxD))}
+        />
+      ))}
     </svg>
   );
 }
