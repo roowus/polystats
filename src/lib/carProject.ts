@@ -65,31 +65,25 @@ function applyMatrix(m: number[], x: number, y: number, z: number): Vec3 {
 }
 
 /**
- * Where the camera sits relative to the car, from the game's own thumbnail
- * setup: it places the camera at (1000.1, 1000.3, 1000) looking at
- * (0.1, 0.3, 0), so this is the eye offset. The Y component is lowered from
- * that raw ratio because the game's frustum and zoom give a flatter, lower view.
+ * Where the camera sits relative to the car.
+ *
+ * The mesh's nose is at +Z (it is the narrow, low end; the tail carries the wide
+ * rear wing), so the camera must be on the +Z side to show the front of the car.
+ * The game's own thumbnail camera sits at (1000.1, 1000.3, 1000), an even 45
+ * degrees: at that azimuth the car reads as a side-on three-quarter view from
+ * above, and the nose points away to the lower left.
+ *
+ * This uses a shallower azimuth (closer to straight ahead) and a lower elevation,
+ * which is what brings the nose toward the viewer and shows the front of the car
+ * rather than its roof. Both values were chosen by rendering a sweep of angles
+ * and looking at them.
  */
 const EYE_OFFSET: Vec3 = (() => {
-  // The game's own ratio: eye (1000.1, 1000.3, 1000) against target
-  // (0.1, 0.3, 0), i.e. equal height and horizontal distance. That is a 35 degree
-  // elevation. Dropping the Y component gives a shallower view in which the
-  // floor pan becomes visible and the car reads as seen from underneath, which
-  // is wrong: an earlier version used 0.62 here and had exactly that fault.
-  const v: Vec3 = [1.0, 1.0, 1.0];
+  const v: Vec3 = [0.42, 0.5, 1.0];
   const len = Math.hypot(...v);
   return [v[0] / len, v[1] / len, v[2] / len];
 })();
 
-/**
- * The direction the camera looks along, which is the negation of the eye offset.
- *
- * This distinction matters: `viewBasis` needs the look direction, while depth
- * sorting only needs an axis consistently pointing away from the viewer. Passing
- * the eye offset to `viewBasis` mirrors both screen axes, which renders the car
- * from underneath: the nose still points lower-left, so it looks merely rotated,
- * but the top and bottom faces are swapped.
- */
 const VIEW_DIR: Vec3 = [-EYE_OFFSET[0], -EYE_OFFSET[1], -EYE_OFFSET[2]];
 
 /**

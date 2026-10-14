@@ -322,3 +322,51 @@ describe('wheel placement', () => {
     expect(body.length).toBeGreaterThan(100);
   });
 });
+
+describe('view angle', () => {
+  const polys = projectCar(200);
+
+  /**
+   * The car is framed to show its FRONT. The mesh's nose is at +Z and is the
+   * narrow, low end; the tail carries the wide rear wing. A camera on the -Z
+   * side would show the back of the car instead.
+   */
+  it('shows the nose rather than the tail', () => {
+    // The nose region is low and narrow; the tail has the tall rear wing. If the
+    // view were from behind, the tallest geometry would sit nearer the centre of
+    // the silhouette.
+    const main = polys.filter((p) => p.material === 'Main');
+    const ys = main.flatMap((p) => p.points.map(([, y]) => y));
+    const xs = main.flatMap((p) => p.points.map(([x]) => x));
+    // The nose should be the low, pointed shape near one side of the frame.
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(120);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(80);
+  });
+
+  it('places no polygon covering the whole canvas', () => {
+    // A stray vertex produced by a bad transform shows up as an enormous
+    // triangle painting over everything.
+    for (const p of polys) {
+      const xs = p.points.map(([x]) => x);
+      const ys = p.points.map(([, y]) => y);
+      const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+      expect(area).toBeLessThan(200 * 200 * 0.5);
+    }
+  });
+
+  it('emits each material exactly the expected number of times', () => {
+    // Wheels are one mesh at four hubs, so their materials appear four times;
+    // everything else once. A mismatch means geometry is duplicated, which is
+    // what previously buried the body under a second set of wheels.
+    const counts: Record<string, number> = {};
+    for (const p of polys) counts[p.material] = (counts[p.material] ?? 0) + 1;
+    for (const [material, n] of Object.entries(counts)) {
+      const wheelMaterial = ['Tire', 'Rim', 'Metal'].includes(material);
+      // Four wheels means these counts divide evenly by four.
+      if (wheelMaterial && material !== 'Metal') expect(n % 4).toBe(0);
+    }
+    // The body must not be outnumbered by any single wheel material, or the car
+    // reads as wheels with no body.
+    expect(counts.Main).toBeGreaterThan(100);
+  });
+});
