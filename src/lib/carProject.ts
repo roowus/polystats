@@ -106,10 +106,15 @@ function viewBasis(dir: Vec3) {
   ];
   const rl = Math.hypot(...right) || 1;
   right[0] /= rl; right[1] /= rl; right[2] /= rl;
+  // Negated deliberately. With up = cross(right, dir) the car renders inverted
+  // (wheels above the body); the silhouette is near-symmetric, so automated
+  // profile/IoU comparisons report a match either way and cannot be trusted to
+  // settle it. This sign is verified by the landmark test below, which asserts
+  // the wheels sit below the body in the rendered output.
   const trueUp: Vec3 = [
-    right[1] * dir[2] - right[2] * dir[1],
-    right[2] * dir[0] - right[0] * dir[2],
-    right[0] * dir[1] - right[1] * dir[0],
+    right[2] * dir[1] - right[1] * dir[2],
+    right[0] * dir[2] - right[2] * dir[0],
+    right[1] * dir[0] - right[0] * dir[1],
   ];
   return { right, up: trueUp };
 }

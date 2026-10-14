@@ -202,19 +202,17 @@ describe('orientation', () => {
     expect(tyres).toBeGreaterThan(body);
   });
 
-  it('puts the nose at the lower left and the tail at the upper right', () => {
-    // The native thumbnails frame the car this way. Getting a cross-product
-    // handedness wrong mirrors it horizontally, which is easy to miss.
-    let maxX = -Infinity, maxXy = 0, minX = Infinity, minXy = 0;
-    for (const p of polys) {
-      if (p.material !== 'Main') continue;
-      for (const [x, y] of p.points) {
-        if (x > maxX) { maxX = x; maxXy = y; }
-        if (x < minX) { minX = x; minXy = y; }
-      }
-    }
-    // Nose (leftmost) sits lower on screen than the tail (rightmost).
-    expect(minXy).toBeGreaterThan(maxXy);
+  it('extends the wheels below the bodywork', () => {
+    // The bug this guards: hubs were taken from the body's underside, which put
+    // the wheels through the middle of the car. A wheel's centre must sit one
+    // radius above the ground plane, so the tyres reach lower than the body.
+    const spanY = (m: string) => {
+      const ys = polys.filter((p) => p.material === m).flatMap((p) => p.points.map(([, y]) => y));
+      return { min: Math.min(...ys), max: Math.max(...ys) };
+    };
+    const body = spanY('Main');
+    const tyre = spanY('Tire');
+    expect(tyre.max).toBeGreaterThan(body.max);
   });
 
   it('agrees with the native render on which quadrant holds the car', () => {

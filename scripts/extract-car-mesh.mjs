@@ -123,12 +123,33 @@ const result = await page.evaluate(
     const zs = bottom.map((b) => b[2]);
     const frontZ = zs.length ? Math.max(...zs) - 1.2 : 0.93;
     const rearZ = zs.length ? Math.min(...zs) + 0.55 : -1.44;
-    const frontY = bottom.length ? bottom.reduce((s, b) => s + b[1], 0) / bottom.length : -0.33;
+
+    // Hub HEIGHT is the axle, not the body's underside.
+    //
+    // Sampling the underside put the wheels through the middle of the car, so
+    // the render showed tyres overlapping the bodywork. The axle sits one wheel
+    // radius above the ground plane, and the ground plane is the body's lowest
+    // point, so hubY = bodyMin.y + radius. Radius comes from the wheel mesh's
+    // own local extent rather than a constant.
+    const wheelMesh = gltf.scene.getObjectByName('Wheel0');
+    let wheelMinY = Infinity, wheelMaxY = -Infinity;
+    wheelMesh.traverse((o) => {
+      if (!o.isMesh) return;
+      const p = o.geometry.getAttribute('position');
+      for (let i = 0; i < p.count; i++) {
+        const y = p.getY(i);
+        if (y < wheelMinY) wheelMinY = y;
+        if (y > wheelMaxY) wheelMaxY = y;
+      }
+    });
+    const wheelRadius = (wheelMaxY - wheelMinY) / 2;
+    const hubY = bodyBox.min.y + wheelRadius;
+
     const wheels = [
-      [hubX, frontY, frontZ],
-      [-hubX, frontY, frontZ],
-      [hubX, frontY, rearZ],
-      [-hubX, frontY, rearZ],
+      [hubX, hubY, frontZ],
+      [-hubX, hubY, frontZ],
+      [hubX, hubY, rearZ],
+      [-hubX, hubY, rearZ],
     ].map((p) => p.map((n) => +n.toFixed(4)));
 
     // Collect one entry per material group. The node's own translation is a
