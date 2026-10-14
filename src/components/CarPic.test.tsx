@@ -33,26 +33,29 @@ describe('CarPic', () => {
     expect(img?.getAttribute('loading')).toBe('lazy');
   });
 
-  it('falls back to the SVG when the render fails to load', () => {
+  it('falls back to the rasteriser when the render fails to load', () => {
     // A style with no render yet returns 404; that must not leave a broken image.
     const { container } = render(<CarPic carStyle={STYLE} />);
     const img = container.querySelector('img');
     expect(img).toBeTruthy();
     fireEvent.error(img!);
     expect(container.querySelector('img')).toBeNull();
-    expect(container.querySelector('svg')).toBeTruthy();
+    // The fallback is a canvas: the mesh is rasterised rather than painted as
+    // SVG polygons, because the model's parts interpenetrate and painter's
+    // algorithm cannot order them. See carRaster.ts.
+    expect(container.querySelector('canvas')).toBeTruthy();
   });
 
-  it('renders the SVG directly when there is no style', () => {
+  it('renders the rasterised fallback directly when there is no style', () => {
     const { container } = render(<CarPic carStyle={null} />);
     expect(container.querySelector('img')).toBeNull();
-    expect(container.querySelector('svg')).toBeTruthy();
+    expect(container.querySelector('canvas')).toBeTruthy();
   });
 
   it('retries the image after the style changes', () => {
     const { container, rerender } = render(<CarPic carStyle={STYLE} />);
     fireEvent.error(container.querySelector('img')!);
-    expect(container.querySelector('svg')).toBeTruthy();
+    expect(container.querySelector('canvas')).toBeTruthy();
 
     // A different style is a different render, so the image should be attempted
     // again rather than staying on the previous fallback.

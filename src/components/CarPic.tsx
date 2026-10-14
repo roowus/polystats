@@ -8,9 +8,12 @@
  * A style with no render yet falls back to `CarSvg`, which draws from the same
  * data the game uses (see below).
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { decodeCarSpec, getProxyUrl } from '@/lib/polytrack';
-import { projectCar, polygonShade, depthRange } from '@/lib/carProject';
+import { rasteriseCar, type RasterOptions } from '@/lib/carRaster';
+
+/** Edge length of the pattern atlases, which are authored at this size. */
+const ATLAS_SIZE = 1024;
 
 /** Worker origin, derived from the configured proxy URL. */
 function workerOrigin(): string {
@@ -147,32 +150,29 @@ function shadeHex(hex: string, factor: number): string {
   );
   return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
-
 /**
- * Car drawn from the game's real mesh.
+ * Car drawn from the game's real mesh, rasterised with a depth buffer.
  *
  * The geometry comes from `scripts/extract-car-mesh.mjs`, which decodes the
- * game's Draco-compressed model once, offline. Drawing is then pure arithmetic:
- * the mesh is projected to 2D and painted per material, with the body taking the
- * player's pattern and colours.
+ * game's Draco-compressed model once, offline. Drawing is then arithmetic: the
+ * mesh is transformed, clipped and shaded into an `ImageData` at the target size.
  *
- * This replaces an earlier hand-drawn silhouette, which did not resemble the
- * car. Using the actual mesh gives the real shape, wheel design and proportions.
+ * An earlier version projected the mesh to SVG polygons and painted them
+ * back-to-front. That is painter's algorithm, and this model's parts interpenetrate
+ * rather than sitting one behind another, so no draw order could be right: the
+ * intake box inside the shell, each rim nested inside its tyre, and the four
+ * overlapping wheels each needed their own special case, and each fix left the
+ * next. A depth buffer settles all of them from first principles. See
+ * `carRaster.ts`.
  */
 function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size: number; className?: string }) {
   const spec = decodeCarSpec(carStyle ?? '');
-  // The style's rims and exhaust bytes pick which art the car wears, so the
-  // rendered car matches the one the player actually drives.
-  const polys = useMemo(
-    () => projectCar(size, spec?.rims ?? 0, spec?.exhaust ?? 0),
-    [size, spec?.rims, spec?.exhaust]
-  );
-  const [minD, maxD] = useMemo(() => depthRange(polys), [polys]);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const body = spec?.primary ?? MATERIAL_FALLBACK.Main;
-  const accent = spec?.secondary ?? '#f4f4ff';
   const frame = spec?.frame ?? MATERIAL_FALLBACK.Metal;
   const rimColour = spec?.rimsColor ?? MATERIAL_FALLBACK.Rim;
+
   // The recoloured atlas is fetched and substituted at runtime, because the
   // placeholder colours live inside the SVG file and cannot be replaced from
   // outside when it is referenced by <image href>.
@@ -198,82 +198,88 @@ function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size:
     };
   }, [atlasPath, spec?.primary, spec?.secondary, spec?.frame]);
 
-  // Until the atlas arrives the body uses a flat gradient in the player's
-  // colours, so the car is never left unpainted.
-  const pattern = atlas || (spec ? patternDataUri(spec.pattern, body, accent) : '');
-  const usingAtlas = Boolean(atlas);
-  const patternId = `carpat-${spec?.pattern ?? 0}-${body.slice(1)}`;
+  const colours = useMemo(
+    () => ({
+      ...MATERIAL_FALLBACK,
+      Main: body,
+      Rim: rimColour,
+      Metal: frame,
+    }),
+    [body, rimColour, frame]
+  );
 
-  const colourFor = (material: string) =>
-    material === 'Main'
-      ? body
-      : material === 'Rim'
-        ? rimColour
-        : material === 'Metal'
-          ? frame
-          : MATERIAL_FALLBACK[material] ?? '#707080';
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let cancelled = false;
+    const paint = (sampler: RasterOptions['sample']) => {
+      if (cancelled) return;
+      const { data, width, height } = rasteriseCar({
+        size,
+        rimsVariant: spec?.rims ?? 0,
+        exhaustVariant: spec?.exhaust ?? 0,
+        colours,
+        sample: sampler,
+      });
+      canvas.width = width;
+      canvas.height = height;
+      ctx.putImageData(new ImageData(data, width, height), 0, 0);
+    };
+
+    // Until the atlas is decoded the car is drawn in flat colour rather than
+    // left blank; the pattern appears as soon as the image loads.
+    if (!atlas) {
+      paint(undefined);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      // The recoloured atlas is read once into a pixel buffer, so sampling per
+      // triangle is an array lookup rather than a canvas draw.
+      const off = document.createElement('canvas');
+      off.width = ATLAS_SIZE;
+      off.height = ATLAS_SIZE;
+      const octx = off.getContext('2d');
+      if (!octx) {
+        paint(undefined);
+        return;
+      }
+      octx.drawImage(img, 0, 0, ATLAS_SIZE, ATLAS_SIZE);
+      const tex = octx.getImageData(0, 0, ATLAS_SIZE, ATLAS_SIZE).data;
+      const sampler: RasterOptions['sample'] = (material, u, v) => {
+        if (material !== 'Main') return null;
+        const tx = Math.min(ATLAS_SIZE - 1, Math.max(0, Math.round(u * (ATLAS_SIZE - 1))));
+        // UVs are stored with V measured from the bottom, matching how the
+        // atlases are authored.
+        const ty = Math.min(ATLAS_SIZE - 1, Math.max(0, Math.round((1 - v) * (ATLAS_SIZE - 1))));
+        const o = (ty * ATLAS_SIZE + tx) * 4;
+        if (tex[o + 3] < 8) return null;
+        return [tex[o], tex[o + 1], tex[o + 2]];
+      };
+      paint(sampler);
+    };
+    img.onerror = () => paint(undefined);
+    img.src = atlas;
+    return () => {
+      cancelled = true;
+    };
+  }, [size, spec?.rims, spec?.exhaust, colours, atlas]);
 
   return (
-    <svg
+    <canvas
+      ref={canvasRef}
       width={size}
       height={size}
-      viewBox={`0 0 ${size} ${size}`}
       className={className}
+      style={{ width: size, height: size }}
       aria-label="Player car"
       role="img"
-    >
-      <defs>
-        {/*
-          The pattern atlas, tinted to the player's palette. Applied per triangle
-          below: an SVG fill is addressed in the element's own coordinate space,
-          not by per-vertex UVs, so each painted triangle clips this image and
-          the image is transformed by the affine map implied by its three UVs.
-        */}
-        {pattern && <image id={`${patternId}-tex`} href={pattern} width="1024" height="1024" />}
-      </defs>
-
-      {polys.map((p, i) => {
-        const tint = polygonShade(p, minD, maxD);
-        const base = colourFor(p.material);
-        const painted = Boolean(usingAtlas && pattern && p.uv && p.material === 'Main');
-
-        if (!painted) {
-          return (
-            <polygon
-              key={i}
-              points={p.points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ')}
-              fill={shadeHex(base, tint)}
-            />
-          );
-        }
-
-        const t = uvTransform(p.uv!, p.points, 1024);
-        const points = p.points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
-        return (
-          <g key={i}>
-            <clipPath id={`${patternId}-c${i}`}>
-              <polygon points={points} />
-            </clipPath>
-            <g clipPath={`url(#${patternId}-c${i})`}>
-              <image href={pattern} width="1024" height="1024" transform={`matrix(${t.join(' ')})`} />
-              {/*
-                Lighting is applied with a white/black wash INSIDE the clip, so
-                it shades the paint without covering it. An opaque overlay drawn
-                over the triangle previously hid the pattern entirely.
-              */}
-              <rect
-                x="0"
-                y="0"
-                width={size}
-                height={size}
-                fill={tint >= 1 ? '#ffffff' : '#000000'}
-                opacity={Math.min(0.3, Math.abs(tint - 1) * 0.6).toFixed(3)}
-              />
-            </g>
-          </g>
-        );
-      })}
-    </svg>
+    />
   );
 }
 
