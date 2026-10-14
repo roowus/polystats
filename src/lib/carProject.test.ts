@@ -108,20 +108,66 @@ describe('projectCar', () => {
     expect(maxOf(big)).toBeGreaterThan(maxOf(polys) * 1.8);
   });
 
-  it('sorts far-to-near so painter drawing is correct', () => {
-    // The interior is deliberately lifted out of the global sort (see below), so
-    // the assertion is per group: whichever group a polygon belongs to, it must
-    // be painted after anything farther in that same group.
-    const groups = new Map<string, number[]>();
-    for (const p of polys) {
-      const key = p.material === 'AirIntake' ? 'interior' : 'shell';
-      (groups.get(key) ?? groups.set(key, []).get(key)!).push(p.depth);
+  it('sorts the bodywork far-to-near so painter drawing is correct', () => {
+    // Two ordered groups are deliberately lifted out of the global sort: the
+    // interior (AirIntake), which must go behind the body, and the wheels, whose
+    // side faces are ordered by which way they face so the rim is not buried.
+    // Everything else must still be back-to-front.
+    const shell = polys
+      .filter((p) => p.material !== 'AirIntake' && p.material !== 'Tire' && p.material !== 'Rim' && p.material !== 'Metal')
+      .map((p) => p.depth);
+    for (let i = 1; i < shell.length; i++) {
+      expect(shell[i - 1]).toBeGreaterThanOrEqual(shell[i]);
     }
-    for (const depths of groups.values()) {
-      for (let i = 1; i < depths.length; i++) {
-        expect(depths[i - 1]).toBeGreaterThanOrEqual(depths[i]);
+  });
+
+  it('draws the tyre side faces around the rim, not over it', () => {
+    // The tyre's hole is exactly the rim's radius, so the rim is only visible
+    // through it. Sorting the two by depth alone interleaves them and leaves the
+    // rim as a crescent sliver; sorting by material draws the rim over the tyre
+    // entirely, spilling outside the wheel. The far side face must precede the
+    // rim and the near one must follow it, within each wheel.
+    //
+    // Wheels are told apart by grouping the tyre and rim polygons into the four
+    // clusters their screen positions fall into, since they are slotted into the
+    // body independently and are not contiguous in the output.
+    const wheelish = polys
+      .map((p, i) => ({ i, p }))
+      .filter(({ p }) => p.material === 'Tire' || p.material === 'Rim' || p.material === 'Metal');
+    expect(wheelish.length).toBeGreaterThan(0);
+    // Cluster by centroid: wheels are far apart on screen relative to their size.
+    const clusters: { cx: number; cy: number; items: typeof wheelish }[] = [];
+    for (const item of wheelish) {
+      const xs = item.p.points.map(([x]) => x);
+      const ys = item.p.points.map(([, y]) => y);
+      const cx = xs.reduce((a, b) => a + b, 0) / xs.length;
+      const cy = ys.reduce((a, b) => a + b, 0) / ys.length;
+      const hit = clusters.find((c) => Math.hypot(c.cx - cx, c.cy - cy) < 30);
+      if (hit) {
+        const n = hit.items.length;
+        hit.cx = (hit.cx * n + cx) / (n + 1);
+        hit.cy = (hit.cy * n + cy) / (n + 1);
+        hit.items.push(item);
+      } else {
+        clusters.push({ cx, cy, items: [item] });
       }
     }
+    let checked = 0;
+    for (const c of clusters) {
+      const rims = c.items.filter(({ p }) => p.material === 'Rim').map(({ i }) => i);
+      if (!rims.length) continue;
+      const faces = c.items.filter(({ p }) => p.material === 'Tire' && Math.abs(p.normal[0]) > 0.7);
+      if (!faces.length) continue;
+      const firstRim = Math.min(...rims);
+      const lastRim = Math.max(...rims);
+      for (const { i, p } of faces) {
+        const toward = p.normal[0] * EYE[0] + p.normal[1] * EYE[1] + p.normal[2] * EYE[2];
+        if (toward < 0) expect(i).toBeLessThan(firstRim);
+        else expect(i).toBeGreaterThan(lastRim);
+        checked++;
+      }
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 
   it('paints the interior before the bodywork', () => {

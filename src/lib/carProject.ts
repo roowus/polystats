@@ -352,16 +352,67 @@ export function projectCar(size: number, rimsVariant = 0, exhaustVariant = 0): F
   // only at the hubs. Emitting them here as well (which an earlier version did)
   // leaves a fifth set sitting at the origin, on top of the bodywork: with four
   // wheels' worth of extra triangles that covered the car entirely.
+  //
+  // Each wheel is projected and sorted as its own closed object, then inserted at
+  // its own depth. Sorting all four wheels' triangles in one global list let a
+  // triangle from one wheel paint over another wheel's rim: the tyre's side faces
+  // span the whole depth range of the wheel, so they landed on top of rims at
+  // entirely different hubs. Grouping keeps each wheel's internal order correct,
+  // which is all that matters for a convex-ish object of this size.
+  type WheelGroup = { depth: number; polys: FlatPolygon[] };
+  const wheelGroups: WheelGroup[] = [];
   for (const [wx, wy, wz] of WHEELS) {
+    const before = out.length;
     for (const p of wheelParts(rimsVariant)) {
       // Keep the tyre for the silhouette; skip the rim and metal when small.
       if (dropFineDetail && p.material !== 'Tire') continue;
       emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz], p.uv);
     }
+    const polys = out.splice(before);
+    if (!polys.length) continue;
+    let sum = 0;
+    for (const q of polys) sum += q.depth;
+    wheelGroups.push({ depth: sum / polys.length, polys });
   }
+
+  // Within a wheel the draw order is: the tyre's FAR side face, then the rim,
+  // then the tyre's NEAR side face.
+  //
+  // The tyre is an annulus whose hole (radius 0.258) is exactly the rim's radius,
+  // so the rim is only ever visible through it. Depth-sorting the tyre and rim
+  // against each other interleaves them — the order alternated over a thousand
+  // times in a single wheel — which left the rim as a crescent sliver around the
+  // edge instead of a disc. Ordering by material instead drew the rim over the
+  // whole tyre, spilling a bright disc outside the wheel.
+  //
+  // What is actually true is that the tyre's two side faces straddle the rim:
+  // one is nearer the camera than the rim, the other farther. So they are told
+  // apart by which way they face and the rim is drawn between them. The tread
+  // needs no special case: it is the wheel's outer surface and never overlaps the
+  // rim on screen.
+  const wheelOrder = (p: FlatPolygon): number => {
+    if (p.material === 'Rim' || p.material === 'Metal') return 1;
+    if (p.material !== 'Tire') return 0;
+    // A side face points along the wheel axis (X); the tread points outward.
+    if (Math.abs(p.normal[0]) <= 0.7) return 0;
+    // A side face pointing away from the camera is the far one.
+    const toward =
+      p.normal[0] * EYE_OFFSET[0] + p.normal[1] * EYE_OFFSET[1] + p.normal[2] * EYE_OFFSET[2];
+    return toward < 0 ? 0 : 2;
+  };
 
   // Painter's algorithm: draw the farthest first.
   out.sort((a, b) => b.depth - a.depth);
+
+  // Slot each wheel in whole, at its own depth, with its own far-to-near order.
+  for (const g of wheelGroups.sort((a, b) => b.depth - a.depth)) {
+    let at = out.findIndex((q) => q.depth < g.depth);
+    if (at === -1) at = out.length;
+    const inner = g.polys
+      .slice()
+      .sort((a, b) => wheelOrder(a) - wheelOrder(b) || b.depth - a.depth);
+    out.splice(at, 0, ...inner);
+  }
 
   // Interior geometry is drawn before the bodywork, not sorted against it.
   //
