@@ -251,15 +251,42 @@ function CarSvg({ carStyle, size, className }: { carStyle?: string | null; size:
       }
       octx.drawImage(img, 0, 0, ATLAS_SIZE, ATLAS_SIZE);
       const tex = octx.getImageData(0, 0, ATLAS_SIZE, ATLAS_SIZE).data;
+      // Bilinear sampling.
+      //
+      // Nearest-neighbour reads a 1024px atlas at one texel per pixel. Across a
+      // single output pixel the UVs can move several texels, so neighbouring
+      // pixels landed on unrelated texels and the paint came out speckled. The
+      // gradient atlas is smooth, so interpolating between the four surrounding
+      // texels is both more accurate and cheaper than supersampling the lookup.
       const sampler: RasterOptions['sample'] = (material, u, v) => {
         if (material !== 'Main') return null;
-        const tx = Math.min(ATLAS_SIZE - 1, Math.max(0, Math.round(u * (ATLAS_SIZE - 1))));
         // UVs are stored with V measured from the bottom, matching how the
         // atlases are authored.
-        const ty = Math.min(ATLAS_SIZE - 1, Math.max(0, Math.round((1 - v) * (ATLAS_SIZE - 1))));
-        const o = (ty * ATLAS_SIZE + tx) * 4;
-        if (tex[o + 3] < 8) return null;
-        return [tex[o], tex[o + 1], tex[o + 2]];
+        const fx = Math.min(1, Math.max(0, u)) * (ATLAS_SIZE - 1);
+        const fy = Math.min(1, Math.max(0, 1 - v)) * (ATLAS_SIZE - 1);
+        const x0 = Math.floor(fx), y0 = Math.floor(fy);
+        const x1 = Math.min(ATLAS_SIZE - 1, x0 + 1);
+        const y1 = Math.min(ATLAS_SIZE - 1, y0 + 1);
+        const dx = fx - x0, dy = fy - y0;
+        let r = 0, g = 0, b = 0, a = 0;
+        const corners: [number, number, number][] = [
+          [x0, y0, (1 - dx) * (1 - dy)],
+          [x1, y0, dx * (1 - dy)],
+          [x0, y1, (1 - dx) * dy],
+          [x1, y1, dx * dy],
+        ];
+        for (const [cx, cy, w] of corners) {
+          if (w <= 0) continue;
+          const o = (cy * ATLAS_SIZE + cx) * 4;
+          const ca = tex[o + 3] / 255;
+          r += tex[o] * w * ca;
+          g += tex[o + 1] * w * ca;
+          b += tex[o + 2] * w * ca;
+          a += w * ca;
+        }
+        if (a < 0.05) return null;
+        // Un-premultiply, so transparent texels do not darken the result.
+        return [r / a, g / a, b / a];
       };
       paint(sampler);
     };

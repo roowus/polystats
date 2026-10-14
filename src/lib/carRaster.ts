@@ -64,6 +64,8 @@ export interface RasterOptions {
    * through. The model itself has no transparency.
    */
   alpha?: (material: string) => number;
+  /** Drop the tyre's side faces, to check what occludes the rim. */
+  dropTyreCaps?: boolean;
 }
 
 /**
@@ -214,6 +216,7 @@ export function rasteriseCar(options: RasterOptions): {
     colours,
     sample,
     alpha,
+    dropTyreCaps = false,
   } = options;
 
   const width = size;
@@ -265,7 +268,16 @@ export function rasteriseCar(options: RasterOptions): {
   // incoming depth is smaller than what is already there. `Infinity` means empty.
   const depth = new Float32Array(width * height).fill(Infinity);
 
-  const emit = (parts: MeshPart[], offset?: Vec3) => {
+  /**
+   * Rasterise a set of parts, optionally mirrored across X.
+   *
+   * The wheel mesh is authored for one side of the car only: its rim reaches the
+   * outboard face at local x = +0.172 while its hub cap sits inboard at
+   * x = -0.133. Placing that same mesh at a hub on the other side puts the cap
+   * outboard and buries the rim, so the two sides of the car show the wrong face.
+   * Mirroring X for the opposite side is what the game does.
+   */
+  const emit = (parts: MeshPart[], offset?: Vec3, mirrorX = false) => {
     for (const part of parts) {
       const idx = part.index;
       const count = idx ? idx.length : part.position.length / 3;
@@ -277,7 +289,7 @@ export function rasteriseCar(options: RasterOptions): {
           const vi = idx ? idx[i + k] : i + k;
           const w = apply(
             part.matrix,
-            part.position[vi * 3],
+            (mirrorX ? -1 : 1) * part.position[vi * 3],
             part.position[vi * 3 + 1],
             part.position[vi * 3 + 2]
           );
@@ -314,6 +326,14 @@ export function rasteriseCar(options: RasterOptions): {
         ];
         const nl = Math.hypot(...n) || 1;
         n = [n[0] / nl, n[1] / nl, n[2] / nl];
+
+        // No back-face culling.
+        //
+        // Every mesh in this model is an open surface rather than a closed solid
+        // (the body alone has 101 boundary edges, the rim 96), so there is no
+        // consistent winding to cull against. The normals are oriented toward the
+        // viewer for shading instead, which is what the flat projection did and
+        // what these meshes are authored for.
         const toward =
           n[0] * VIEW.eye[0] + n[1] * VIEW.eye[1] + n[2] * VIEW.eye[2];
         if (toward < 0) n = [-n[0], -n[1], -n[2]];
@@ -359,7 +379,11 @@ export function rasteriseCar(options: RasterOptions): {
   for (const p of PARTS) emit([p]);
   emit(exhaustParts(exhaustVariant));
   for (const hub of HUB_POSITIONS) {
-    emit(wheelParts(rimsVariant), [hub[0], hub[1], hub[2]]);
+    // The mesh is authored so its rim faces +X and its hub cap faces -X. Which
+    // side needs mirroring is therefore determined by which face the camera can
+    // see at that hub, not by the sign of X alone; `WHEEL_MESH_FLIP` records the
+    // side the source mesh already suits.
+    emit(wheelParts(rimsVariant), [hub[0], hub[1], hub[2]], hub[0] > 0);
   }
 
   return { data, width, height };
@@ -409,6 +433,7 @@ function rasterTriangle(
       let depthSum = 0;
       let uSum = 0;
       let vSum = 0;
+      let uvN = 0;
       for (let sy = 0; sy < SUB; sy++) {
         for (let sx = 0; sx < SUB; sx++) {
           const x = px + (sx + 0.5) * step;
@@ -422,6 +447,7 @@ function rasterTriangle(
           if (uvs) {
             uSum += w0 * uvs[0][0] + w1 * uvs[1][0] + w2 * uvs[2][0];
             vSum += w0 * uvs[0][1] + w1 * uvs[1][1] + w2 * uvs[2][1];
+            uvN++;
           }
         }
       }
@@ -442,7 +468,7 @@ function rasterTriangle(
         // The pattern is smooth across a triangle, so sampling once at the
         // pixel's covered centre is accurate enough and much cheaper than
         // resampling every subsample.
-        const painted = sample(material, uSum / covered, vSum / covered);
+        const painted = sample(material, uSum / uvN, vSum / uvN);
         if (painted) {
           cr = painted[0];
           cg = painted[1];

@@ -301,31 +301,6 @@ const result = await page.evaluate(
     // hole on screen and, being at the same depth as the rim, won the painter's
     // sort and hid it. Only the tread carries the silhouette, so only the tread is
     // kept.
-    const dropTyreCaps = (tyreParts) =>
-      tyreParts.map((part) => {
-        const idx = part.index;
-        if (!idx) return part;
-        const axis = Math.abs(part.matrix[0]) >= Math.abs(part.matrix[5]) ? 0 : 1;
-        const keep = [];
-        for (let i = 0; i < idx.length; i += 3) {
-          const v = [0, 1, 2].map((k) => {
-            const j = idx[i + k];
-            return [part.position[j * 3], part.position[j * 3 + 1], part.position[j * 3 + 2]];
-          });
-          const u = [v[1][0] - v[0][0], v[1][1] - v[0][1], v[1][2] - v[0][2]];
-          const w = [v[2][0] - v[0][0], v[2][1] - v[0][1], v[2][2] - v[0][2]];
-          const n = [
-            u[1] * w[2] - u[2] * w[1],
-            u[2] * w[0] - u[0] * w[2],
-            u[0] * w[1] - u[1] * w[0],
-          ];
-          const len = Math.hypot(...n) || 1;
-          // A side face points along the wheel axis; the tread points outward.
-          if (Math.abs(n[axis] / len) < 0.7) keep.push(idx[i], idx[i + 1], idx[i + 2]);
-        }
-        return { ...part, index: keep };
-      });
-
     let sharedTyre = null;
     const wheelVariants = [];
     for (let i = 0; i < 14; i++) {
