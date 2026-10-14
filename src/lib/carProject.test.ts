@@ -109,8 +109,30 @@ describe('projectCar', () => {
   });
 
   it('sorts far-to-near so painter drawing is correct', () => {
-    for (let i = 1; i < polys.length; i++) {
-      expect(polys[i - 1].depth).toBeGreaterThanOrEqual(polys[i].depth);
+    // The interior is deliberately lifted out of the global sort (see below), so
+    // the assertion is per group: whichever group a polygon belongs to, it must
+    // be painted after anything farther in that same group.
+    const groups = new Map<string, number[]>();
+    for (const p of polys) {
+      const key = p.material === 'AirIntake' ? 'interior' : 'shell';
+      (groups.get(key) ?? groups.set(key, []).get(key)!).push(p.depth);
+    }
+    for (const depths of groups.values()) {
+      for (let i = 1; i < depths.length; i++) {
+        expect(depths[i - 1]).toBeGreaterThanOrEqual(depths[i]);
+      }
+    }
+  });
+
+  it('paints the interior before the bodywork', () => {
+    // `AirIntake` is a closed box inside the shell, visible only through the
+    // cockpit opening and side vents. Sorted purely by depth its outermost
+    // triangles land in front of the body, painting a black slab across the roof
+    // and flanks. It must therefore be emitted before the bodywork.
+    const lastInterior = polys.map((p) => p.material).lastIndexOf('AirIntake');
+    const firstShell = polys.findIndex((p) => p.material !== 'AirIntake');
+    if (lastInterior >= 0) {
+      expect(firstShell).toBeGreaterThan(lastInterior);
     }
   });
 

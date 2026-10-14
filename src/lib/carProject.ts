@@ -362,6 +362,29 @@ export function projectCar(size: number, rimsVariant = 0, exhaustVariant = 0): F
 
   // Painter's algorithm: draw the farthest first.
   out.sort((a, b) => b.depth - a.depth);
+
+  // Interior geometry is drawn before the bodywork, not sorted against it.
+  //
+  // `AirIntake` is a closed black box sitting entirely inside the body shell: its
+  // bounds are within the body's on every axis. The body mesh has genuine holes
+  // where the cockpit opening and the side vents are, and the game shows the dark
+  // intake through them. Sorted purely by depth, the intake's outermost triangles
+  // legitimately land in front of the body at that point, so painter's algorithm
+  // painted a black slab across the roof and flanks, which is what made the car
+  // look like its internals were on the outside.
+  //
+  // Painting it first reproduces the game exactly: the openings stay dark because
+  // nothing covers them, and everywhere else the body paints over the box.
+  const interior = new Set(['AirIntake']);
+  const isInterior = (p: FlatPolygon) => interior.has(p.material);
+  if (out.some(isInterior)) {
+    const inner = out.filter(isInterior);
+    const shell = out.filter((p) => !isInterior(p));
+    // Each group keeps its own back-to-front order. SVG paints in document
+    // order, so the interior is emitted FIRST and the bodywork paints over it.
+    out.length = 0;
+    out.push(...inner, ...shell);
+  }
   return out;
 }
 
