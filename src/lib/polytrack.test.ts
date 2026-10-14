@@ -92,7 +92,28 @@ describe('decodeCarStyle', () => {
   it('decodes a serialized car style into four RGB hex colors', () => {
     // Sampled from the live API: pattern 4, rims 0, exhaust 0,
     // colors black / purple / purple / black.
-    expect(decodeCarStyle('AAQAAAAAAI4AU44AUwAAAA')).toBe('0000008e00538e0053000000');
+    expect(decodeCarStyle('AAQAAAAAAI4AU44AUwAAAA')).toBe('00000053008e53008e000000');
+  });
+
+  it('accepts base64url styles containing - and _', () => {
+    // The API emits base64url. atob() rejects those characters, which used to
+    // throw and silently fall back to default colours for most players.
+    const style = 'AA4GBbqmF14wGG__AHJvYw'; // Tvirty, a cyan car
+    expect(style).toMatch(/[-_]/);
+    const decoded = decodeCarStyle(style);
+    expect(decoded).not.toBe('');
+    expect(decoded).toHaveLength(24);
+  });
+
+  it('reads colours little-endian, so red and blue are not swapped', () => {
+    // The game stores each colour as [low, mid, high] = B, G, R. Reading the
+    // bytes in order turns a cyan body into olive.
+    const decoded = decodeCarStyle('AA4GBbqmF14wGG__AHJvYw');
+    const primary = decoded.slice(0, 6);
+    // #17a6ba is cyan/teal, matching the car shown on the leaderboard.
+    expect(primary).toBe('17a6ba');
+    // The byte-swapped reading produced the wrong 'baa617'.
+    expect(primary).not.toBe('baa617');
   });
 
   it('returns empty for invalid input', () => {
@@ -100,6 +121,13 @@ describe('decodeCarStyle', () => {
     expect(decodeCarStyle('!!!not base64!!!')).toBe('');
     // Valid base64 but too short.
     expect(decodeCarStyle(btoa('short'))).toBe('');
+  });
+
+  it('never throws, whatever the input', () => {
+    const inputs = ['-', '_', '=', '____', '----', 'A', 'AA', 'AAA', '\u0000', 'null', 'undefined'];
+    for (const input of inputs) {
+      expect(() => decodeCarStyle(input), `threw on ${JSON.stringify(input)}`).not.toThrow();
+    }
   });
 });
 
@@ -117,7 +145,7 @@ describe('normalizeEntry', () => {
     });
     expect(entry.name).toBe('Monstrosity');
     expect(entry.nickname).toBe('Monstrosity');
-    expect(entry.carColors).toBe('0000008e00538e0053000000');
+    expect(entry.carColors).toBe('00000053008e53008e000000');
     expect(entry.frames).toBe(22123);
     expect(entry.verifiedState).toBe(1);
   });
@@ -187,7 +215,7 @@ describe('fetchUser', () => {
     );
     const user = await fetchUser('token');
     expect(user?.name).toBe('Pix');
-    expect(user?.carColors).toBe('0000008e00538e0053000000');
+    expect(user?.carColors).toBe('00000053008e53008e000000');
     expect(user?.isVerifier).toBe(true);
   });
 

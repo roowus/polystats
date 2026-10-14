@@ -152,16 +152,31 @@ export async function sha256Hex(message: string): Promise<string> {
  * Decode the serialized `carStyle` field into the legacy 24-char hex format
  * expected by the UI (four concatenated RRGGBB colors).
  *
- * Binary layout (16 bytes, base64 encoded by the API):
- *   [0] version (0)
- *   [1] pattern, [2] rims, [3] exhaust
- *   [4..6], [7..9], [10..12], [13..15] — four RGB colors
+ * Binary layout (16 bytes, base64url encoded by the API), taken from PolyTrack's
+ * own `serializeBinary`:
+ *   [0]  version (0)
+ *   [1]  pattern, [2] rims, [3] exhaust
+ *   [4..6]   primary (body)
+ *   [7..9]   secondary
+ *   [10..12] frame
+ *   [13..15] rims
+ *
+ * Two details matter and both were wrong before:
+ *
+ *  - The API uses base64**url**, so `-` and `_` appear in real styles. `atob`
+ *    rejects those characters and throws, which silently produced default
+ *    colours for the majority of players. Translate to standard base64 first.
+ *  - Each colour is written little-endian as [low, mid, high], i.e. B, G, R.
+ *    Reading those bytes as R, G, B swaps red and blue, turning a cyan car
+ *    olive.
  */
 export function decodeCarStyle(carStyle: string): string {
   if (!carStyle) return '';
   let bytes: Uint8Array;
   try {
-    const binary = atob(carStyle);
+    const base64 = carStyle.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const binary = atob(padded);
     bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   } catch {
@@ -170,9 +185,11 @@ export function decodeCarStyle(carStyle: string): string {
   if (bytes.length < 16 || bytes[0] !== 0) return '';
   const colors: string[] = [];
   for (let c = 0; c < 4; c++) {
-    const r = bytes[4 + c * 3];
-    const g = bytes[5 + c * 3];
-    const b = bytes[6 + c * 3];
+    const o = 4 + c * 3;
+    // Stored little-endian: byte o is blue, o+1 green, o+2 red.
+    const r = bytes[o + 2];
+    const g = bytes[o + 1];
+    const b = bytes[o];
     colors.push(
       r.toString(16).padStart(2, '0') +
         g.toString(16).padStart(2, '0') +
