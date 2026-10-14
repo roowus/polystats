@@ -125,15 +125,13 @@ const result = await page.evaluate(
     const rearZ = zs.length ? Math.min(...zs) + 0.55 : -1.44;
 
 
-    // Hub X: wheels must sit OUTBOARD of the body shell.
+    // Hub X: one track width for all four wheels.
     //
-    // Two earlier attempts got this wrong and both put the wheels inside the
-    // car, where they drew over the bodywork and the render read as a hollow
-    // shell. The Suspension mesh's extent is not the axle end either.
-    //
-    // The reliable measure is the body's own width at each axle: the hub sits
-    // one wheel half-width beyond that, so the tyre clears the shell. Front and
-    // rear differ, so measure each separately.
+    // A car has a single track, not a different one per axle. Deriving it from
+    // the body's width at each end (an earlier attempt) gave 0.873 front and
+    // 0.672 rear, which made the front wheels look wider than the rear and read
+    // as a deformed, backwards-facing car. The Suspension mesh spans the axles,
+    // so its X extent is the track.
     const wheelHalfWidth = (() => {
       let mn = Infinity, mx = -Infinity;
       wheelMesh.traverse((o) => {
@@ -147,29 +145,19 @@ const result = await page.evaluate(
       });
       return (mx - mn) / 2;
     })();
-    const bodyHalfWidthNear = (z) => {
+    const suspExtent = (() => {
+      if (!susp) return bodyBox.max.x;
       let m = 0;
-      body.traverse((o) => {
+      susp.traverse((o) => {
         if (!o.isMesh) return;
         const p = o.geometry.getAttribute('position');
-        for (let i = 0; i < p.count; i++) {
-          const v = new THREE.Vector3(p.getX(i), p.getY(i), p.getZ(i)).applyMatrix4(o.matrixWorld);
-          if (Math.abs(v.z - z) < 0.35) m = Math.max(m, Math.abs(v.x));
-        }
+        for (let i = 0; i < p.count; i++) m = Math.max(m, Math.abs(p.getX(i)));
       });
       return m;
-    };
-    const frontHubX = bodyHalfWidthNear(frontZ) + wheelHalfWidth;
-    const rearHubX = bodyHalfWidthNear(rearZ) + wheelHalfWidth;
+    })();
+    // The hub sits at the axle end, so the tyre's centre is the track half-width.
+    const hubX = suspExtent > 0 ? suspExtent : bodyBox.max.x - wheelHalfWidth;
 
-
-    // Hub HEIGHT is the axle, not the body's underside.
-    //
-    // Sampling the underside put the wheels through the middle of the car, so
-    // the render showed tyres overlapping the bodywork. The axle sits one wheel
-    // radius above the ground plane, and the ground plane is the body's lowest
-    // point, so hubY = bodyMin.y + radius. Radius comes from the wheel mesh's
-    // own local extent rather than a constant.
     let wheelMinY = Infinity, wheelMaxY = -Infinity;
     wheelMesh.traverse((o) => {
       if (!o.isMesh) return;
@@ -184,10 +172,10 @@ const result = await page.evaluate(
     const hubY = bodyBox.min.y + wheelRadius;
 
     const wheels = [
-      [frontHubX, hubY, frontZ],
-      [-frontHubX, hubY, frontZ],
-      [rearHubX, hubY, rearZ],
-      [-rearHubX, hubY, rearZ],
+      [hubX, hubY, frontZ],
+      [-hubX, hubY, frontZ],
+      [hubX, hubY, rearZ],
+      [-hubX, hubY, rearZ],
     ].map((p) => p.map((n) => +n.toFixed(4)));
 
     // Collect one entry per material group. The node's own translation is a

@@ -304,3 +304,56 @@ describe('camera and perspective', () => {
     expect(ratio).toBeLessThan(3);
   });
 });
+
+describe('level of detail', () => {
+  /**
+   * At the 56px size the header uses, the full mesh is roughly one triangle per
+   * pixel: they overlap into noise and the car reads as a shapeless blob, which
+   * is exactly what it looked like. Rim spokes and wheel trim are sub-pixel
+   * there, so they are dropped.
+   */
+  it('drops wheel detail at small sizes', () => {
+    const small = projectCar(56);
+    const large = projectCar(200);
+    const rims = (ps: typeof small) => ps.filter((p) => p.material === 'Rim').length;
+    expect(rims(small)).toBe(0);
+    expect(rims(large)).toBeGreaterThan(0);
+    expect(small.length).toBeLessThan(large.length * 0.6);
+  });
+
+  it('keeps the silhouette when detail is dropped', () => {
+    // The tyre and body carry the shape, so they must survive at every size.
+    for (const size of [32, 56, 120, 200]) {
+      const ps = projectCar(size);
+      expect(ps.filter((p) => p.material === 'Tire').length).toBeGreaterThan(100);
+      expect(ps.filter((p) => p.material === 'Main').length).toBeGreaterThan(50);
+    }
+  });
+
+  it('keeps triangles above roughly a quarter pixel each at 56px', () => {
+    // Below that they stop forming a coherent shape.
+    const small = projectCar(56);
+    const perPixel = small.length / (56 * 56);
+    expect(perPixel).toBeLessThan(0.6);
+  });
+});
+
+describe('wheel track', () => {
+  it('gives all four wheels the same track width', () => {
+    // A car has one track. An earlier extraction derived it per axle from the
+    // body width, giving 0.873 front and 0.672 rear, which made the front wheels
+    // look wider than the rear and the car look deformed and backwards.
+    const xs = carBounds.wheelHubs.map((h) => Math.abs(h[0]));
+    for (const x of xs) {
+      expect(Math.abs(x - xs[0])).toBeLessThan(0.01);
+    }
+  });
+
+  it('tucks the wheels inside the widest bodywork', () => {
+    // The front wing is the widest part; wheels wider than that read as a
+    // cartoon car.
+    const maxHalfWidth = Math.max(...carBounds.wheelHubs.map((h) => Math.abs(h[0])));
+    const bodyHalfWidth = carBounds.max[0];
+    expect(maxHalfWidth).toBeLessThan(bodyHalfWidth);
+  });
+});

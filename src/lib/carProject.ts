@@ -210,6 +210,15 @@ const LIGHT_DIR: Vec3 = (() => {
 })();
 
 export function projectCar(size: number): FlatPolygon[] {
+  // Detail that contributes nothing at small sizes but costs a great deal.
+  //
+  // At 56px the full mesh is one triangle per pixel: they overlap into noise and
+  // the car reads as a shapeless blob. The rim spokes and the metal trim inside
+  // the wheels are the largest group and are sub-pixel below about 48px, so they
+  // are dropped there. The tyre, body and wings are always kept, since those
+  // carry the silhouette.
+  const dropFineDetail = size <= 64;
+
   const spanX = BOUNDS.maxX - BOUNDS.minX;
   const spanY = BOUNDS.maxY - BOUNDS.minY;
   const span = Math.max(spanX, spanY) * 1.12; // small margin so nothing touches the edge
@@ -302,6 +311,8 @@ export function projectCar(size: number): FlatPolygon[] {
   for (const [wx, wy, wz] of WHEELS) {
     for (const p of PARTS) {
       if (!p.name.startsWith('Wheel')) continue;
+      // Keep the tyre for the silhouette; skip the rim and metal when small.
+      if (dropFineDetail && p.material !== 'Tire') continue;
       emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz], p.uv);
     }
   }
