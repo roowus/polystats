@@ -29,6 +29,14 @@ export interface FlatPolygon {
    * roof mid-toned, which reads as a hollow underside.
    */
   normal: Vec3;
+  /**
+   * Texture coordinates for each corner, in the same order as `points`.
+   *
+   * These index the game's pattern atlases, so the paint pattern can be mapped
+   * onto each panel the way the game does rather than overlaid across the whole
+   * car. Only present for parts whose mesh carries UVs (the painted ones).
+   */
+  uv: [number, number][] | null;
 }
 
 type Vec3 = [number, number, number];
@@ -216,12 +224,14 @@ export function projectCar(size: number): FlatPolygon[] {
     index: number[] | null,
     material: string,
     /** Offset applied after the part matrix, used to place wheels at hubs. */
-    offset?: Vec3
+    offset?: Vec3,
+    uv?: number[] | null
   ) => {
     const count = index ? index.length : position.length / 3;
     for (let i = 0; i < count; i += 3) {
       const pts: [number, number][] = [];
       const world: Vec3[] = [];
+      const uvs: [number, number][] = [];
       let depth = 0;
       for (let k = 0; k < 3; k++) {
         const vi = index ? index[i + k] : i + k;
@@ -235,12 +245,19 @@ export function projectCar(size: number): FlatPolygon[] {
         world.push([x, y, z]);
         pts.push(project(x, y, z));
         depth += depthOf(x, y, z);
+        if (uv) uvs.push([uv[vi * 2], uv[vi * 2 + 1]]);
       }
-      out.push({ points: pts, material, depth: depth / 3, normal: faceNormal(world) });
+      out.push({
+        points: pts,
+        material,
+        depth: depth / 3,
+        normal: faceNormal(world),
+        uv: uv ? uvs : null,
+      });
     }
   };
 
-  for (const p of PARTS) emit(p.matrix, p.position, p.index, p.material);
+  for (const p of PARTS) emit(p.matrix, p.position, p.index, p.material, undefined, p.uv);
 
   // Wheels: the same mesh at each hub, which the extraction recorded.
   const wheelPart = PARTS.find((p) => p.material === 'Tire');
@@ -248,7 +265,7 @@ export function projectCar(size: number): FlatPolygon[] {
     for (const [wx, wy, wz] of WHEELS) {
       for (const p of PARTS) {
         // Every wheel sub-mesh (Tire, Rim, Metal) shares the Wheel root matrix.
-        if (p.name.startsWith('Wheel')) emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz]);
+        if (p.name.startsWith('Wheel')) emit(p.matrix, p.position, p.index, p.material, [wx, wy, wz], p.uv);
       }
     }
   }

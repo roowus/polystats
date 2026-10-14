@@ -229,3 +229,49 @@ describe('orientation', () => {
     expect(right).toBeGreaterThan(left * 0.5);
   });
 });
+
+describe('texture coordinates', () => {
+  const polys = projectCar(200);
+
+  it('carries UVs for the painted body panels', () => {
+    // Without these the pattern atlas cannot be mapped onto the car, which is
+    // what the paint scheme depends on.
+    const main = polys.filter((p) => p.material === 'Main' && p.uv);
+    expect(main.length).toBeGreaterThan(50);
+  });
+
+  it('gives every UV triangle three pairs', () => {
+    for (const p of polys) {
+      if (!p.uv) continue;
+      expect(p.uv).toHaveLength(3);
+      for (const [u, v] of p.uv) {
+        expect(Number.isFinite(u)).toBe(true);
+        expect(Number.isFinite(v)).toBe(true);
+      }
+    }
+  });
+
+  it('keeps UVs inside the atlas', () => {
+    // A UV outside 0..1 samples outside the 1024px atlas and renders blank.
+    for (const p of polys) {
+      if (!p.uv) continue;
+      for (const [u, v] of p.uv) {
+        expect(u).toBeGreaterThanOrEqual(-0.01);
+        expect(u).toBeLessThanOrEqual(1.01);
+        expect(v).toBeGreaterThanOrEqual(-0.01);
+        expect(v).toBeLessThanOrEqual(1.01);
+      }
+    }
+  });
+
+  it('spreads the body across most of the atlas', () => {
+    // A UV unwrap should use the texture, not sample one tiny corner.
+    const us: number[] = [], vs: number[] = [];
+    for (const p of polys) {
+      if (p.material !== 'Main' || !p.uv) continue;
+      for (const [u, v] of p.uv) { us.push(u); vs.push(v); }
+    }
+    expect(Math.max(...us) - Math.min(...us)).toBeGreaterThan(0.5);
+    expect(Math.max(...vs) - Math.min(...vs)).toBeGreaterThan(0.5);
+  });
+});
