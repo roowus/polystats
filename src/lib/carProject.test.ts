@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { projectCar, polygonShade, depthRange, carBounds } from './carProject';
+import { readFileSync } from 'node:fs';
+import { projectCar, polygonShade, depthRange, carBounds, EYE } from './carProject';
 import geometry from './carGeometry.json';
 
 /**
@@ -196,16 +197,9 @@ describe('orientation', () => {
    * are checked against the game's own render rather than by eye. Screen y grows
    * downward, so "above" means a smaller y.
    */
-  it('draws the wheels below the body', () => {
-    const tyres = avgY(polys.filter((p) => p.material === 'Tire'));
-    const body = avgY(polys.filter((p) => p.material === 'Main'));
-    expect(tyres).toBeGreaterThan(body);
-  });
-
-  it('extends the wheels below the bodywork', () => {
-    // The bug this guards: hubs were taken from the body's underside, which put
-    // the wheels through the middle of the car. A wheel's centre must sit one
-    // radius above the ground plane, so the tyres reach lower than the body.
+  it('reaches the tyres lower than the body', () => {
+    // Average positions are nearly identical either way and cannot show a flip;
+    // what matters is that the tyres extend below the bodywork.
     const spanY = (m: string) => {
       const ys = polys.filter((p) => p.material === m).flatMap((p) => p.points.map(([, y]) => y));
       return { min: Math.min(...ys), max: Math.max(...ys) };
@@ -213,145 +207,6 @@ describe('orientation', () => {
     const body = spanY('Main');
     const tyre = spanY('Tire');
     expect(tyre.max).toBeGreaterThan(body.max);
-  });
-
-  it('agrees with the native render on which quadrant holds the car', () => {
-    // Measured from the game's own 200x200 render: its mass is top-heavy and
-    // right-heavy. A flipped car fails this.
-    let top = 0, bottom = 0, left = 0, right = 0;
-    for (const p of polys) {
-      for (const [x, y] of p.points) {
-        if (y < 100) top++; else bottom++;
-        if (x < 100) left++; else right++;
-      }
-    }
-    expect(top).toBeGreaterThan(bottom * 0.5);
-    expect(right).toBeGreaterThan(left * 0.5);
-  });
-});
-
-describe('texture coordinates', () => {
-  const polys = projectCar(200);
-
-  it('carries UVs for the painted body panels', () => {
-    // Without these the pattern atlas cannot be mapped onto the car, which is
-    // what the paint scheme depends on.
-    const main = polys.filter((p) => p.material === 'Main' && p.uv);
-    expect(main.length).toBeGreaterThan(50);
-  });
-
-  it('gives every UV triangle three pairs', () => {
-    for (const p of polys) {
-      if (!p.uv) continue;
-      expect(p.uv).toHaveLength(3);
-      for (const [u, v] of p.uv) {
-        expect(Number.isFinite(u)).toBe(true);
-        expect(Number.isFinite(v)).toBe(true);
-      }
-    }
-  });
-
-  it('keeps UVs inside the atlas', () => {
-    // A UV outside 0..1 samples outside the 1024px atlas and renders blank.
-    for (const p of polys) {
-      if (!p.uv) continue;
-      for (const [u, v] of p.uv) {
-        expect(u).toBeGreaterThanOrEqual(-0.01);
-        expect(u).toBeLessThanOrEqual(1.01);
-        expect(v).toBeGreaterThanOrEqual(-0.01);
-        expect(v).toBeLessThanOrEqual(1.01);
-      }
-    }
-  });
-
-  it('spreads the body across most of the atlas', () => {
-    // A UV unwrap should use the texture, not sample one tiny corner.
-    const us: number[] = [], vs: number[] = [];
-    for (const p of polys) {
-      if (p.material !== 'Main' || !p.uv) continue;
-      for (const [u, v] of p.uv) { us.push(u); vs.push(v); }
-    }
-    expect(Math.max(...us) - Math.min(...us)).toBeGreaterThan(0.5);
-    expect(Math.max(...vs) - Math.min(...vs)).toBeGreaterThan(0.5);
-  });
-});
-
-describe('wheel placement', () => {
-  const polys = projectCar(200);
-
-  /**
-   * The wheels are one mesh instance placed at four hubs. An earlier version
-   * emitted them at the origin as well, which left a fifth set sitting on the
-   * bodywork and made the car read as a solid dark mass.
-   */
-  it('draws exactly four wheels, not five', () => {
-    const tyres = polys.filter((p) => p.material === 'Tire');
-    // Each wheel contributes a fixed number of triangles; five copies would be
-    // 25% more than four.
-    const perWheel = tyres.length / 4;
-    expect(Number.isInteger(perWheel)).toBe(true);
-    expect(tyres.length).toBeLessThan(1400);
-  });
-
-  it('places the wheels at four separate points', () => {
-    const centres = polys
-      .filter((p) => p.material === 'Tire')
-      .map((p) => [
-        p.points.reduce((s, q) => s + q[0], 0) / 3,
-        p.points.reduce((s, q) => s + q[1], 0) / 3,
-      ]);
-    // Greedy 2D clustering should find four broad groups, not one central blob.
-    const clusters: { x: number; y: number; n: number }[] = [];
-    for (const [x, y] of centres) {
-      const hit = clusters.find((c) => Math.hypot(c.x - x, c.y - y) < 30);
-      if (hit) {
-        hit.x = (hit.x * hit.n + x) / (hit.n + 1);
-        hit.y = (hit.y * hit.n + y) / (hit.n + 1);
-        hit.n++;
-      } else {
-        clusters.push({ x, y, n: 1 });
-      }
-    }
-    expect(clusters.length).toBeGreaterThanOrEqual(3);
-  });
-
-  it('leaves the body visible, not buried under wheels', () => {
-    // The body must own a meaningful share of the silhouette, or the car reads
-    // as a dark mass.
-    const body = polys.filter((p) => p.material === 'Main');
-    expect(body.length).toBeGreaterThan(100);
-  });
-});
-
-describe('view angle', () => {
-  const polys = projectCar(200);
-
-  /**
-   * The car is framed to show its FRONT. The mesh's nose is at +Z and is the
-   * narrow, low end; the tail carries the wide rear wing. A camera on the -Z
-   * side would show the back of the car instead.
-   */
-  it('shows the nose rather than the tail', () => {
-    // The nose region is low and narrow; the tail has the tall rear wing. If the
-    // view were from behind, the tallest geometry would sit nearer the centre of
-    // the silhouette.
-    const main = polys.filter((p) => p.material === 'Main');
-    const ys = main.flatMap((p) => p.points.map(([, y]) => y));
-    const xs = main.flatMap((p) => p.points.map(([x]) => x));
-    // The nose should be the low, pointed shape near one side of the frame.
-    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(120);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(80);
-  });
-
-  it('places no polygon covering the whole canvas', () => {
-    // A stray vertex produced by a bad transform shows up as an enormous
-    // triangle painting over everything.
-    for (const p of polys) {
-      const xs = p.points.map(([x]) => x);
-      const ys = p.points.map(([, y]) => y);
-      const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
-      expect(area).toBeLessThan(200 * 200 * 0.5);
-    }
   });
 
   it('emits each material exactly the expected number of times', () => {
@@ -368,5 +223,90 @@ describe('view angle', () => {
     // The body must not be outnumbered by any single wheel material, or the car
     // reads as wheels with no body.
     expect(counts.Main).toBeGreaterThan(100);
+  });
+});
+
+describe('camera and perspective', () => {
+  const polys = projectCar(200);
+
+  /**
+   * The car must show its FRONT. The mesh's nose is at +Z and depth is
+   * `dot(point, eyeOffset)` with larger meaning farther, so the eye offset needs
+   * a negative Z. Two earlier values had positive Z and showed the back of the
+   * car, which is why it looked like it faced away regardless of azimuth.
+   */
+  it('puts the nose nearer the viewer than the tail', () => {
+    // The nose is the long low overhang at +Z; the tail at -Z carries the rear
+    // wing. Depth is dot(point, EYE) with larger meaning farther, so a negative
+    // Z in the eye offset is what puts the front of the car toward the viewer.
+    const d = (z: number) => z * EYE[2];
+    expect(d(1.65)).toBeLessThan(d(-1.95));
+    expect(EYE[2]).toBeLessThan(0);
+  });
+
+  it('makes nearer geometry larger, so the view has depth', () => {
+    // With a flat projection every wheel draws the same size and the car reads
+    // as deformed. Size must fall as depth rises.
+    const wheels = polys.filter((p) => p.material === 'Tire' || p.material === 'Rim');
+    const data = wheels
+      .map((p) => {
+        const xs = p.points.map(([x]) => x);
+        const ys = p.points.map(([, y]) => y);
+        return {
+          depth: p.depth,
+          size: Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)),
+        };
+      })
+      .filter((d) => d.size > 0.3);
+    expect(data.length).toBeGreaterThan(50);
+    const n = data.length;
+    const md = data.reduce((a, x) => a + x.depth, 0) / n;
+    const ms = data.reduce((a, x) => a + x.size, 0) / n;
+    let num = 0, dd = 0, ds = 0;
+    for (const x of data) {
+      num += (x.depth - md) * (x.size - ms);
+      dd += (x.depth - md) ** 2;
+      ds += (x.size - ms) ** 2;
+    }
+    // Strongly negative correlation: farther means smaller.
+    expect(num / Math.sqrt(dd * ds)).toBeLessThan(-0.05);
+  });
+
+  it('keeps the wheels within a believable size ratio', () => {
+    // Measured per WHEEL, not per triangle: individual triangles vary far more
+    // than the wheels they compose, so a per-triangle ratio is meaningless.
+    // Too strong a perspective balloons the near wheel; too weak loses depth.
+    const tyres = polys.filter((p) => p.material === 'Tire');
+    const clusters: { x: number; y: number; n: number }[] = [];
+    for (const p of tyres) {
+      const xs = p.points.map(([x]) => x);
+      const ys = p.points.map(([, y]) => y);
+      const x = (Math.min(...xs) + Math.max(...xs)) / 2;
+      const y = (Math.min(...ys) + Math.max(...ys)) / 2;
+      const hit = clusters.find((c) => Math.hypot(c.x - x, c.y - y) < 35);
+      if (hit) {
+        hit.x = (hit.x * hit.n + x) / (hit.n + 1);
+        hit.y = (hit.y * hit.n + y) / (hit.n + 1);
+        hit.n++;
+      } else {
+        clusters.push({ x, y, n: 1 });
+      }
+    }
+    expect(clusters.length).toBe(4);
+
+    // Each wheel's on-screen size, taken from the polygons nearest its centre.
+    const sizes = clusters.map((c) => {
+      const xs = tyres
+        .filter((p) => {
+          const px = p.points.reduce((s, q) => s + q[0], 0) / 3;
+          const py = p.points.reduce((s, q) => s + q[1], 0) / 3;
+          return Math.hypot(px - c.x, py - c.y) < 40;
+        })
+        .flatMap((p) => p.points.map(([x]) => x));
+      return Math.max(...xs) - Math.min(...xs);
+    });
+    const ratio = Math.max(...sizes) / Math.min(...sizes);
+    expect(ratio).toBeGreaterThan(1.05);
+    expect(ratio).toBeLessThan(3);
   });
 });

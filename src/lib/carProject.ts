@@ -78,13 +78,29 @@ function applyMatrix(m: number[], x: number, y: number, z: number): Vec3 {
  * rather than its roof. Both values were chosen by rendering a sweep of angles
  * and looking at them.
  */
-const EYE_OFFSET: Vec3 = (() => {
-  const v: Vec3 = [0.42, 0.5, 1.0];
+/** Exported for tests, which assert which end of the car faces the viewer. */
+export const EYE: Vec3 = (() => {
+  // NEGATIVE Z: depth is dot(point, EYE), larger meaning farther, and the nose
+  // sits at +Z. Positive Z here shows the back of the car, which is what both
+  // earlier values did.
+  const v: Vec3 = [-0.42, 0.5, -1.0];
   const len = Math.hypot(...v);
   return [v[0] / len, v[1] / len, v[2] / len];
 })();
 
+/** The eye offset, used as the depth axis. */
+const EYE_OFFSET: Vec3 = EYE;
+
 const VIEW_DIR: Vec3 = [-EYE_OFFSET[0], -EYE_OFFSET[1], -EYE_OFFSET[2]];
+
+/**
+ * Camera distance in model units, for the perspective divide.
+ *
+ * The car is roughly 3.6 units long. A larger value flattens the view toward
+ * orthographic; this one keeps the near wheel visibly larger than the far one
+ * without distorting the body the way a very close camera would.
+ */
+const CAMERA_DISTANCE = 14;
 
 /**
  * Build an orthonormal camera basis for a view looking along `dir`.
@@ -202,10 +218,32 @@ export function projectCar(size: number): FlatPolygon[] {
   const scale = size / span;
 
   const out: FlatPolygon[] = [];
+  /**
+   * Project a world point to the canvas.
+   *
+   * Perspective, not orthographic: dividing by distance makes nearer geometry
+   * larger. A flat projection draws the far wheels the same size as the near
+   * ones, which reads as a deformed car and destroys the sense of depth.
+   *
+   * `CAMERA_DISTANCE` is in model units, where the car is about 3.6 long. The
+   * value is a compromise: too small and the near wing balloons, too large and
+   * the effect disappears.
+   */
   const project = (x: number, y: number, z: number): [number, number] => {
     const sx = x * BASIS.right[0] + y * BASIS.right[1] + z * BASIS.right[2];
     const sy = x * BASIS.up[0] + y * BASIS.up[1] + z * BASIS.up[2];
-    return [(sx - cx) * scale + size / 2, size / 2 - (sy - cy) * scale];
+    // Distance along the view axis; clamped so geometry behind the camera cannot
+    // invert.
+    // `sz` grows with distance from the camera (the same convention the depth
+    // sort uses), so the divisor ADDS it: far geometry gets a smaller factor and
+    // therefore draws smaller. Subtracting here inverted the effect, making the
+    // far wheels larger than the near ones.
+    const sz = x * EYE_OFFSET[0] + y * EYE_OFFSET[1] + z * EYE_OFFSET[2];
+    const persp = CAMERA_DISTANCE / Math.max(CAMERA_DISTANCE + sz, CAMERA_DISTANCE * 0.35);
+    return [
+      (sx - cx) * scale * persp + size / 2,
+      size / 2 - (sy - cy) * scale * persp,
+    ];
   };
   // Depth measured along the eye offset: larger means farther from the camera,
   // which is the order the painter's-algorithm sort expects.
