@@ -26,14 +26,6 @@ export function carImageUrl(carStyle?: string | null): string | null {
   return `${workerOrigin()}/car/${encodeURIComponent(carStyle)}.png`;
 }
 
-/** Lighten or darken a hex colour, for face shading. */
-function shade(hex: string, factor: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
-    Math.max(0, Math.min(255, Math.round(v * factor)))
-  );
-  return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-}
 
 /**
  * Pattern artwork shipped with the game, indexed by the style's `pattern` byte.
@@ -92,7 +84,7 @@ export function patternDataUri(pattern: number, primary: string, secondary: stri
   const fallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
 <defs>
 <linearGradient id="p" x1="0" y1="0" x2="1" y2="0">
-<stop offset="0" stop-color="${primary}"/><stop offset="1" stop-color="${shade(primary, 0.72)}"/>
+<stop offset="0" stop-color="${primary}"/><stop offset="1" stop-color="${secondary}"/>
 </linearGradient>
 </defs>
 <rect width="1024" height="1024" fill="url(#p)"/>
@@ -143,13 +135,6 @@ const MATERIAL_FALLBACK: Record<string, string> = {
   BrakeLight: '#c02020',
 };
 
-function shadeHex(hex: string, factor: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) =>
-    Math.max(0, Math.min(255, Math.round(v * factor)))
-  );
-  return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-}
 /**
  * Car drawn from the game's real mesh, rasterised with a depth buffer.
  *

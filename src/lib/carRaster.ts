@@ -189,14 +189,6 @@ const BOUNDS = (() => {
   return { minX, maxX, minY, maxY };
 })();
 
-/** A triangle queued for rasterisation, already in view space. */
-interface ViewTri {
-  x: number[]; // screen x per corner
-  y: number[];
-  z: number[]; // view depth per corner, larger meaning farther
-  r: number; g: number; b: number; a: number;
-}
-
 /**
  * Rasterise the car into an RGBA buffer.
  *
@@ -216,7 +208,6 @@ export function rasteriseCar(options: RasterOptions): {
     colours,
     sample,
     alpha,
-    dropTyreCaps = false,
   } = options;
 
   const width = size;
@@ -284,7 +275,6 @@ export function rasteriseCar(options: RasterOptions): {
       for (let i = 0; i < count; i += 3) {
         const world: Vec3[] = [];
         const view: [number, number, number][] = [];
-        let uSum = 0, vSum = 0;
         for (let k = 0; k < 3; k++) {
           const vi = idx ? idx[i + k] : i + k;
           const w = apply(
@@ -300,10 +290,6 @@ export function rasteriseCar(options: RasterOptions): {
           }
           world.push(w);
           view.push(project(w[0], w[1], w[2]));
-          if (part.uv) {
-            uSum += part.uv[vi * 2];
-            vSum += part.uv[vi * 2 + 1];
-          }
         }
 
         // Face normal, oriented toward the camera. The source mesh's winding
