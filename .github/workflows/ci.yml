@@ -7,7 +7,9 @@ on:
     branches: [main]
 
 jobs:
-  ci:
+  # The branch rule on main requires a status check named "verify", so this job
+  # id must stay "verify". Renaming it silently blocks every push to main.
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

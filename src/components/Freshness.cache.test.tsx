@@ -37,7 +37,7 @@ describe('useDataStatus caching', () => {
   it('coalesces concurrent mounts into a single request', async () => {
     // Several components can mount at once on one page.
     const a = renderHook(() => useDataStatus());
-    const b = renderHook(() => useDataStatus());
+    renderHook(() => useDataStatus());
     const c = renderHook(() => useDataStatus());
     await waitFor(() => expect(a.result.current).toEqual(STATUS));
     await waitFor(() => expect(c.result.current).toEqual(STATUS));
