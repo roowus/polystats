@@ -30,12 +30,18 @@ export function shareToCatalog(userId: string, nickname?: string): void {
   });
 }
 
-/** Upsert a player profile (nickname/car style) into the community database. */
-export function upsertUserProfile(userId: string, nickname?: string, carStyle?: string): void {
+/**
+ * Ask the backend to refresh a player's stored profile.
+ *
+ * Sends only the user id, never the nickname or car style. The worker resolves the
+ * player from the public PolyTrack leaderboards and writes what the API returns, so
+ * a forged request can name a player but cannot choose what is stored about them.
+ */
+export function upsertUserProfile(userId: string): void {
   fetch(`${workerOrigin()}/users`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId, nickname, carStyle }),
+    body: JSON.stringify({ userId }),
   }).catch(() => {
     // local-only context; ignore
   });

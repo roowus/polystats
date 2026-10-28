@@ -259,7 +259,6 @@ const UserPage = () => {
           <RecentRecorder
             userId={userId!}
             nickname={status.nickname}
-            carStyle={status.entries[0]?.carStyle}
             onChange={refreshLists}
           />
         )}
@@ -427,18 +426,17 @@ export default UserPage;
 function RecentRecorder({
   userId,
   nickname,
-  carStyle,
   onChange,
 }: {
   userId: string;
   nickname: string | null;
-  carStyle?: string;
   onChange: () => void;
 }) {
   useEffect(() => {
     pushRecentUser(userId, nickname ?? undefined);
-    // keep the community database fresh on every lookup
-    upsertUserProfile(userId, nickname ?? undefined, carStyle);
+    // Ask the backend to refresh this player from the PolyTrack API. It sends only
+    // the user id; the worker decides what to store.
+    upsertUserProfile(userId);
     onChange();
     // run once per finished scan
     // eslint-disable-next-line react-hooks/exhaustive-deps
